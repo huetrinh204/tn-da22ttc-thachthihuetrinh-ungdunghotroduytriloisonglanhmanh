@@ -103,7 +103,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: nameController,
                   textCapitalization: TextCapitalization.words,
                   decoration: _inputDecoration("Nhập họ và tên", Icons.person_outline),
-                  validator: (v) => v!.trim().isEmpty ? "Vui lòng nhập tên" : null,
+                  validator: (v) {
+                    if (v!.trim().isEmpty) return "Vui lòng nhập tên";
+                    if (v.trim().length < 2) return "Tên phải có ít nhất 2 ký tự";
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 20),
 
@@ -116,7 +120,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: _inputDecoration("Nhập email", Icons.email_outlined),
                   validator: (v) {
                     if (v!.trim().isEmpty) return "Vui lòng nhập email";
-                    if (!v.contains("@")) return "Email không hợp lệ";
+                    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
+                    if (!emailRegex.hasMatch(v.trim())) return "Email không đúng định dạng";
                     return null;
                   },
                 ),
@@ -128,8 +133,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: passwordController,
                   obscureText: obscurePassword,
+                  onChanged: (_) {
+                    // re-validate confirm khi password thay đổi
+                    _formKey.currentState?.validate();
+                  },
                   decoration: _inputDecoration(
-                    "Tối thiểu 6 ký tự",
+                    "Tối thiểu 8 ký tự",
                     Icons.lock_outline,
                     suffix: IconButton(
                       icon: Icon(
@@ -139,7 +148,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: () => setState(() => obscurePassword = !obscurePassword),
                     ),
                   ),
-                  validator: (v) => v!.length < 6 ? "Mật khẩu tối thiểu 6 ký tự" : null,
+                  validator: (v) {
+                    if (v!.isEmpty) return "Vui lòng nhập mật khẩu";
+                    if (v.length < 8) return "Mật khẩu tối thiểu 8 ký tự";
+                    if (!RegExp(r'[A-Z]').hasMatch(v)) return "Mật khẩu phải có ít nhất 1 chữ hoa";
+                    if (!RegExp(r'[0-9]').hasMatch(v)) return "Mật khẩu phải có ít nhất 1 chữ số";
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 20),
 
@@ -160,8 +175,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: () => setState(() => obscureConfirm = !obscureConfirm),
                     ),
                   ),
-                  validator: (v) =>
-                      v != passwordController.text ? "Mật khẩu không khớp" : null,
+                  validator: (v) {
+                    if (v!.isEmpty) return "Vui lòng xác nhận mật khẩu";
+                    if (v != passwordController.text) return "Mật khẩu không khớp";
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 32),
 
