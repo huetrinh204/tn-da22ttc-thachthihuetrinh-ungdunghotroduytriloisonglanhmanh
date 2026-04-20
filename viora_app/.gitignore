@@ -53,3 +53,6 @@ android/.kotlin/
 
 # Flutter sensitive files
 flutter_export_environment.sh
+
+# Google Services (contains API keys)
+android/app/google-services.json

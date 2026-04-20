@@ -1,14 +1,43 @@
 import { Router } from "express";
 import pool from "../config/db";
-const router = Router();
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+import dotenv from "dotenv";
 
-// REGISTER
+dotenv.config();
+
+const router = Router();
+
+// 👉 dùng env cho bảo mật
+const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
+
+// 👉 Google client
+const GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID || "971894407814-sdhs1msoj8v96c13cc7jle7coq95dfcd.apps.googleusercontent.com";
+
+const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+
+// ================= REGISTER =================
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
 
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: "Missing fields" });
+  }
+
   try {
+    // 🔍 check email tồn tại
+    const [existing]: any = await pool.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
     // 🔐 hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -20,15 +49,18 @@ router.post("/register", async (req, res) => {
     res.json({ message: "Register success" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
 
-
-// LOGIN
+// ================= LOGIN =================
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Missing fields" });
+  }
 
   try {
     const [rows]: any = await pool.query(
@@ -42,17 +74,22 @@ router.post("/login", async (req, res) => {
 
     const user = rows[0];
 
-    // 🔐 so sánh password
+    // ❗ nếu là account Google thì không login bằng password
+    if (!user.password) {
+      return res.status(400).json({
+        message: "Please login with Google",
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({ message: "Wrong password" });
     }
 
-    // 🎟️ tạo token
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      "SECRET_KEY",
+      JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -62,7 +99,72 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error });
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// ================= GOOGLE LOGIN =================
+router.post("/google", async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required" });
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: [
+        "971894407814-sdhs1msoj8v96c13cc7jle7coq95dfcd.apps.googleusercontent.com",
+        "971894407814-7stj4uu1l0klka0rldq9a7ulsudei802.apps.googleusercontent.com",
+      ],
+    });
+
+    const payload = ticket.getPayload();
+
+    const email = payload?.email;
+    const name = payload?.name;
+
+    if (!email) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+
+    // 🔍 check user tồn tại chưa
+    const [rows]: any = await pool.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+
+    let userId;
+
+    if (rows.length === 0) {
+      // 👉 tạo user mới (Google)
+      const [result]: any = await pool.query(
+        "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+        [name || "Google User", email, ""]
+      );
+
+      userId = result.insertId;
+    } else {
+      userId = rows[0].id;
+    }
+
+    // 🎟️ tạo JWT
+    const jwtToken = jwt.sign(
+      { id: userId, email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({
+      message: "Login success",
+      token: jwtToken,
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Google login failed" });
   }
 });
 

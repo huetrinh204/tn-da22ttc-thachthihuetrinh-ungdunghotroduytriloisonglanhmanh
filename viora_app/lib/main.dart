@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
-import 'services/api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
 }
-void testLogin() async {
-  print("CALL API...");
 
-  final res = await ApiService.login(
-    "trinh123@gmail.com",
-    "123456",
-  );
-
-  print("LOGIN RESPONSE: $res");
-}
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -24,28 +16,36 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
 
+  Widget? startScreen;
+
   @override
   void initState() {
     super.initState();
-    testLogin(); // 👈 gọi ở đây
+    checkLogin();
   }
 
-  void testLogin() async {
-    print("CALL API...");
+  void checkLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token");
 
-    final res = await ApiService.login(
-      "testlogin@gmail.com",
-      "111111",
-    );
-
-    print("LOGIN RESPONSE: $res");
+    if (token != null) {
+      setState(() {
+        startScreen = const HomeScreen();
+      });
+    } else {
+      setState(() {
+        startScreen = const LoginScreen();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: startScreen ?? const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 }
