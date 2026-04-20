@@ -19,6 +19,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // Step 2
   int? selectedBirthYear;
+  final birthYearController = TextEditingController();
 
   // Step 3
   final heightController = TextEditingController();
@@ -32,8 +33,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     {"id": "mental", "label": "Sức khỏe tinh thần", "icon": "🧘"},
     {"id": "weight", "label": "Kiểm soát cân nặng", "icon": "⚖️"},
     {"id": "hydration", "label": "Uống đủ nước", "icon": "💧"},
+    {"id": "other", "label": "Khác", "icon": "✏️"},
   ];
   final Set<String> selectedGoals = {};
+  final customGoalController = TextEditingController();
 
   bool isLoading = false;
 
@@ -42,6 +45,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _pageController.dispose();
     heightController.dispose();
     weightController.dispose();
+    birthYearController.dispose();
+    customGoalController.dispose();
     super.dispose();
   }
 
@@ -72,13 +77,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token") ?? "";
 
+    // nếu chọn "Khác" thì thêm custom goal vào list
+    final goals = selectedGoals.toList();
+    if (goals.contains("other") && customGoalController.text.trim().isNotEmpty) {
+      goals.remove("other");
+      goals.add("other:${customGoalController.text.trim()}");
+    }
+
     await ApiService.updateProfile(
       token: token,
       gender: selectedGender,
       birthYear: selectedBirthYear,
       height: double.tryParse(heightController.text),
       weight: double.tryParse(weightController.text),
-      goals: selectedGoals.toList(),
+      goals: goals,
     );
 
     await prefs.setBool("onboarding_done", true);
@@ -97,7 +109,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       case 0:
         return selectedGender != null;
       case 1:
-        return selectedBirthYear != null;
+        return selectedBirthYear != null ||
+            (birthYearController.text.trim().isNotEmpty &&
+                int.tryParse(birthYearController.text.trim()) != null);
       case 2:
         return true; // optional
       case 3:
@@ -265,7 +279,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   // ===== PAGE 2: BIRTH YEAR =====
   Widget _buildBirthYearPage() {
     final currentYear = DateTime.now().year;
-    final years = List.generate(83, (i) => currentYear - 7 - i);
+    final suggestedYears = [
+      currentYear - 15, currentYear - 20, currentYear - 25,
+      currentYear - 30, currentYear - 35, currentYear - 40,
+      currentYear - 50, currentYear - 60, currentYear - 70,
+    ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -278,53 +296,84 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 8),
           const Text("Để gợi ý phù hợp với độ tuổi của bạn",
               style: TextStyle(color: Colors.grey, fontSize: 15)),
-          const SizedBox(height: 32),
-          Expanded(
-            child: ListView.builder(
-              itemCount: years.length,
-              itemBuilder: (_, i) {
-                final year = years[i];
-                final isSelected = selectedBirthYear == year;
-                return GestureDetector(
-                  onTap: () => setState(() => selectedBirthYear = year),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                    decoration: BoxDecoration(
+          const SizedBox(height: 28),
+
+          // INPUT
+          TextField(
+            controller: birthYearController,
+            keyboardType: TextInputType.number,
+            maxLength: 4,
+            onChanged: (v) {
+              final year = int.tryParse(v);
+              if (year != null && year >= 1924 && year <= currentYear - 5) {
+                setState(() => selectedBirthYear = year);
+              } else {
+                setState(() => selectedBirthYear = null);
+              }
+            },
+            decoration: InputDecoration(
+              hintText: "Nhập năm sinh (VD: 1995)",
+              hintStyle: const TextStyle(color: Colors.grey),
+              prefixIcon: const Icon(Icons.cake_outlined, color: Colors.grey),
+              counterText: "",
+              filled: true,
+              fillColor: const Color(0xFFF7F7F7),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 1.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // SUGGESTIONS
+          const Text("Gợi ý nhanh:",
+              style: TextStyle(fontSize: 13, color: Colors.grey)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: suggestedYears.map((year) {
+              final isSelected = selectedBirthYear == year;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedBirthYear = year;
+                    birthYearController.text = "$year";
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFFF7F7F7),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
                       color: isSelected
-                          ? const Color(0xFFE8F5E9)
-                          : const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF4CAF50)
-                            : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("$year",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              color: isSelected
-                                  ? const Color(0xFF2E7D32)
-                                  : Colors.black87,
-                            )),
-                        if (isSelected)
-                          const Icon(Icons.check_circle,
-                              color: Color(0xFF4CAF50), size: 20),
-                      ],
+                          ? const Color(0xFF4CAF50)
+                          : Colors.transparent,
+                      width: 1.5,
                     ),
                   ),
-                );
-              },
-            ),
+                  child: Text(
+                    "$year",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected
+                          ? const Color(0xFF2E7D32)
+                          : Colors.black87,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -403,7 +452,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // ===== PAGE 4: GOALS =====
   Widget _buildGoalsPage() {
-    return Padding(
+    final isOtherSelected = selectedGoals.contains("other");
+
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,59 +466,88 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const Text("Chọn một hoặc nhiều mục tiêu",
               style: TextStyle(color: Colors.grey, fontSize: 15)),
           const SizedBox(height: 28),
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.3,
-              children: goalOptions.map((g) {
-                final isSelected = selectedGoals.contains(g["id"]);
-                return GestureDetector(
-                  onTap: () => setState(() {
-                    if (isSelected) {
-                      selectedGoals.remove(g["id"]);
-                    } else {
-                      selectedGoals.add(g["id"]);
-                    }
-                  }),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    decoration: BoxDecoration(
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.3,
+            children: goalOptions.map((g) {
+              final isSelected = selectedGoals.contains(g["id"]);
+              return GestureDetector(
+                onTap: () => setState(() {
+                  if (isSelected) {
+                    selectedGoals.remove(g["id"]);
+                  } else {
+                    selectedGoals.add(g["id"]);
+                  }
+                }),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFFE8F5E9)
+                        : const Color(0xFFF7F7F7),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
                       color: isSelected
-                          ? const Color(0xFFE8F5E9)
-                          : const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF4CAF50)
-                            : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(g["icon"]!, style: const TextStyle(fontSize: 32)),
-                        const SizedBox(height: 8),
-                        Text(
-                          g["label"]!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected
-                                ? const Color(0xFF2E7D32)
-                                : Colors.black87,
-                          ),
-                        ),
-                      ],
+                          ? const Color(0xFF4CAF50)
+                          : Colors.transparent,
+                      width: 1.5,
                     ),
                   ),
-                );
-              }).toList(),
-            ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(g["icon"]!, style: const TextStyle(fontSize: 32)),
+                      const SizedBox(height: 8),
+                      Text(
+                        g["label"]!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected
+                              ? const Color(0xFF2E7D32)
+                              : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
+
+          // CUSTOM GOAL INPUT (hiện khi chọn "Khác")
+          if (isOtherSelected) ...[
+            const SizedBox(height: 20),
+            const Text("Mục tiêu của bạn là gì?",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: customGoalController,
+              maxLength: 100,
+              decoration: InputDecoration(
+                hintText: "Ví dụ: Bỏ thuốc lá, giảm stress...",
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                prefixIcon: const Icon(Icons.edit_outlined, color: Colors.grey),
+                filled: true,
+                fillColor: const Color(0xFFF7F7F7),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF4CAF50), width: 1.5),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
         ],
       ),
     );
