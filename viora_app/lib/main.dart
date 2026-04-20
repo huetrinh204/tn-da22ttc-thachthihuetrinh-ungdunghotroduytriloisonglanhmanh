@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +16,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   Widget? startScreen;
 
   @override
@@ -27,15 +27,14 @@ class _MyAppState extends State<MyApp> {
   void checkLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
+    final onboardingDone = prefs.getBool("onboarding_done") ?? false;
 
-    if (token != null) {
-      setState(() {
-        startScreen = const HomeScreen();
-      });
+    if (token != null && onboardingDone) {
+      setState(() => startScreen = const HomeScreen());
+    } else if (token != null && !onboardingDone) {
+      setState(() => startScreen = const OnboardingScreen());
     } else {
-      setState(() {
-        startScreen = const LoginScreen();
-      });
+      setState(() => startScreen = const LoginScreen());
     }
   }
 
@@ -43,9 +42,14 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: startScreen ?? const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      theme: ThemeData(
+        fontFamily: 'Roboto',
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
       ),
+      home: startScreen ??
+          const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
     );
   }
 }

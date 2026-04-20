@@ -28,7 +28,6 @@ router.post("/register", async (req, res) => {
   }
 
   try {
-    // 🔍 check email tồn tại
     const [existing]: any = await pool.query(
       "SELECT * FROM users WHERE email = ?",
       [email]
@@ -38,15 +37,47 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // 🔐 hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await pool.query(
+    const [result]: any = await pool.query(
       "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
       [name, email, hashedPassword]
     );
 
-    res.json({ message: "Register success" });
+    const userId = result.insertId;
+
+    // trả về token luôn để vào onboarding
+    const token = jwt.sign(
+      { id: userId, email },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.json({ message: "Register success", token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// ================= UPDATE PROFILE (ONBOARDING) =================
+router.put("/profile", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const { gender, birth_year, height, weight, goals } = req.body;
+
+    await pool.query(
+      `UPDATE users SET gender = ?, birth_year = ?, height = ?, weight = ?, goals = ? WHERE id = ?`,
+      [gender, birth_year, height, weight, JSON.stringify(goals), decoded.id]
+    );
+
+    res.json({ message: "Profile updated" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
