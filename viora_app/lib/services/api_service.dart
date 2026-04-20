@@ -98,23 +98,93 @@ class ApiService {
       final response = await http.post(
         Uri.parse("$baseUrl/auth/google"),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "token": token,
-        }),
+        body: jsonEncode({"token": token}),
       );
 
       final data = jsonDecode(response.body);
-
-      // 👉 debug
-      print("GOOGLE API RESPONSE: $data");
-
-      if (response.statusCode == 200) {
-        return data;
-      } else {
-        return {"message": data["message"] ?? "Google login failed"};
-      }
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Google login failed"};
     } catch (e) {
-      print("ERROR: $e");
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= GET TODAY HABITS =================
+  static Future<Map<String, dynamic>> getTodayHabits(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/habits/today"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= CREATE HABIT =================
+  static Future<Map<String, dynamic>> createHabit({
+    required String token,
+    required String name,
+    String category = "other",
+    String icon = "⭐",
+    String color = "#4CAF50",
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/habits"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "name": name,
+          "category": category,
+          "icon": icon,
+          "color": color,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= CHECK-IN HABIT =================
+  static Future<Map<String, dynamic>> checkInHabit(
+      String token, int habitId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/habits/$habitId/checkin"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= DELETE HABIT =================
+  static Future<Map<String, dynamic>> deleteHabit(
+      String token, int habitId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/habits/$habitId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
       return {"message": "Network error"};
     }
   }

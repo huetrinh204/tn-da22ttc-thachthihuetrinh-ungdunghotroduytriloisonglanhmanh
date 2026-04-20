@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS streaks (
   user_id INT NOT NULL UNIQUE,
   current_streak INT DEFAULT 0,
   longest_streak INT DEFAULT 0,
-  last_active_date DATE,
+  last_completed_date DATE,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
