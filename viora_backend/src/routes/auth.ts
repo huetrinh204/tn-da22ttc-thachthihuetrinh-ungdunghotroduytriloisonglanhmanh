@@ -61,6 +61,30 @@ router.post("/register", async (req, res) => {
 });
 
 
+// ================= GET PROFILE =================
+router.get("/profile", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const [rows]: any = await pool.query(
+      "SELECT id, name, email, gender, birth_year, height, weight, goals, created_at FROM users WHERE id = ?",
+      [decoded.id]
+    );
+
+    if (rows.length === 0) return res.status(404).json({ message: "User not found" });
+
+    res.json({ user: rows[0] });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 // ================= UPDATE PROFILE (ONBOARDING) =================
 router.put("/profile", async (req, res) => {
   const authHeader = req.headers.authorization;

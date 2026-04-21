@@ -23,6 +23,21 @@ function authMiddleware(req: any, res: any, next: any) {
   }
 }
 
+// ================= GET STREAK =================
+router.get("/streak", authMiddleware, async (req: any, res) => {
+  try {
+    const [rows]: any = await pool.query(
+      "SELECT * FROM streaks WHERE user_id = ?",
+      [req.user.id]
+    );
+    const streak = rows[0] || { current_streak: 0, longest_streak: 0 };
+    res.json({ streak });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // ================= GET ALL HABITS =================
 router.get("/", authMiddleware, async (req: any, res) => {
   try {
@@ -45,7 +60,7 @@ router.get("/today", authMiddleware, async (req: any, res) => {
     const [habits]: any = await pool.query(
       `SELECT h.*, 
         CASE WHEN hl.id IS NOT NULL THEN 1 ELSE 0 END AS is_completed,
-        hl.completed_count, hl.note
+        hl.value AS completed_count, hl.note
        FROM habits h
        LEFT JOIN habit_logs hl ON h.id = hl.habit_id AND hl.log_date = ?
        WHERE h.user_id = ? AND h.is_active = 1

@@ -2,7 +2,42 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://10.0.2.2:3000";
+  // true = điện thoại thật, false = máy ảo (emulator)
+  static const bool _isPhysicalDevice = true;
+
+  static const String baseUrl = _isPhysicalDevice
+      ? "http://192.168.1.6:3000"
+      : "http://10.0.2.2:3000";
+
+  // ================= GET PROFILE =================
+  static Future<Map<String, dynamic>> getProfile(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/auth/profile"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= GET STREAK =================
+  static Future<Map<String, dynamic>> getStreak(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/habits/streak"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
 
   // ================= LOGIN =================
   static Future<Map<String, dynamic>> login(
