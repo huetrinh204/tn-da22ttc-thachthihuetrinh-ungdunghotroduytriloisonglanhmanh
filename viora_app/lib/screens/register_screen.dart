@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'onboarding_screen.dart';
 import '../widgets/floating_leaves.dart';
+import '../widgets/app_snackbar.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -34,7 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() { isLoading = true; message = ""; });
+    setState(() => isLoading = true);
     final res = await ApiService.register(
       nameController.text.trim(),
       emailController.text.trim(),
@@ -50,7 +51,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         MaterialPageRoute(builder: (_) => const OnboardingScreen()),
       );
     } else {
-      setState(() => message = res["message"]);
+      if (!mounted) return;
+      AppSnackbar.showError(context, res["message"] ?? "Đăng ký thất bại");
     }
   }
 
@@ -233,30 +235,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             },
                           ),
                           const SizedBox(height: 24),
-
-                          // ERROR
-                          if (message.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.red.shade200),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.error_outline,
-                                      color: Colors.red, size: 18),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(message,
-                                        style: const TextStyle(
-                                            color: Colors.red, fontSize: 13)),
-                                  ),
-                                ],
-                              ),
-                            ),
 
                           // REGISTER BUTTON
                           SizedBox(

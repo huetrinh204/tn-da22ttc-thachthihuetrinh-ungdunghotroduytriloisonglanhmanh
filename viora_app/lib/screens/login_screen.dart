@@ -3,8 +3,10 @@ import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
+import 'onboarding_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../widgets/floating_leaves.dart';
+import '../widgets/app_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -36,10 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void handleLogin() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      setState(() => message = "Vui lòng nhập đầy đủ thông tin");
+      AppSnackbar.showError(context, "Vui lòng nhập đầy đủ thông tin");
       return;
     }
-    setState(() { isLoading = true; message = ""; });
+    setState(() => isLoading = true);
     final res = await ApiService.login(
       emailController.text.trim(),
       passwordController.text.trim(),
@@ -48,13 +50,17 @@ class _LoginScreenState extends State<LoginScreen> {
     if (res["message"] == "Login success") {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", res["token"]);
+      final onboardingDone = prefs.getBool("onboarding_done") ?? false;
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (_) => onboardingDone ? const HomeScreen() : const OnboardingScreen(),
+        ),
       );
     } else {
-      setState(() => message = res["message"]);
+      if (!mounted) return;
+      AppSnackbar.showError(context, res["message"] ?? "Đăng nhập thất bại");
     }
   }
 
@@ -66,25 +72,31 @@ class _LoginScreenState extends State<LoginScreen> {
       final auth = await user.authentication;
       final idToken = auth.idToken;
       if (idToken == null) {
-        setState(() => message = "Google login thất bại");
+        if (!mounted) return;
+        AppSnackbar.showError(context, "Google login thất bại");
         return;
       }
-      setState(() { isLoading = true; message = ""; });
+      setState(() => isLoading = true);
       final res = await ApiService.googleLogin(idToken);
       setState(() => isLoading = false);
       if (res["message"] == "Login success") {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("token", res["token"]);
+        final onboardingDone = prefs.getBool("onboarding_done") ?? false;
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(
+            builder: (_) => onboardingDone ? const HomeScreen() : const OnboardingScreen(),
+          ),
         );
       } else {
-        setState(() => message = res["message"]);
+        if (!mounted) return;
+        AppSnackbar.showError(context, res["message"] ?? "Google login thất bại");
       }
     } catch (e) {
-      setState(() => message = "Lỗi Google login: $e");
+      if (!mounted) return;
+      AppSnackbar.showError(context, "Lỗi Google login: $e");
     }
   }
 
@@ -278,70 +290,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 16),
 
-                        // GOOGLE + APPLE buttons
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: isLoading ? null : handleGoogleLogin,
-                                icon: Image.network(
-                                  'https://www.google.com/favicon.ico',
-                                  height: 18,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                      Icons.login,
-                                      size: 18,
-                                      color: Colors.black54),
-                                ),
-                                label: const Text(
-                                  "Google",
-                                  style: TextStyle(
-                                      fontSize: 13, color: Colors.black87),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  side: const BorderSide(
-                                      color: Color(0xFFDDDDDD)),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
+                        // GOOGLE button
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: isLoading ? null : handleGoogleLogin,
+                            icon: Image.network(
+                              'https://www.google.com/favicon.ico',
+                              height: 18,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.login,
+                                  size: 18,
+                                  color: Colors.black54),
+                            ),
+                            label: const Text(
+                              "Đăng nhập bằng Google",
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.black87),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              side: const BorderSide(color: Color(0xFFDDDDDD)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () {},
-                                icon: const Icon(Icons.apple,
-                                    size: 20, color: Colors.black87),
-                                label: const Text(
-                                  "Apple",
-                                  style: TextStyle(
-                                      fontSize: 13, color: Colors.black87),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  side: const BorderSide(
-                                      color: Color(0xFFDDDDDD)),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (message.isNotEmpty) ...[
-                          const SizedBox(height: 14),
-                          Text(
-                            message,
-                            style: const TextStyle(
-                                color: Colors.red, fontSize: 13),
-                            textAlign: TextAlign.center,
                           ),
-                        ],
+                        ),
 
                         const SizedBox(height: 20),
 
