@@ -10,12 +10,16 @@ class PlantScreen extends StatefulWidget {
   State<PlantScreen> createState() => _PlantScreenState();
 }
 
-class _PlantScreenState extends State<PlantScreen> {
+class _PlantScreenState extends State<PlantScreen>
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   String plantType = "sprout";
   int plantLevel = 1;
   int plantExp = 0;
   bool plantWilted = false;
   bool isLoading = true;
+
+  @override
+  bool get wantKeepAlive => false; // Không cache → reload mỗi lần vào tab
 
   static const List<Map<String, dynamic>> _levelInfo = [
     {"name": "Hạt giống",      "desc": "Hành trình bắt đầu từ đây",          "color": 0xFF8D6E63},
@@ -28,7 +32,19 @@ class _PlantScreenState extends State<PlantScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPlant();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _loadPlant();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _loadPlant() async {
@@ -50,6 +66,7 @@ class _PlantScreenState extends State<PlantScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // required by AutomaticKeepAliveClientMixin
     final level = plantLevel.clamp(1, 5);
     final info = _levelInfo[level - 1];
 

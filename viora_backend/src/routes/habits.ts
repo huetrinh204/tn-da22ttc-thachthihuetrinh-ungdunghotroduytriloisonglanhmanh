@@ -311,6 +311,33 @@ async function checkAchievements(userId: number): Promise<any[]> {
   return newlyUnlocked;
 }
 
+// ================= SET PLANT TYPE =================
+router.put("/plant/type", authMiddleware, async (req: any, res) => {
+  const { plant_type } = req.body;
+  if (!plant_type) return res.status(400).json({ message: "Missing plant_type" });
+
+  try {
+    const [rows]: any = await pool.query(
+      "SELECT id FROM plants WHERE user_id = ?", [req.user.id]);
+
+    if (rows.length === 0) {
+      await pool.query(
+        "INSERT INTO plants (user_id, plant_type, level, experience) VALUES (?, ?, 1, 0)",
+        [req.user.id, plant_type]
+      );
+    } else {
+      await pool.query(
+        "UPDATE plants SET plant_type = ? WHERE user_id = ?",
+        [plant_type, req.user.id]
+      );
+    }
+    res.json({ message: "Plant type updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // ================= GET PLANT =================
 router.get("/plant", authMiddleware, async (req: any, res) => {
   try {
@@ -362,6 +389,7 @@ async function updatePlant(userId: number, today: string) {
     [userId]
   );
   const totalHabits = habitRows[0].total;
+  console.log(`[Plant] userId=${userId} totalHabits=${totalHabits}`);
   if (totalHabits === 0) return;
 
   // Đếm habits đã check-in hôm nay
@@ -371,6 +399,7 @@ async function updatePlant(userId: number, today: string) {
     [userId, today]
   );
   const doneToday = doneRows[0].done;
+  console.log(`[Plant] doneToday=${doneToday} today=${today}`);
 
   // Tính điểm theo tỉ lệ hoàn thành
   const ratio = doneToday / totalHabits;
@@ -379,6 +408,7 @@ async function updatePlant(userId: number, today: string) {
   else if (ratio >= 0.5) points = 2;
   else if (ratio > 0) points = 1;
 
+  console.log(`[Plant] ratio=${ratio} points=${points}`);
   if (points === 0) return;
 
   // Lấy hoặc tạo plant
@@ -388,6 +418,7 @@ async function updatePlant(userId: number, today: string) {
   );
 
   if (plantRows.length === 0) {
+    console.log(`[Plant] No plant found, creating new`);
     await pool.query(
       `INSERT INTO plants (user_id, plant_type, level, experience, last_watered)
        VALUES (?, 'sprout', 1, ?, ?)`,
@@ -398,8 +429,19 @@ async function updatePlant(userId: number, today: string) {
 
   const plant = plantRows[0];
 
-  // Chỉ cộng điểm 1 lần/ngày
-  if (plant.last_watered === today) return;
+  // Chỉ cộng điểm 1 lần/ngày — convert về string để so sánh đúng
+  const lastWatered = plant.last_watered
+    ? (plant.last_watered instanceof Date
+        ? plant.last_watered.toISOString().split("T")[0]
+        : String(plant.last_watered).split("T")[0])
+    : null;
+
+  console.log(`[Plant] lastWatered=${lastWatered} today=${today} exp=${plant.experience}`);
+
+  if (lastWatered === today) {
+    console.log(`[Plant] Already watered today, skip`);
+    return;
+  }
 
   const newExp = plant.experience + points;
 

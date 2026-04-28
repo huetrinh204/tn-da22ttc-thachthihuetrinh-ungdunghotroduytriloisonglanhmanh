@@ -162,6 +162,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     await prefs.setBool("onboarding_done", true);
     await prefs.setString("plant_type", selectedPlant);
 
+    // Sync plant type lên backend
+    await ApiService.setPlantType(token, selectedPlant);
+
     setState(() => isLoading = false);
     if (!mounted) return;
     Navigator.pushReplacement(

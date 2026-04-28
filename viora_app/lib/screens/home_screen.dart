@@ -17,21 +17,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const _DashboardTab(),
-    const HabitsScreen(),
-    const PlantScreen(),
-    const StatsScreen(),
-    const ProfileScreen(),
-  ];
+  Widget _buildScreen(int index) {
+    switch (index) {
+      case 0: return const _DashboardTab();
+      case 1: return const HabitsScreen();
+      case 2: return const PlantScreen();
+      case 3: return const StatsScreen();
+      case 4: return const ProfileScreen();
+      default: return const _DashboardTab();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: _buildScreen(_currentIndex),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),

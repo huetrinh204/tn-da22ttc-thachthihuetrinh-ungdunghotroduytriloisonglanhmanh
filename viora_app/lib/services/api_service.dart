@@ -304,6 +304,20 @@ class ApiService {
     }
   }
 
+  // ================= SET PLANT TYPE =================
+  static Future<void> setPlantType(String token, String plantType) async {
+    try {
+      await http.put(
+        Uri.parse("$baseUrl/habits/plant/type"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"plant_type": plantType}),
+      );
+    } catch (_) {}
+  }
+
   // ================= GET PLANT =================
   static Future<Map<String, dynamic>> getPlant(String token) async {
     try {
