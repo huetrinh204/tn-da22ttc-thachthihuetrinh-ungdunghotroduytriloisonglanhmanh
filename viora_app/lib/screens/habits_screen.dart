@@ -44,10 +44,52 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   void handleCheckIn(int habitId, bool isCompleted) async {
-    // optimistic update
+    // Nếu đã hoàn thành rồi thì không làm gì
+    if (isCompleted) return;
+
+    // Hiện dialog xác nhận
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Text("✅ ", style: TextStyle(fontSize: 22)),
+            Text("Xác nhận hoàn thành",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          "Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.",
+          style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Chưa chắc",
+                style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("Đã hoàn thành!"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Optimistic update
     setState(() {
       final idx = habits.indexWhere((h) => h["id"] == habitId);
-      if (idx != -1) habits[idx]["is_completed"] = isCompleted ? 0 : 1;
+      if (idx != -1) habits[idx]["is_completed"] = 1;
     });
 
     final res = await ApiService.checkInHabit(token, habitId);
@@ -396,7 +438,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       },
       onDismissed: (_) => handleDelete(habit["id"]),
       child: GestureDetector(
-        onTap: () => handleCheckIn(habit["id"], isCompleted),
+        onTap: isCompleted ? null : () => handleCheckIn(habit["id"], isCompleted),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           margin: const EdgeInsets.only(bottom: 12),

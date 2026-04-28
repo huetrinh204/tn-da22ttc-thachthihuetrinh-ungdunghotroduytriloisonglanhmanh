@@ -154,12 +154,8 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
     );
 
     if (existing.length > 0) {
-      // undo check-in
-      await pool.query(
-        "DELETE FROM habit_logs WHERE habit_id = ? AND log_date = ?",
-        [req.params.id, today]
-      );
-      return res.json({ message: "Unchecked", is_completed: false });
+      // Đã check-in rồi, không cho undo
+      return res.json({ message: "Already checked in", is_completed: true });
     }
 
     // check-in mới
