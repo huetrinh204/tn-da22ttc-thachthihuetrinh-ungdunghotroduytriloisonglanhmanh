@@ -223,4 +223,41 @@ router.post("/google", async (req, res) => {
   }
 });
 
+// ================= UPDATE PASSWORD =================
+router.put("/password", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const { current_password, new_password } = req.body;
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    const [rows]: any = await pool.query(
+      "SELECT * FROM users WHERE id = ?", [decoded.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ message: "User not found" });
+
+    const user = rows[0];
+    if (!user.password) {
+      return res.status(400).json({ message: "Tài khoản Google không thể đổi mật khẩu" });
+    }
+
+    const isMatch = await bcrypt.compare(current_password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Mật khẩu hiện tại không đúng" });
+
+    const hashed = await bcrypt.hash(new_password, 10);
+    await pool.query("UPDATE users SET password = ? WHERE id = ?", [hashed, decoded.id]);
+
+    res.json({ message: "Password updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;

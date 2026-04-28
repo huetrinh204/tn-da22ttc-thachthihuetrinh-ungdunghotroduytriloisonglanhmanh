@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
-import 'login_screen.dart';
 import 'habits_screen.dart';
+import 'plant_screen.dart';
+import 'stats_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,6 +20,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const _DashboardTab(),
     const HabitsScreen(),
+    const PlantScreen(),
+    const StatsScreen(),
+    const ProfileScreen(),
   ];
 
   @override
@@ -34,6 +39,9 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.white,
         elevation: 8,
+        type: BottomNavigationBarType.fixed,
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -44,6 +52,21 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.check_circle_outline),
             activeIcon: Icon(Icons.check_circle),
             label: "Thói quen",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.eco_outlined),
+            activeIcon: Icon(Icons.eco),
+            label: "Cây",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart_outlined),
+            activeIcon: Icon(Icons.bar_chart),
+            label: "Thống kê",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: "Hồ sơ",
           ),
         ],
       ),
@@ -108,17 +131,6 @@ class _DashboardTabState extends State<_DashboardTab> {
     });
   }
 
-  void _handleLogout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove("token");
-    await prefs.remove("onboarding_done");
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
-  }
-
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return "Chào buổi sáng";
@@ -143,13 +155,6 @@ class _DashboardTabState extends State<_DashboardTab> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.grey),
-            onPressed: _handleLogout,
-            tooltip: "Đăng xuất",
-          ),
-        ],
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))

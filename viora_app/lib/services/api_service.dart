@@ -208,6 +208,89 @@ class ApiService {
     }
   }
 
+  // ================= STATS =================
+  static Future<Map<String, dynamic>> getWeeklyStats(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/stats/weekly"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"data": []};
+    } catch (e) {
+      return {"data": []};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getMonthlyStats(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/stats/monthly"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"data": []};
+    } catch (e) {
+      return {"data": []};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getCategoryStats(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/stats/categories"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"data": []};
+    } catch (e) {
+      return {"data": []};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getStatsSummary(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/stats/summary"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"summary": {}};
+    } catch (e) {
+      return {"summary": {}};
+    }
+  }
+
+  // ================= UPDATE PASSWORD =================
+  static Future<Map<String, dynamic>> updatePassword({
+    required String token,
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/auth/password"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "current_password": currentPassword,
+          "new_password": newPassword,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
   // ================= GET PLANT =================
   static Future<Map<String, dynamic>> getPlant(String token) async {
     try {
