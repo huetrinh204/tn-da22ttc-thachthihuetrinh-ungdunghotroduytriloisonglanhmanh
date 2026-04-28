@@ -53,7 +53,41 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     {"id": "sunflower","emoji": "🌻","name": "Hướng dương", "desc": "Luôn hướng về phía ánh sáng"},
   ];
 
+  // Validation errors
+  String? birthYearError;
+  String? heightError;
+  String? weightError;
+
   bool isLoading = false;
+
+  // Validation helpers
+  String? _validateBirthYear(String v) {
+    final currentYear = DateTime.now().year;
+    final year = int.tryParse(v.trim());
+    if (v.trim().isEmpty) return null;
+    if (year == null) return "Năm sinh không hợp lệ";
+    if (year < 1930) return "Năm sinh không thể trước 1930";
+    if (year > currentYear - 10) return "Bạn phải ít nhất 10 tuổi";
+    return null;
+  }
+
+  String? _validateHeight(String v) {
+    if (v.trim().isEmpty) return null;
+    final h = double.tryParse(v.trim());
+    if (h == null) return "Chiều cao không hợp lệ";
+    if (h < 100) return "Chiều cao tối thiểu 100 cm";
+    if (h > 250) return "Chiều cao tối đa 250 cm";
+    return null;
+  }
+
+  String? _validateWeight(String v) {
+    if (v.trim().isEmpty) return null;
+    final w = double.tryParse(v.trim());
+    if (w == null) return "Cân nặng không hợp lệ";
+    if (w < 15) return "Cân nặng tối thiểu 15 kg";
+    if (w > 300) return "Cân nặng tối đa 300 kg";
+    return null;
+  }
 
   @override
   void initState() {
@@ -140,11 +174,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     switch (_currentPage) {
       case 0: return selectedGender != null;
       case 1:
+        if (birthYearError != null) return false;
         return selectedBirthYear != null ||
             (birthYearController.text.trim().isNotEmpty &&
                 int.tryParse(birthYearController.text.trim()) != null);
-      case 2: return true;
-      case 3: return selectedGoals.isNotEmpty;
+      case 2:
+        return heightError == null && weightError == null;
+      case 3:
+        if (selectedGoals.isEmpty) return false;
+        if (selectedGoals.contains("other") &&
+            customGoalController.text.trim().isEmpty) return false;
+        return true;
       case 4: return true;
       default: return true;
     }
@@ -427,26 +467,32 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   keyboardType: TextInputType.number,
                   maxLength: 4,
                   onChanged: (v) {
-                    final year = int.tryParse(v);
-                    setState(() => selectedBirthYear =
-                        (year != null && year >= 1924 && year <= currentYear - 5)
-                            ? year
-                            : null);
+                    final error = _validateBirthYear(v);
+                    final year = int.tryParse(v.trim());
+                    setState(() {
+                      birthYearError = error;
+                      selectedBirthYear = (error == null && year != null) ? year : null;
+                    });
                   },
                   decoration: InputDecoration(
                     hintText: "Nhập năm sinh (VD: 1995)",
                     hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.cake_outlined, color: Color(0xFF1E88E5)),
+                    prefixIcon: const Icon(Icons.cake_outlined, color: Color(0xFF2E7D32)),
+                    errorText: birthYearError,
                     counterText: "",
                     filled: true,
-                    fillColor: const Color(0xFFF0F7FF),
+                    fillColor: const Color(0xFFF1F8E9),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF1E88E5), width: 1.5),
+                      borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 1.5),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
                     ),
                   ),
                 ),
@@ -524,8 +570,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   hint: "Ví dụ: 165",
                   suffix: "cm",
                   icon: Icons.height,
-                  color: const Color(0xFF8E24AA),
-                  bgColor: const Color(0xFFF3E5F5),
+                  color: const Color(0xFF2E7D32),
+                  bgColor: const Color(0xFFF1F8E9),
+                  errorText: heightError,
+                  onChanged: (v) => setState(() => heightError = _validateHeight(v)),
                 ),
                 const SizedBox(height: 20),
                 _buildBodyField(
@@ -534,24 +582,26 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   hint: "Ví dụ: 55",
                   suffix: "kg",
                   icon: Icons.monitor_weight_outlined,
-                  color: const Color(0xFF8E24AA),
-                  bgColor: const Color(0xFFF3E5F5),
+                  color: const Color(0xFF2E7D32),
+                  bgColor: const Color(0xFFF1F8E9),
+                  errorText: weightError,
+                  onChanged: (v) => setState(() => weightError = _validateWeight(v)),
                 ),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3E5F5),
+                    color: const Color(0xFFF1F8E9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.info_outline, color: Color(0xFF8E24AA), size: 18),
+                      Icon(Icons.info_outline, color: Color(0xFF2E7D32), size: 18),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           "Thông tin này giúp tính BMI và gợi ý thói quen phù hợp hơn.",
-                          style: TextStyle(fontSize: 12, color: Color(0xFF6A1B9A)),
+                          style: TextStyle(fontSize: 12, color: Color(0xFF1B5E20)),
                         ),
                       ),
                     ],
@@ -573,6 +623,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     required IconData icon,
     required Color color,
     required Color bgColor,
+    String? errorText,
+    ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,13 +635,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         const SizedBox(height: 8),
         TextField(
           controller: controller,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          onChanged: onChanged,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.grey),
             prefixIcon: Icon(icon, color: color),
             suffixText: suffix,
             suffixStyle: TextStyle(color: color, fontWeight: FontWeight.w600),
+            errorText: errorText,
             filled: true,
             fillColor: bgColor,
             border: OutlineInputBorder(
@@ -599,6 +653,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: color, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
             ),
           ),
         ),
@@ -679,6 +741,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   TextField(
                     controller: customGoalController,
                     maxLength: 100,
+                    onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
                       hintText: "Mục tiêu của bạn là gì?",
                       hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
