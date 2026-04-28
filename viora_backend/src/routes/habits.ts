@@ -175,7 +175,10 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
     // cập nhật plant
     await updatePlant(req.user.id, today);
 
-    res.json({ message: "Checked in", is_completed: true });
+    // kiểm tra và unlock achievements
+    const newAchievements = await checkAchievements(req.user.id);
+
+    res.json({ message: "Checked in", is_completed: true, new_achievements: newAchievements });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -226,6 +229,87 @@ async function updateStreak(userId: number) {
 }
 
 export default router;
+
+// ================= GET ACHIEVEMENTS =================
+router.get("/achievements", authMiddleware, async (req: any, res) => {
+  try {
+    const [rows]: any = await pool.query(
+      "SELECT * FROM achievements WHERE user_id = ? ORDER BY unlocked_at DESC",
+      [req.user.id]
+    );
+    res.json({ achievements: rows });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// helper: kiểm tra và unlock achievements
+const ACHIEVEMENTS = [
+  { key: "first_checkin",  title: "Bước đầu tiên",     icon: "🌱", desc: "Hoàn thành check-in đầu tiên" },
+  { key: "streak_3",       title: "3 ngày liên tiếp",   icon: "🔥", desc: "Duy trì streak 3 ngày" },
+  { key: "streak_7",       title: "Tuần kiên trì",      icon: "⚡", desc: "Duy trì streak 7 ngày" },
+  { key: "streak_30",      title: "Tháng bền bỉ",       icon: "🏆", desc: "Duy trì streak 30 ngày" },
+  { key: "habits_5",       title: "Đa nhiệm",           icon: "🎯", desc: "Tạo 5 thói quen" },
+  { key: "checkin_50",     title: "Nửa trăm",           icon: "💪", desc: "Hoàn thành 50 check-ins" },
+  { key: "checkin_100",    title: "Bách chiến",         icon: "🌟", desc: "Hoàn thành 100 check-ins" },
+  { key: "plant_level_3",  title: "Cây non",            icon: "🪴", desc: "Cây đạt cấp độ 3" },
+  { key: "plant_level_5",  title: "Vườn địa đàng",     icon: "🌳", desc: "Cây đạt cấp độ tối đa" },
+];
+
+async function checkAchievements(userId: number): Promise<any[]> {
+  // Lấy achievements đã unlock
+  const [existing]: any = await pool.query(
+    "SELECT achievement_key FROM achievements WHERE user_id = ?",
+    [userId]
+  );
+  const unlockedKeys = new Set(existing.map((r: any) => r.achievement_key));
+
+  const newlyUnlocked: any[] = [];
+
+  // Lấy dữ liệu cần thiết
+  const [streakRows]: any = await pool.query(
+    "SELECT current_streak FROM streaks WHERE user_id = ?", [userId]);
+  const streak = streakRows[0]?.current_streak ?? 0;
+
+  const [checkinRows]: any = await pool.query(
+    "SELECT COUNT(*) as total FROM habit_logs WHERE user_id = ?", [userId]);
+  const totalCheckins = checkinRows[0].total;
+
+  const [habitRows]: any = await pool.query(
+    "SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_active = 1", [userId]);
+  const totalHabits = habitRows[0].total;
+
+  const [plantRows]: any = await pool.query(
+    "SELECT level FROM plants WHERE user_id = ?", [userId]);
+  const plantLevel = plantRows[0]?.level ?? 1;
+
+  // Điều kiện cho từng achievement
+  const conditions: Record<string, boolean> = {
+    first_checkin:  totalCheckins >= 1,
+    streak_3:       streak >= 3,
+    streak_7:       streak >= 7,
+    streak_30:      streak >= 30,
+    habits_5:       totalHabits >= 5,
+    checkin_50:     totalCheckins >= 50,
+    checkin_100:    totalCheckins >= 100,
+    plant_level_3:  plantLevel >= 3,
+    plant_level_5:  plantLevel >= 5,
+  };
+
+  for (const ach of ACHIEVEMENTS) {
+    if (!unlockedKeys.has(ach.key) && conditions[ach.key]) {
+      await pool.query(
+        `INSERT INTO achievements (user_id, achievement_key, title, description, icon)
+         VALUES (?, ?, ?, ?, ?)`,
+        [userId, ach.key, ach.title, ach.desc, ach.icon]
+      );
+      newlyUnlocked.push(ach);
+    }
+  }
+
+  return newlyUnlocked;
+}
 
 // ================= GET PLANT =================
 router.get("/plant", authMiddleware, async (req: any, res) => {

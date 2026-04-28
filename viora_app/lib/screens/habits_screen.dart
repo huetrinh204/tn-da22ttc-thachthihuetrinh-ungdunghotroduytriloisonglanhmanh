@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../widgets/achievement_popup.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -49,7 +50,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
       if (idx != -1) habits[idx]["is_completed"] = isCompleted ? 0 : 1;
     });
 
-    await ApiService.checkInHabit(token, habitId);
+    final res = await ApiService.checkInHabit(token, habitId);
+
+    // Hiện popup nếu có achievement mới unlock
+    if (!mounted) return;
+    final newAchievements = res["new_achievements"] as List?;
+    if (newAchievements != null && newAchievements.isNotEmpty) {
+      AchievementPopup.show(context, newAchievements);
+    }
   }
 
   void handleDelete(int habitId) async {

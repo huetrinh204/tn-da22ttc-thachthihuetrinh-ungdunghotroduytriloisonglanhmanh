@@ -85,7 +85,7 @@ router.get("/profile", async (req, res) => {
 });
 
 
-// ================= UPDATE PROFILE (ONBOARDING) =================
+// ================= UPDATE PROFILE =================
 router.put("/profile", async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
@@ -94,11 +94,27 @@ router.put("/profile", async (req, res) => {
 
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET);
-    const { gender, birth_year, height, weight, goals } = req.body;
+    const { name, gender, birth_year, height, weight, goals } = req.body;
 
+    // Build dynamic update query — chỉ update field nào được gửi lên
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (name !== undefined) { fields.push("name = ?"); values.push(name.trim()); }
+    if (gender !== undefined) { fields.push("gender = ?"); values.push(gender); }
+    if (birth_year !== undefined) { fields.push("birth_year = ?"); values.push(birth_year); }
+    if (height !== undefined) { fields.push("height = ?"); values.push(height); }
+    if (weight !== undefined) { fields.push("weight = ?"); values.push(weight); }
+    if (goals !== undefined) { fields.push("goals = ?"); values.push(JSON.stringify(goals)); }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    values.push(decoded.id);
     await pool.query(
-      `UPDATE users SET gender = ?, birth_year = ?, height = ?, weight = ?, goals = ? WHERE id = ?`,
-      [gender, birth_year, height, weight, JSON.stringify(goals), decoded.id]
+      `UPDATE users SET ${fields.join(", ")} WHERE id = ?`,
+      values
     );
 
     res.json({ message: "Profile updated" });

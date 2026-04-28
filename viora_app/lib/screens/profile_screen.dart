@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import 'login_screen.dart';
+import 'achievements_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -107,14 +108,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: () async {
                   if (ctrl.text.trim().isEmpty) return;
                   Navigator.pop(ctx);
-                  await ApiService.updateProfile(
-                      token: token, gender: gender,
-                      birthYear: birthYear, height: height,
-                      weight: weight, goals: goals);
-                  // Update name separately via profile endpoint
-                  setState(() => name = ctrl.text.trim());
+                  final res = await ApiService.updateProfile(
+                    token: token,
+                    name: ctrl.text.trim(),
+                  );
                   if (!mounted) return;
-                  AppSnackbar.showSuccess(context, "Đã cập nhật tên");
+                  if (res["message"] == "Profile updated") {
+                    setState(() => name = ctrl.text.trim());
+                    AppSnackbar.showSuccess(context, "Đã cập nhật tên");
+                  } else {
+                    AppSnackbar.showError(context, res["message"] ?? "Thất bại");
+                  }
                 },
                 style: _btnStyle(),
                 child: const Text("Lưu"),
@@ -467,6 +471,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildTile("Đổi mật khẩu", "Cập nhật mật khẩu",
                       Icons.lock_outline,
                       onTap: _showChangePasswordSheet),
+                ]),
+                const SizedBox(height: 16),
+
+                // Achievements
+                _buildSection("Thành tích", [
+                  _buildTile("Thành tích của tôi", "Xem các thành tích đã mở khóa",
+                      Icons.emoji_events_outlined,
+                      onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const AchievementsScreen()),
+                          )),
                 ]),
                 const SizedBox(height: 16),
 

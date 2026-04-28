@@ -93,6 +93,7 @@ class ApiService {
   // ================= UPDATE PROFILE =================
   static Future<Map<String, dynamic>> updateProfile({
     required String token,
+    String? name,
     String? gender,
     int? birthYear,
     double? height,
@@ -100,28 +101,25 @@ class ApiService {
     List<String>? goals,
   }) async {
     try {
+      final body = <String, dynamic>{};
+      if (name != null) body["name"] = name;
+      if (gender != null) body["gender"] = gender;
+      if (birthYear != null) body["birth_year"] = birthYear;
+      if (height != null) body["height"] = height;
+      if (weight != null) body["weight"] = weight;
+      if (goals != null) body["goals"] = goals;
+
       final response = await http.put(
         Uri.parse("$baseUrl/auth/profile"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({
-          "gender": gender,
-          "birth_year": birthYear,
-          "height": height,
-          "weight": weight,
-          "goals": goals,
-        }),
+        body: jsonEncode(body),
       );
-
       final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        return data;
-      } else {
-        return {"message": data["message"] ?? "Update failed"};
-      }
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Update failed"};
     } catch (e) {
       return {"message": "Network error"};
     }
@@ -186,6 +184,21 @@ class ApiService {
       return {"message": data["message"] ?? "Failed"};
     } catch (e) {
       return {"message": "Network error"};
+    }
+  }
+
+  // ================= GET ACHIEVEMENTS =================
+  static Future<Map<String, dynamic>> getAchievements(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/habits/achievements"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"achievements": []};
+    } catch (e) {
+      return {"achievements": []};
     }
   }
 
