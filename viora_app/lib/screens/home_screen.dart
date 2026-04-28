@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../widgets/plant_widget.dart';
 import 'login_screen.dart';
 import 'habits_screen.dart';
 
@@ -64,6 +65,12 @@ class _DashboardTabState extends State<_DashboardTab> {
   int totalToday = 0;
   bool isLoading = true;
 
+  // Plant data
+  String plantType = "sprout";
+  int plantLevel = 1;
+  int plantExp = 0;
+  bool plantWilted = false;
+
   @override
   void initState() {
     super.initState();
@@ -77,6 +84,7 @@ class _DashboardTabState extends State<_DashboardTab> {
     final profileRes = await ApiService.getProfile(token);
     final streakRes = await ApiService.getStreak(token);
     final habitsRes = await ApiService.getTodayHabits(token);
+    final plantRes = await ApiService.getPlant(token);
 
     if (!mounted) return;
     setState(() {
@@ -86,6 +94,16 @@ class _DashboardTabState extends State<_DashboardTab> {
       final habits = habitsRes["habits"] as List? ?? [];
       totalToday = habits.length;
       completedToday = habits.where((h) => h["is_completed"] == 1).length;
+
+      // Plant
+      final plant = plantRes["plant"];
+      if (plant != null) {
+        plantType = prefs.getString("plant_type") ?? plant["plant_type"] ?? "sprout";
+        plantLevel = plant["level"] ?? 1;
+        plantExp = plant["experience"] ?? 0;
+        plantWilted = plant["is_wilted"] == true;
+      }
+
       isLoading = false;
     });
   }
@@ -161,6 +179,10 @@ class _DashboardTabState extends State<_DashboardTab> {
                   _buildStreakCard(),
                   const SizedBox(height: 16),
 
+                  // Plant card
+                  _buildPlantCard(),
+                  const SizedBox(height: 16),
+
                   // Today progress card
                   _buildTodayCard(progress),
                   const SizedBox(height: 16),
@@ -178,6 +200,88 @@ class _DashboardTabState extends State<_DashboardTab> {
     const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
     final dayName = days[now.weekday - 1];
     return "$dayName, ${now.day}/${now.month}/${now.year}";
+  }
+
+  Widget _buildPlantCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Text("🌿", style: TextStyle(fontSize: 18)),
+              SizedBox(width: 8),
+              Text(
+                "Cây của bạn",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              PlantWidget(
+                plantType: plantType,
+                level: plantLevel,
+                isWilted: plantWilted,
+                size: 60,
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (plantWilted)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          "Hãy check-in để cây hồi phục! 💧",
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.red),
+                        ),
+                      )
+                    else
+                      PlantProgressBar(
+                        experience: plantExp,
+                        level: plantLevel,
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      plantWilted
+                          ? "Cây chưa được tưới 3 ngày rồi..."
+                          : "Hoàn thành thói quen để cây lớn lên!",
+                      style: const TextStyle(
+                          fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildStreakCard() {

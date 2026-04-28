@@ -208,6 +208,21 @@ class ApiService {
     }
   }
 
+  // ================= GET PLANT =================
+  static Future<Map<String, dynamic>> getPlant(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/habits/plant"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
   // ================= DELETE HABIT =================
   static Future<Map<String, dynamic>> deleteHabit(
       String token, int habitId) async {

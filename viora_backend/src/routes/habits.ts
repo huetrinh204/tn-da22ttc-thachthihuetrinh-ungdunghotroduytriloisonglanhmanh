@@ -172,6 +172,9 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
     // cập nhật streak
     await updateStreak(req.user.id);
 
+    // cập nhật plant
+    await updatePlant(req.user.id, today);
+
     res.json({ message: "Checked in", is_completed: true });
   } catch (error) {
     console.log(error);
@@ -223,3 +226,111 @@ async function updateStreak(userId: number) {
 }
 
 export default router;
+
+// ================= GET PLANT =================
+router.get("/plant", authMiddleware, async (req: any, res) => {
+  try {
+    const [rows]: any = await pool.query(
+      "SELECT * FROM plants WHERE user_id = ?",
+      [req.user.id]
+    );
+
+    if (rows.length === 0) {
+      return res.json({
+        plant: {
+          plant_type: "sprout",
+          level: 1,
+          experience: 0,
+          is_wilted: false,
+        },
+      });
+    }
+
+    const plant = rows[0];
+
+    // check héo: không check-in 3 ngày liên tiếp
+    const [lastLog]: any = await pool.query(
+      `SELECT MAX(log_date) as last_date FROM habit_logs WHERE user_id = ?`,
+      [req.user.id]
+    );
+
+    const lastDate = lastLog[0]?.last_date;
+    let isWilted = false;
+    if (lastDate) {
+      const diffDays = Math.floor(
+        (new Date().getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      isWilted = diffDays >= 3;
+    }
+
+    res.json({ plant: { ...plant, is_wilted: isWilted } });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// helper: cập nhật plant experience và level
+async function updatePlant(userId: number, today: string) {
+  // Đếm tổng habits active
+  const [habitRows]: any = await pool.query(
+    "SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_active = 1",
+    [userId]
+  );
+  const totalHabits = habitRows[0].total;
+  if (totalHabits === 0) return;
+
+  // Đếm habits đã check-in hôm nay
+  const [doneRows]: any = await pool.query(
+    `SELECT COUNT(*) as done FROM habit_logs 
+     WHERE user_id = ? AND log_date = ?`,
+    [userId, today]
+  );
+  const doneToday = doneRows[0].done;
+
+  // Tính điểm theo tỉ lệ hoàn thành
+  const ratio = doneToday / totalHabits;
+  let points = 0;
+  if (ratio >= 1.0) points = 3;
+  else if (ratio >= 0.5) points = 2;
+  else if (ratio > 0) points = 1;
+
+  if (points === 0) return;
+
+  // Lấy hoặc tạo plant
+  const [plantRows]: any = await pool.query(
+    "SELECT * FROM plants WHERE user_id = ?",
+    [userId]
+  );
+
+  if (plantRows.length === 0) {
+    await pool.query(
+      `INSERT INTO plants (user_id, plant_type, level, experience, last_watered)
+       VALUES (?, 'sprout', 1, ?, ?)`,
+      [userId, points, today]
+    );
+    return;
+  }
+
+  const plant = plantRows[0];
+
+  // Chỉ cộng điểm 1 lần/ngày
+  if (plant.last_watered === today) return;
+
+  const newExp = plant.experience + points;
+
+  // Ngưỡng level: 1→2: 10, 2→3: 30, 3→4: 100, 4→5: 300
+  const thresholds = [0, 10, 30, 100, 300];
+  let newLevel = plant.level;
+  for (let i = thresholds.length - 1; i >= 0; i--) {
+    if (newExp >= thresholds[i]) {
+      newLevel = Math.min(i + 1, 5);
+      break;
+    }
+  }
+
+  await pool.query(
+    `UPDATE plants SET experience = ?, level = ?, last_watered = ? WHERE user_id = ?`,
+    [newExp, newLevel, today, userId]
+  );
+}
