@@ -36,6 +36,21 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Helper: check onboarding từ server thay vì chỉ dựa vào local prefs
+  Future<bool> _checkOnboardingDone(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Nếu local đã đánh dấu done thì tin luôn
+    if (prefs.getBool("onboarding_done") == true) return true;
+    // Không thì hỏi server — nếu user đã có gender hoặc goals thì coi như done
+    final profile = await ApiService.getProfile(token);
+    final user = profile["user"];
+    if (user != null && (user["gender"] != null || user["goals"] != null)) {
+      await prefs.setBool("onboarding_done", true);
+      return true;
+    }
+    return false;
+  }
+
   void handleLogin() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       AppSnackbar.showError(context, "Vui lòng nhập đầy đủ thông tin");
@@ -50,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (res["message"] == "Login success") {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", res["token"]);
-      final onboardingDone = prefs.getBool("onboarding_done") ?? false;
+      final onboardingDone = await _checkOnboardingDone(res["token"]);
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -82,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (res["message"] == "Login success") {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("token", res["token"]);
-        final onboardingDone = prefs.getBool("onboarding_done") ?? false;
+        final onboardingDone = await _checkOnboardingDone(res["token"]);
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
