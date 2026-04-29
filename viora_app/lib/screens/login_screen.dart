@@ -7,6 +7,7 @@ import 'onboarding_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
+import '../services/notification_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,13 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
   // Helper: check onboarding từ server thay vì chỉ dựa vào local prefs
   Future<bool> _checkOnboardingDone(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    // Nếu local đã đánh dấu done thì tin luôn
-    if (prefs.getBool("onboarding_done") == true) return true;
-    // Không thì hỏi server — nếu user đã có gender hoặc goals thì coi như done
+    if (prefs.getBool("onboarding_done") == true) {
+      // Schedule notifications mỗi lần login
+      await NotificationService.scheduleAll();
+      return true;
+    }
     final profile = await ApiService.getProfile(token);
     final user = profile["user"];
     if (user != null && (user["gender"] != null || user["goals"] != null)) {
       await prefs.setBool("onboarding_done", true);
+      await NotificationService.scheduleAll();
       return true;
     }
     return false;

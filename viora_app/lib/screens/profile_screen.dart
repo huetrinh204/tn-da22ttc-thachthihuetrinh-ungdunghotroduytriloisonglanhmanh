@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
+import 'notification_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -482,6 +483,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             context,
                             MaterialPageRoute(
                                 builder: (_) => const AchievementsScreen()),
+                          )),
+                ]),
+                const SizedBox(height: 16),
+
+                // Notifications
+                _buildSection("Thông báo", [
+                  _buildTile("Nhắc nhở thói quen", "Cài đặt giờ nhắc hàng ngày",
+                      Icons.notifications_outlined,
+                      onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    const NotificationSettingsScreen()),
                           )),
                 ]),
                 const SizedBox(height: 16),
