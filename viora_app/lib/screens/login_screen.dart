@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
 import '../services/notification_service.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -37,22 +38,25 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Helper: check onboarding từ server thay vì chỉ dựa vào local prefs
   Future<bool> _checkOnboardingDone(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool("onboarding_done") == true) {
-      // Schedule notifications mỗi lần login
-      await NotificationService.scheduleAll();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool("onboarding_done") == true) {
+        try { await NotificationService.scheduleAll(); } catch (_) {}
+        return true;
+      }
+      final profile = await ApiService.getProfile(token);
+      final user = profile["user"];
+      if (user != null && (user["gender"] != null || user["goals"] != null)) {
+        await prefs.setBool("onboarding_done", true);
+        try { await NotificationService.scheduleAll(); } catch (_) {}
+        return true;
+      }
+      return false;
+    } catch (e) {
+      // Nếu có lỗi bất kỳ, vẫn cho vào app
       return true;
     }
-    final profile = await ApiService.getProfile(token);
-    final user = profile["user"];
-    if (user != null && (user["gender"] != null || user["goals"] != null)) {
-      await prefs.setBool("onboarding_done", true);
-      await NotificationService.scheduleAll();
-      return true;
-    }
-    return false;
   }
 
   void handleLogin() async {
@@ -67,9 +71,15 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     setState(() => isLoading = false);
     if (res["message"] == "Login success") {
+      final token = res["token"];
+      if (token == null) {
+        if (!mounted) return;
+        AppSnackbar.showError(context, "Đăng nhập thất bại, thử lại");
+        return;
+      }
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("token", res["token"]);
-      final onboardingDone = await _checkOnboardingDone(res["token"]);
+      await prefs.setString("token", token);
+      final onboardingDone = await _checkOnboardingDone(token);
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
@@ -243,7 +253,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) =>
+                                      const ForgotPasswordScreen()),
+                            ),
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
                               minimumSize: Size.zero,

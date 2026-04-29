@@ -3,13 +3,12 @@ import pool from "../config/db";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import { sendOtpEmail } from "../services/email_service";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const router = Router();
-
-// 👉 dùng env cho bảo mật
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 
 // 👉 Google client
@@ -270,6 +269,72 @@ router.put("/password", async (req, res) => {
     await pool.query("UPDATE users SET password = ? WHERE id = ?", [hashed, decoded.id]);
 
     res.json({ message: "Password updated" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= SEND OTP (quên mật khẩu) =================
+router.post("/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: "Vui lòng nhập email" });
+
+  try {
+    const [rows]: any = await pool.query(
+      "SELECT id, name FROM users WHERE email = ?", [email]);
+    if (rows.length === 0) {
+      return res.json({ message: "Nếu email tồn tại, mã OTP đã được gửi" });
+    }
+
+    const user = rows[0];
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
+    // Lưu OTP thẳng vào bảng users — tự ghi đè OTP cũ
+    await pool.query(
+      "UPDATE users SET otp_code = ?, otp_expires_at = ? WHERE email = ?",
+      [code, expiresAt, email]);
+
+    // Gửi email qua Gmail
+    await sendOtpEmail(email, user.name, code);
+
+    res.json({ message: "Nếu email tồn tại, mã OTP đã được gửi" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= VERIFY OTP & RESET PASSWORD =================
+router.post("/reset-password", async (req, res) => {
+  const { email, code, new_password } = req.body;
+  if (!email || !code || !new_password) {
+    return res.status(400).json({ message: "Thiếu thông tin" });
+  }
+
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT id FROM users 
+       WHERE email = ? AND otp_code = ? AND otp_expires_at > NOW()`,
+      [email, code]);
+
+    if (rows.length === 0) {
+      return res.status(400).json({ message: "Mã OTP không hợp lệ hoặc đã hết hạn" });
+    }
+
+    if (new_password.length < 8) {
+      return res.status(400).json({ message: "Mật khẩu tối thiểu 8 ký tự" });
+    }
+
+    const hashed = await bcrypt.hash(new_password, 10);
+
+    // Đổi mật khẩu và xóa OTP luôn
+    await pool.query(
+      "UPDATE users SET password = ?, otp_code = NULL, otp_expires_at = NULL WHERE email = ?",
+      [hashed, email]);
+
+    res.json({ message: "Đặt lại mật khẩu thành công" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });

@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
   height DECIMAL(5,2),
   weight DECIMAL(5,2),
   goals JSON,
+  otp_code VARCHAR(6) NULL,
+  otp_expires_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -90,6 +90,41 @@ class ApiService {
     }
   }
 
+  // ================= FORGOT PASSWORD =================
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/forgot-password"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  static Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/auth/reset-password"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+          "code": code,
+          "new_password": newPassword,
+        }),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
   // ================= UPDATE PROFILE =================
   static Future<Map<String, dynamic>> updateProfile({
     required String token,

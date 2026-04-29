@@ -5,6 +5,7 @@ import '../widgets/app_snackbar.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'notification_settings_screen.dart';
+import 'forgot_password_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -320,6 +321,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const Text("Đổi mật khẩu",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              // Link quên mật khẩu
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordScreen()),
+                  );
+                },
+                child: const Text(
+                  "Quên mật khẩu hiện tại? Đặt lại qua email →",
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF4CAF50),
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: curCtrl,

@@ -11,13 +11,17 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@types/nodemailer": "^8.0.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "google-auth-library": "^10.6.2",
     "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.22.1"
+    "mysql2": "^3.22.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.7",
+    "resend": "^6.12.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -25,6 +29,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.6.0",
+    "@types/node-cron": "^3.0.11",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
