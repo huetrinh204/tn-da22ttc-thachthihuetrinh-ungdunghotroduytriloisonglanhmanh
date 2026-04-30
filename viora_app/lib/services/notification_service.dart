@@ -29,6 +29,38 @@ class NotificationService {
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
     );
+
+    // Tạo notification channels cho Android
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'viora_daily_1',
+          'Nhắc sáng',
+          description: 'Nhắc nhở thói quen buổi sáng',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'viora_daily_2',
+          'Nhắc tối',
+          description: 'Nhắc nhở thói quen buổi tối',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
+          'viora_test',
+          'Test',
+          description: 'Test notification',
+          importance: Importance.max,
+        ),
+      );
+    }
+
     _initialized = true;
   }
 
@@ -84,50 +116,107 @@ class NotificationService {
     required int hour,
     required int minute,
   }) async {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      hour,
-      minute,
-    );
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduled = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      );
 
-    // Nếu giờ đã qua hôm nay thì lên lịch cho ngày mai
-    if (scheduled.isBefore(now)) {
-      scheduled = scheduled.add(const Duration(days: 1));
+      if (scheduled.isBefore(now)) {
+        scheduled = scheduled.add(const Duration(days: 1));
+      }
+
+      await _plugin.zonedSchedule(
+        id,
+        title,
+        body,
+        scheduled,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            'viora_daily_$id',
+            id == 1 ? 'Nhắc sáng' : 'Nhắc tối',
+            channelDescription: 'Nhắc nhở thói quen hàng ngày',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexact,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+      print('[Notification] Scheduled id=$id at $hour:$minute');
+    } catch (e) {
+      print('[Notification] Schedule error id=$id: $e');
     }
-
-    await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduled,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'viora_daily_$id',
-          id == 1 ? 'Nhắc sáng' : 'Nhắc tối',
-          channelDescription: 'Nhắc nhở thói quen hàng ngày',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        ),
-        iOS: const DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
   }
 
   static Future<void> cancelAll() async {
     await _plugin.cancelAll();
+  }
+
+  // Gửi thông báo test ngay lập tức (không schedule)
+  static Future<void> sendTestNotification() async {
+    try {
+      await init();
+      await requestPermission();
+
+      // Test zonedSchedule sau 10 giây
+      final now = tz.TZDateTime.now(tz.local);
+      final scheduled = now.add(const Duration(seconds: 10));
+
+      await _plugin.zonedSchedule(
+        99,
+        "🌱 Thông báo test (10s)",
+        "zonedSchedule hoạt động! Notification theo giờ sẽ hoạt động.",
+        scheduled,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'viora_test',
+            'Test',
+            channelDescription: 'Test notification',
+            importance: Importance.max,
+            priority: Priority.max,
+            playSound: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentSound: true,
+            presentBadge: true,
+          ),
+        ),
+        androidScheduleMode: AndroidScheduleMode.inexact,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+      );
+      print('[Notification] Test scheduled for 10 seconds from now');
+    } catch (e) {
+      print('[Notification] Test error: $e');
+      // Fallback: show ngay
+      await _plugin.show(
+        99,
+        "🌱 Thông báo test",
+        "Local notification hoạt động!",
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'viora_test', 'Test',
+            importance: Importance.max,
+            priority: Priority.max,
+          ),
+        ),
+      );
+    }
   }
 
   // ===== SETTINGS =====

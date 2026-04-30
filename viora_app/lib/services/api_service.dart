@@ -3,10 +3,10 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // true = điện thoại thật, false = máy ảo (emulator)
-  static const bool _isPhysicalDevice = false;
+  static const bool _isPhysicalDevice = true;
 
   static const String baseUrl = _isPhysicalDevice
-      ? "http://192.168.1.6:3000"
+      ? "http://192.168.1.7:3000"
       : "http://10.0.2.2:3000";
 
   // ================= GET PROFILE =================

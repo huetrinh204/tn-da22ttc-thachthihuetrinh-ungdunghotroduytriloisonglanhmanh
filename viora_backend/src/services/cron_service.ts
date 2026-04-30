@@ -3,13 +3,11 @@ import pool from "../config/db";
 import { sendMorningReminder, sendEveningReminder } from "./email_service";
 
 export function startCronJobs() {
-  // Sáng 8:00 — nhắc bắt đầu ngày
   cron.schedule("0 8 * * *", async () => {
     console.log("[Cron] Running morning reminder...");
     await sendMorningEmails();
   }, { timezone: "Asia/Ho_Chi_Minh" });
 
-  // Tối 21:00 — nhắc hoàn thành + tổng kết
   cron.schedule("0 21 * * *", async () => {
     console.log("[Cron] Running evening reminder...");
     await sendEveningEmails();
@@ -17,6 +15,9 @@ export function startCronJobs() {
 
   console.log("[Cron] Jobs scheduled: 8:00 AM & 9:00 PM (Asia/Ho_Chi_Minh)");
 }
+
+// Export để test thủ công
+export { sendMorningEmails, sendEveningEmails };
 
 async function sendMorningEmails() {
   try {
@@ -41,8 +42,8 @@ async function sendEveningEmails() {
       "SELECT id, name, email FROM users WHERE email IS NOT NULL AND email != ''"
     );
 
+    let sentCount = 0;
     for (const user of users) {
-      // Đếm tổng habits active
       const [habitRows]: any = await pool.query(
         "SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_active = 1",
         [user.id]
@@ -50,16 +51,19 @@ async function sendEveningEmails() {
       const total = habitRows[0].total;
       if (total === 0) continue;
 
-      // Đếm habits đã check-in hôm nay
       const [doneRows]: any = await pool.query(
         "SELECT COUNT(*) as done FROM habit_logs WHERE user_id = ? AND log_date = ?",
         [user.id, today]
       );
       const done = doneRows[0].done;
 
-      await sendEveningReminder(user.email, user.name, done, total);
+      // Chỉ gửi nếu chưa hoàn thành hết
+      if (done < total) {
+        await sendEveningReminder(user.email, user.name, done, total);
+        sentCount++;
+      }
     }
-    console.log(`[Cron] Evening emails sent to ${users.length} users`);
+    console.log(`[Cron] Evening emails sent to ${sentCount}/${users.length} users (incomplete habits only)`);
   } catch (error) {
     console.error("[Cron] Evening email error:", error);
   }

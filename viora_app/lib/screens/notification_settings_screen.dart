@@ -167,7 +167,32 @@ class _NotificationSettingsScreenState
 
                 const SizedBox(height: 24),
 
-                // Test button
+                // Test ngay
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await NotificationService.sendTestNotification();
+                      if (!mounted) return;
+                      AppSnackbar.showSuccess(
+                          context, "Thông báo test sẽ hiện sau 10 giây!");
+                    },
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    label: const Text("Gửi thông báo test ngay",
+                        style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Áp dụng cài đặt
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
