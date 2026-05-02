@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/achievement_popup.dart';
+import '../widgets/viora_app_bar.dart';
+import '../theme/app_theme.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -289,23 +291,16 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final progress = total > 0 ? completed / total : 0.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Thói quen hôm nay",
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      backgroundColor: const Color(0xFFF1F8E9),
+      appBar: VioraAppBar(
+        title: "Thói quen hôm nay",
         actions: [
           IconButton(
-            icon: const Icon(Icons.add, color: Color(0xFF4CAF50), size: 28),
+            icon: const Icon(Icons.add_circle_outline_rounded,
+                color: AppColors.primary, size: 26),
             onPressed: showAddHabitSheet,
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: isLoading

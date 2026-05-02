@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
+import '../widgets/viora_app_bar.dart';
+import '../theme/app_theme.dart';
 import 'habits_screen.dart';
 import 'plant_screen.dart';
 import 'stats_screen.dart';
@@ -32,43 +34,57 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _buildScreen(_currentIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        selectedItemColor: const Color(0xFF4CAF50),
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        elevation: 8,
-        type: BottomNavigationBarType.fixed,
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: "Trang chủ",
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (i) => setState(() => _currentIndex = i),
+            selectedItemColor: AppColors.primary,
+            unselectedItemColor: const Color(0xFFBDBDBD),
+            backgroundColor: Colors.white,
+            elevation: 0,
+            type: BottomNavigationBarType.fixed,
+            selectedFontSize: 11,
+            unselectedFontSize: 11,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined, size: 24),
+                activeIcon: Icon(Icons.home_rounded, size: 24),
+                label: "Trang chủ",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.check_circle_outline_rounded, size: 24),
+                activeIcon: Icon(Icons.check_circle_rounded, size: 24),
+                label: "Thói quen",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.eco_outlined, size: 24),
+                activeIcon: Icon(Icons.eco_rounded, size: 24),
+                label: "Cây",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.bar_chart_outlined, size: 24),
+                activeIcon: Icon(Icons.bar_chart_rounded, size: 24),
+                label: "Thống kê",
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline_rounded, size: 24),
+                activeIcon: Icon(Icons.person_rounded, size: 24),
+                label: "Hồ sơ",
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.check_circle_outline),
-            activeIcon: Icon(Icons.check_circle),
-            label: "Thói quen",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.eco_outlined),
-            activeIcon: Icon(Icons.eco),
-            label: "Cây",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            activeIcon: Icon(Icons.bar_chart),
-            label: "Thống kê",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: "Hồ sơ",
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -143,20 +159,18 @@ class _DashboardTabState extends State<_DashboardTab> {
     final progress = totalToday == 0 ? 0.0 : completedToday / totalToday;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Viora 🌱",
-          style: TextStyle(
-            color: Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+      backgroundColor: const Color(0xFFF1F8E9),
+      appBar: const VioraAppBar(showLogo: true),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFE8F5E9), Color(0xFFF1F8E9), Color(0xFFFAFDFA)],
+            stops: [0.0, 0.4, 1.0],
           ),
         ),
-      ),
-      body: isLoading
+        child: isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
           : RefreshIndicator(
               onRefresh: _loadData,
@@ -197,6 +211,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                 ],
               ),
             ),
+        ),
     );
   }
 
@@ -294,37 +309,62 @@ class _DashboardTabState extends State<_DashboardTab> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF66BB6A)],
+          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF43A047)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4CAF50).withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: const Color(0xFF2E7D32).withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Row(
         children: [
-          const Text("🔥", style: TextStyle(fontSize: 40)),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: Text("🔥", style: TextStyle(fontSize: 28)),
+            ),
+          ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "$currentStreak ngày liên tiếp",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "$currentStreak ngày liên tiếp",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const Text(
-                "Giữ vững phong độ nhé!",
-                style: TextStyle(fontSize: 13, color: Colors.white70),
+                const SizedBox(height: 2),
+                const Text(
+                  "Giữ vững phong độ nhé! 💪",
+                  style: TextStyle(fontSize: 13, color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            children: [
+              const Text("🏆", style: TextStyle(fontSize: 20)),
+              const SizedBox(height: 2),
+              Text(
+                "Best",
+                style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.white.withValues(alpha: 0.7)),
               ),
             ],
           ),
@@ -334,16 +374,17 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 
   Widget _buildTodayCard(double progress) {
+    final allDone = completedToday == totalToday && totalToday > 0;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -353,42 +394,73 @@ class _DashboardTabState extends State<_DashboardTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Hôm nay",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.today_rounded,
+                        color: Color(0xFF2E7D32), size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Hôm nay",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                "$completedToday/$totalToday",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF4CAF50),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: allDone
+                      ? const Color(0xFFE8F5E9)
+                      : const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "$completedToday/$totalToday",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: allDone
+                        ? const Color(0xFF2E7D32)
+                        : const Color(0xFF666666),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
               backgroundColor: const Color(0xFFE8F5E9),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                allDone ? const Color(0xFF2E7D32) : const Color(0xFF4CAF50),
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             totalToday == 0
-                ? "Chưa có thói quen nào. Thêm ngay nhé!"
-                : completedToday == totalToday
+                ? "Chưa có thói quen nào. Thêm ngay nhé! ✨"
+                : allDone
                     ? "Tuyệt vời! Bạn đã hoàn thành tất cả hôm nay 🎉"
                     : "Còn ${totalToday - completedToday} thói quen chưa hoàn thành",
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 13,
+              color: allDone ? const Color(0xFF2E7D32) : Colors.grey,
+              fontWeight: allDone ? FontWeight.w500 : FontWeight.normal,
+            ),
           ),
         ],
       ),

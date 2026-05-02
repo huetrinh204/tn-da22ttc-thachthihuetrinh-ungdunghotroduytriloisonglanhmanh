@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/notification_service.dart';
 import 'services/fcm_service.dart';
+import 'theme/app_theme.dart';
 
 // Handler cho background messages
 @pragma('vm:entry-point')
@@ -58,10 +59,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'Roboto',
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4CAF50)),
-      ),
+      theme: AppTheme.light,
       home: startScreen ??
           const Scaffold(
             body: Center(child: CircularProgressIndicator()),

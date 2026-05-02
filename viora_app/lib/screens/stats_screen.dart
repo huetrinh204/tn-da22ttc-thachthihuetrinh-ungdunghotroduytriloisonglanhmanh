@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../widgets/viora_app_bar.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -83,20 +84,15 @@ class _StatsScreenState extends State<StatsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text("Thống kê",
-            style: TextStyle(
-                color: Color(0xFF1B5E20),
-                fontWeight: FontWeight.bold,
-                fontSize: 18)),
+      backgroundColor: const Color(0xFFF1F8E9),
+      appBar: VioraAppBar(
+        title: "Thống kê",
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF4CAF50),
           unselectedLabelColor: Colors.grey,
           indicatorColor: const Color(0xFF4CAF50),
+          indicatorWeight: 3,
           tabs: const [
             Tab(text: "Tuần này"),
             Tab(text: "Tháng này"),

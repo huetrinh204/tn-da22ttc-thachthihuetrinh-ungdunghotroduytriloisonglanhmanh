@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
+import '../widgets/viora_app_bar.dart';
 
 class PlantScreen extends StatefulWidget {
   const PlantScreen({super.key});
@@ -72,15 +73,7 @@ class _PlantScreenState extends State<PlantScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F8E9),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text("Cây của tôi",
-            style: TextStyle(
-                color: Color(0xFF1B5E20),
-                fontWeight: FontWeight.bold,
-                fontSize: 18)),
-      ),
+      appBar: const VioraAppBar(title: "Cây của tôi"),
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
           : RefreshIndicator(

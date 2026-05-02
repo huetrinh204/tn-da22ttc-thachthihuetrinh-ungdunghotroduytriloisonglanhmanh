@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../widgets/viora_app_bar.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -65,17 +66,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Thành tích",
-          style: TextStyle(
-              color: Color(0xFF1B5E20),
-              fontWeight: FontWeight.bold,
-              fontSize: 18),
-        ),
-      ),
+      appBar: const VioraAppBar(title: "Thành tích"),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF4CAF50)))

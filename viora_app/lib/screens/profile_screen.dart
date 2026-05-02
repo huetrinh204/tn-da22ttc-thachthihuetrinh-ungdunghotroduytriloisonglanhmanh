@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/viora_app_bar.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'notification_settings_screen.dart';
@@ -420,16 +421,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text("Hồ sơ",
-            style: TextStyle(
-                color: Color(0xFF1B5E20),
-                fontWeight: FontWeight.bold,
-                fontSize: 18)),
-      ),
+      backgroundColor: const Color(0xFFF1F8E9),
+      appBar: const VioraAppBar(title: "Hồ sơ"),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
