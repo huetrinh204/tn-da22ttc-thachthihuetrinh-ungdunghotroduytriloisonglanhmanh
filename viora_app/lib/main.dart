@@ -57,13 +57,18 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: startScreen ??
-          const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, _) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: mode,
+        home: startScreen ??
+            const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
+      ),
     );
   }
 }

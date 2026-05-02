@@ -291,7 +291,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final progress = total > 0 ? completed / total : 0.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8E9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
         title: "Thói quen hôm nay",
         actions: [

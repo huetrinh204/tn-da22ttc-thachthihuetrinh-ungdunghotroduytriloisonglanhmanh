@@ -72,7 +72,7 @@ class _PlantScreenState extends State<PlantScreen>
     final info = _levelInfo[level - 1];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8E9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const VioraAppBar(title: "Cây của tôi"),
       body: isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))

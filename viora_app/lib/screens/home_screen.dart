@@ -158,16 +158,23 @@ class _DashboardTabState extends State<_DashboardTab> {
   Widget build(BuildContext context) {
     final progress = totalToday == 0 ? 0.0 : completedToday / totalToday;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0F1A0F) : const Color(0xFFF1F8E9);
+    final gradColors = isDark
+        ? [const Color(0xFF0F1A0F), const Color(0xFF1A2E1A), const Color(0xFF1E2E1E)]
+        : [const Color(0xFFE8F5E9), const Color(0xFFF1F8E9), const Color(0xFFFAFDFA)];
+    final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8E9),
+      backgroundColor: bgColor,
       appBar: const VioraAppBar(showLogo: true),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFE8F5E9), Color(0xFFF1F8E9), Color(0xFFFAFDFA)],
-            stops: [0.0, 0.4, 1.0],
+            colors: gradColors,
+            stops: const [0.0, 0.4, 1.0],
           ),
         ),
         child: isLoading
@@ -223,16 +230,18 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 
   Widget _buildPlantCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -374,15 +383,17 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 
   Widget _buildTodayCard(double progress) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
     final allDone = completedToday == totalToday && totalToday > 0;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

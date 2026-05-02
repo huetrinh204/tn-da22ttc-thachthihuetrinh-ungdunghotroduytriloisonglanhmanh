@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/viora_app_bar.dart';
+import '../theme/app_theme.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'notification_settings_screen.dart';
@@ -421,7 +422,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8E9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const VioraAppBar(title: "Hồ sơ"),
       body: isLoading
           ? const Center(
@@ -513,6 +514,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ]),
                 const SizedBox(height: 16),
 
+                // Giao diện
+                _buildSection("Giao diện", [
+                  _buildThemeToggleTile(),
+                ]),
+                const SizedBox(height: 16),
+
                 // Logout
                 SizedBox(
                   width: double.infinity,
@@ -532,6 +539,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 32),
               ],
             ),
+    );
+  }
+
+  Widget _buildThemeToggleTile() {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, _) {
+        final isDark = mode == ThemeMode.dark;
+        return ListTile(
+          leading: Icon(
+            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+            color: AppColors.primary,
+            size: 22,
+          ),
+          title: Text(
+            isDark ? "Giao diện tối" : "Giao diện sáng",
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          ),
+          subtitle: Text(
+            isDark ? "Đang dùng chế độ tối" : "Đang dùng chế độ sáng",
+            style: const TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          trailing: Switch(
+            value: isDark,
+            onChanged: (val) {
+              themeNotifier.value =
+                  val ? ThemeMode.dark : ThemeMode.light;
+            },
+            activeColor: AppColors.primary,
+          ),
+        );
+      },
     );
   }
 
