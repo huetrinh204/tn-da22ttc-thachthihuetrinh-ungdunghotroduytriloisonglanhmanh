@@ -275,6 +275,47 @@ router.put("/password", async (req, res) => {
   }
 });
 
+// ================= SAVE NOTIFICATION SETTINGS =================
+router.put("/notification-settings", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const {
+      morning_enabled, morning_hour, morning_minute,
+      evening_enabled, evening_hour, evening_minute
+    } = req.body;
+    await pool.query(
+      `UPDATE users SET 
+        notif_morning_enabled = ?, notif_morning_hour = ?, notif_morning_minute = ?,
+        notif_evening_enabled = ?, notif_evening_hour = ?, notif_evening_minute = ?
+       WHERE id = ?`,
+      [morning_enabled, morning_hour, morning_minute,
+       evening_enabled, evening_hour, evening_minute, decoded.id]
+    );
+    res.json({ message: "Settings saved" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= SAVE FCM TOKEN =================
+router.post("/fcm-token", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const { fcm_token } = req.body;
+    await pool.query("UPDATE users SET fcm_token = ? WHERE id = ?",
+      [fcm_token, decoded.id]);
+    res.json({ message: "FCM token saved" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // ================= SEND OTP (quên mật khẩu) =================
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;

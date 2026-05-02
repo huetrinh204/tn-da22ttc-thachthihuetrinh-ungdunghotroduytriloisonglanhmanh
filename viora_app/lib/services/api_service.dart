@@ -6,7 +6,7 @@ class ApiService {
   static const bool _isPhysicalDevice = true;
 
   static const String baseUrl = _isPhysicalDevice
-      ? "http://192.168.1.7:3000"
+      ? "http://192.168.1.3:3000"
       : "http://10.0.2.2:3000";
 
   // ================= GET PROFILE =================
@@ -88,6 +88,49 @@ class ApiService {
     } catch (e) {
       return {"message": "Network error"};
     }
+  }
+
+  // ================= SAVE NOTIFICATION SETTINGS =================
+  static Future<void> saveNotificationSettings({
+    required String token,
+    required bool morningEnabled,
+    required int morningHour,
+    required int morningMinute,
+    required bool eveningEnabled,
+    required int eveningHour,
+    required int eveningMinute,
+  }) async {
+    try {
+      await http.put(
+        Uri.parse("$baseUrl/auth/notification-settings"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "morning_enabled": morningEnabled ? 1 : 0,
+          "morning_hour": morningHour,
+          "morning_minute": morningMinute,
+          "evening_enabled": eveningEnabled ? 1 : 0,
+          "evening_hour": eveningHour,
+          "evening_minute": eveningMinute,
+        }),
+      );
+    } catch (_) {}
+  }
+
+  // ================= SAVE FCM TOKEN =================
+  static Future<void> saveFcmToken(String token, String fcmToken) async {
+    try {
+      await http.post(
+        Uri.parse("$baseUrl/auth/fcm-token"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"fcm_token": fcmToken}),
+      );
+    } catch (_) {}
   }
 
   // ================= FORGOT PASSWORD =================

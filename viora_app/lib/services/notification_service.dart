@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_service.dart';
 
 class NotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
@@ -248,6 +249,22 @@ class NotificationService {
     if (morningMinute != null) await prefs.setInt(_morningMinuteKey, morningMinute);
     if (eveningHour != null) await prefs.setInt(_eveningHourKey, eveningHour);
     if (eveningMinute != null) await prefs.setInt(_eveningMinuteKey, eveningMinute);
+
+    // Sync lên server để backend gửi FCM đúng giờ
+    final token = prefs.getString("token") ?? "";
+    if (token.isNotEmpty) {
+      final settings = await getSettings();
+      await ApiService.saveNotificationSettings(
+        token: token,
+        morningEnabled: settings['morning_enabled'],
+        morningHour: settings['morning_hour'],
+        morningMinute: settings['morning_minute'],
+        eveningEnabled: settings['evening_enabled'],
+        eveningHour: settings['evening_hour'],
+        eveningMinute: settings['evening_minute'],
+      );
+    }
+
     await scheduleAll();
   }
 }
