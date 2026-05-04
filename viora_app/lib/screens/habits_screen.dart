@@ -54,34 +54,64 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: ctx.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Text("✅ ", style: TextStyle(fontSize: 22)),
-            Text("Xác nhận hoàn thành",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text("✅ ", style: TextStyle(fontSize: 22)),
+            Text(
+              "Xác nhận hoàn thành",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: ctx.textPrimary,
+              ),
+            ),
           ],
         ),
-        content: const Text(
+        content: Text(
           "Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.",
-          style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Chưa chắc",
-                style: TextStyle(color: Colors.grey)),
+          style: TextStyle(
+            fontSize: 14,
+            color: ctx.textPrimary,
+            height: 1.5,
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text("Đã hoàn thành!"),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ctx.textSecondary,
+                    side: BorderSide(color: ctx.textSecondary.withValues(alpha: 0.3)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text("Chưa chắc"),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text("Đã hoàn thành!"),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -464,7 +494,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? const Color(0xFF4CAF50).withOpacity(0.15)
+                      ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
                       : const Color(0xFFF7F7F7),
                   borderRadius: BorderRadius.circular(12),
                 ),
