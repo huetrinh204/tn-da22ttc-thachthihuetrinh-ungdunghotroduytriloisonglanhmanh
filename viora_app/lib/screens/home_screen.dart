@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_extensions.dart';
 import 'habits_screen.dart';
 import 'plant_screen.dart';
 import 'stats_screen.dart';
@@ -36,7 +37,9 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _buildScreen(_currentIndex),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.darkSurface
+              : Colors.white,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -51,7 +54,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: (i) => setState(() => _currentIndex = i),
             selectedItemColor: AppColors.primary,
             unselectedItemColor: const Color(0xFFBDBDBD),
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.darkSurface
+                : Colors.white,
             elevation: 0,
             type: BottomNavigationBarType.fixed,
             selectedFontSize: 11,
@@ -163,7 +168,6 @@ class _DashboardTabState extends State<_DashboardTab> {
     final gradColors = isDark
         ? [const Color(0xFF0F1A0F), const Color(0xFF1A2E1A), const Color(0xFF1E2E1E)]
         : [const Color(0xFFE8F5E9), const Color(0xFFF1F8E9), const Color(0xFFFAFDFA)];
-    final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -188,16 +192,16 @@ class _DashboardTabState extends State<_DashboardTab> {
                   // Greeting
                   Text(
                     "${_getGreeting()}${userName.isNotEmpty ? ', $userName' : ''} 👋",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: context.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _getTodayLabel(),
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
+                    style: TextStyle(fontSize: 14, color: context.textSecondary),
                   ),
                   const SizedBox(height: 24),
 
@@ -248,16 +252,16 @@ class _DashboardTabState extends State<_DashboardTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Text("🌿", style: TextStyle(fontSize: 18)),
-              SizedBox(width: 8),
+              const Text("🌿", style: TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
               Text(
                 "Cây của bạn",
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: context.textPrimary,
                 ),
               ),
             ],
@@ -417,12 +421,12 @@ class _DashboardTabState extends State<_DashboardTab> {
                         color: Color(0xFF2E7D32), size: 18),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
+                  Text(
                     "Hôm nay",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1A1A1A),
+                      color: context.textPrimary,
                     ),
                   ),
                 ],
@@ -491,9 +495,9 @@ class _DashboardTabState extends State<_DashboardTab> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F8E9),
+        color: context.infoBoxColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFC8E6C9)),
+        border: Border.all(color: context.infoBoxBorder),
       ),
       child: Row(
         children: [
@@ -502,9 +506,9 @@ class _DashboardTabState extends State<_DashboardTab> {
           Expanded(
             child: Text(
               quote,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF388E3C),
+                color: context.textGreenLight,
                 fontStyle: FontStyle.italic,
               ),
             ),

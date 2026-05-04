@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../widgets/achievement_popup.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_extensions.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -339,7 +340,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF43A047)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -439,7 +440,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: isCompleted ? const Color(0xFFE8F5E9) : Colors.white,
+            color: isCompleted
+                ? const Color(0xFFE8F5E9)
+                : Theme.of(context).cardTheme.color ?? Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isCompleted ? const Color(0xFF4CAF50) : Colors.transparent,
@@ -447,7 +450,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -486,7 +489,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                         fontWeight: FontWeight.w600,
                         color: isCompleted
                             ? const Color(0xFF2E7D32)
-                            : Colors.black87,
+                            : context.textPrimary,
                         decoration: isCompleted
                             ? TextDecoration.lineThrough
                             : TextDecoration.none,
@@ -536,19 +539,19 @@ class _HabitsScreenState extends State<HabitsScreen> {
         children: [
           const Text("🌱", style: TextStyle(fontSize: 64)),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "Chưa có thói quen nào",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             "Thêm thói quen đầu tiên để bắt đầu\nhành trình sống lành mạnh",
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey, fontSize: 14),
+            style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
           const SizedBox(height: 28),
           ElevatedButton.icon(

@@ -6,7 +6,7 @@ class ApiService {
   static const bool _isPhysicalDevice = true;
 
   static const String baseUrl = _isPhysicalDevice
-      ? "http://192.168.1.3:3000"
+      ? "http://192.168.1.5:3000"
       : "http://10.0.2.2:3000";
 
   // ================= GET PROFILE =================

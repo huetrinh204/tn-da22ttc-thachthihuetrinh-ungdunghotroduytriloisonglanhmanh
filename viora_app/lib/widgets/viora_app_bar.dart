@@ -28,14 +28,19 @@ class VioraAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final appBarBg = isDark ? AppColors.darkSurface : Colors.white;
+    final titleColor = isDark ? const Color(0xFF81C784) : AppColors.primaryDarker;
+    final iconColor = isDark ? const Color(0xFF81C784) : AppColors.primaryDark;
+
     return AppBar(
-      backgroundColor: backgroundColor ?? Colors.white,
+      backgroundColor: appBarBg,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: showBack
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  color: AppColors.primaryDarker, size: 20),
+              icon: Icon(Icons.arrow_back_ios_rounded, color: iconColor, size: 20),
               onPressed: () => Navigator.pop(context),
             )
           : leading,
@@ -45,26 +50,19 @@ class VioraAppBar extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 Image.asset('assets/images/logo.png', height: 32),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Viora',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.primaryDarker,
+                    color: titleColor,
                     letterSpacing: 0.5,
                   ),
                 ),
               ],
             )
           : title != null
-              ? Text(
-                  title!,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryDarker,
-                  ),
-                )
+              ? Text(title!, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: titleColor))
               : null,
       actions: actions,
       bottom: bottom,

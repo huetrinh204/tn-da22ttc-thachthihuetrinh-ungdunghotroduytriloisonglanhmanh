@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_extensions.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'notification_settings_screen.dart';
@@ -622,7 +623,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSection(String title, List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color ?? Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -631,10 +632,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(title,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey)),
+                    color: context.textSecondary)),
           ),
           ...children,
         ],
@@ -647,14 +648,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ListTile(
       leading: Icon(icon, color: const Color(0xFF4CAF50), size: 22),
       title: Text(label,
-          style: const TextStyle(fontSize: 14, color: Colors.grey)),
+          style: TextStyle(fontSize: 14, color: context.textSecondary)),
       subtitle: Text(value,
-          style: const TextStyle(
+          style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Colors.black87)),
+              color: context.textPrimary)),
       trailing: onTap != null
-          ? const Icon(Icons.chevron_right, color: Colors.grey)
+          ? Icon(Icons.chevron_right, color: context.textSecondary)
           : null,
       onTap: onTap,
     );

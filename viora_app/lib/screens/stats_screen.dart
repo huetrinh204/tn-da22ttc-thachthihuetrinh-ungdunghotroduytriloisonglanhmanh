@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
+import '../theme/theme_extensions.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -165,10 +166,11 @@ class _StatsScreenState extends State<StatsScreen>
 
   Widget _buildSummaryCard(
       String label, String value, String emoji, Color color) {
+    final cardColor = Theme.of(context).cardTheme.color ?? Colors.white;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -240,17 +242,14 @@ class _StatsScreenState extends State<StatsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color ?? Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: Color(0xFF1B5E20))),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
           const SizedBox(height: 4),
           const Text("Số habit hoàn thành mỗi ngày",
               style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -339,7 +338,7 @@ class _StatsScreenState extends State<StatsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color ?? Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -410,3 +409,4 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 }
+

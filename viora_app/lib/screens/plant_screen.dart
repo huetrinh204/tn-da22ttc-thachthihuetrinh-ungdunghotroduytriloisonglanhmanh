@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
+import '../theme/theme_extensions.dart';
 
 class PlantScreen extends StatefulWidget {
   const PlantScreen({super.key});
@@ -67,9 +68,10 @@ class _PlantScreenState extends State<PlantScreen>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // required by AutomaticKeepAliveClientMixin
+    super.build(context);
     final level = plantLevel.clamp(1, 5);
     final info = _levelInfo[level - 1];
+    final cardColor = Theme.of(context).cardTheme.color ?? Colors.white;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -89,7 +91,7 @@ class _PlantScreenState extends State<PlantScreen>
                       gradient: LinearGradient(
                         colors: [
                           Color(info["color"] as int).withValues(alpha: 0.15),
-                          Colors.white,
+                          cardColor,
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -163,7 +165,7 @@ class _PlantScreenState extends State<PlantScreen>
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -188,7 +190,7 @@ class _PlantScreenState extends State<PlantScreen>
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -211,22 +213,22 @@ class _PlantScreenState extends State<PlantScreen>
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F8E9),
+                      color: context.infoBoxColor,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFC8E6C9)),
+                      border: Border.all(color: context.infoBoxBorder),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           children: [
-                            Text("💡", style: TextStyle(fontSize: 18)),
-                            SizedBox(width: 8),
+                            const Text("💡", style: TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
                             Text("Cách kiếm điểm",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
-                                    color: Color(0xFF1B5E20))),
+                                    color: context.textGreen)),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -353,12 +355,12 @@ class _PlantScreenState extends State<PlantScreen>
         children: [
           Expanded(
               child: Text(text,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF2E7D32)))),
+                  style: TextStyle(fontSize: 13, color: context.textGreenLight))),
           Text(reward,
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1B5E20))),
+                  color: context.textGreen)),
         ],
       ),
     );
