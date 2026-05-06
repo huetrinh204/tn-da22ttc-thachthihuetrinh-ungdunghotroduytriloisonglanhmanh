@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/theme_extensions.dart';
 
 class PlantWidget extends StatefulWidget {
   final String plantType;
@@ -92,17 +93,17 @@ class _PlantWidgetState extends State<PlantWidget>
         const SizedBox(height: 6),
         Text(
           _plantName,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1B5E20),
+            color: context.textGreen,
           ),
         ),
         Text(
           widget.isWilted ? '😢 Cây đang héo...' : _levelName,
           style: TextStyle(
             fontSize: 12,
-            color: widget.isWilted ? Colors.red : Colors.grey,
+            color: widget.isWilted ? Colors.red : context.textSecondary,
           ),
         ),
       ],
@@ -126,11 +127,11 @@ class PlantProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (level >= 5) {
-      return const Text(
+      return Text(
         '🏆 Cây đã đạt cấp độ tối đa!',
         style: TextStyle(
           fontSize: 13,
-          color: Color(0xFF1B5E20),
+          color: context.textGreen,
           fontWeight: FontWeight.w600,
         ),
       );
@@ -149,13 +150,13 @@ class PlantProgressBar extends StatelessWidget {
           children: [
             Text(
               'Cấp $level → ${level + 1}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: context.textSecondary),
             ),
             Text(
               '$experience / $nextThreshold điểm',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 12,
-                  color: Color(0xFF2E7D32),
+                  color: context.textGreenLight,
                   fontWeight: FontWeight.w600),
             ),
           ],
@@ -166,7 +167,7 @@ class PlantProgressBar extends StatelessWidget {
           child: LinearProgressIndicator(
             value: progress.clamp(0.0, 1.0),
             minHeight: 8,
-            backgroundColor: const Color(0xFFE8F5E9),
+            backgroundColor: context.infoBoxColor,
             valueColor:
                 const AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
           ),

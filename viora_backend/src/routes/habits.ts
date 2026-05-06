@@ -143,7 +143,7 @@ router.delete("/:id", authMiddleware, async (req: any, res) => {
 
 // ================= CHECK-IN HABIT =================
 router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
-  const { note } = req.body;
+  const { note, metric_value, metric_unit } = req.body;
   const today = new Date().toISOString().split("T")[0];
 
   try {
@@ -160,13 +160,16 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
 
     // check-in mới
     await pool.query(
-      `INSERT INTO habit_logs (habit_id, user_id, log_date, note)
-       VALUES (?, ?, ?, ?)`,
-      [req.params.id, req.user.id, today, note || null]
+      `INSERT INTO habit_logs (habit_id, user_id, log_date, note, metric_value, metric_unit)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [req.params.id, req.user.id, today, note || null, metric_value || null, metric_unit || null]
     );
 
-    // cập nhật streak
+    // cập nhật streak tổng
     await updateStreak(req.user.id);
+
+    // cập nhật streak riêng của habit này
+    await updateHabitStreak(req.params.id, today);
 
     // cập nhật plant
     await updatePlant(req.user.id, today);
@@ -180,6 +183,43 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// helper: cập nhật streak riêng của habit
+async function updateHabitStreak(habitId: number, today: string) {
+  const [habitRows]: any = await pool.query(
+    "SELECT current_streak, last_completed_date FROM habits WHERE id = ?",
+    [habitId]
+  );
+
+  if (habitRows.length === 0) return;
+
+  const habit = habitRows[0];
+  const lastDate = habit.last_completed_date
+    ? new Date(habit.last_completed_date)
+    : null;
+  const todayDate = new Date(today);
+
+  let newStreak = habit.current_streak || 0;
+
+  if (lastDate) {
+    const diffDays = Math.floor(
+      (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays === 0) return; // Đã check-in hôm nay rồi
+    if (diffDays === 1) newStreak += 1; // Liên tiếp
+    else newStreak = 1; // Bị gián đoạn, reset về 1
+  } else {
+    newStreak = 1; // Lần đầu tiên
+  }
+
+  const longestStreak = Math.max(newStreak, habit.longest_streak || 0);
+
+  await pool.query(
+    "UPDATE habits SET current_streak = ?, longest_streak = ?, last_completed_date = ? WHERE id = ?",
+    [newStreak, longestStreak, today, habitId]
+  );
+}
 
 // helper: cập nhật streak
 async function updateStreak(userId: number) {

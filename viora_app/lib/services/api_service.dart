@@ -9,7 +9,7 @@ class ApiService {
       ? "http://192.168.1.5:3000"
       : "http://10.0.2.2:3000";
 
-  // ================= GET PROFILE =================
+  // ================= GET PROFILE ====Uu=============
   static Future<Map<String, dynamic>> getProfile(String token) async {
     try {
       final response = await http.get(
@@ -282,14 +282,22 @@ class ApiService {
 
   // ================= CHECK-IN HABIT =================
   static Future<Map<String, dynamic>> checkInHabit(
-      String token, int habitId) async {
+      String token, 
+      int habitId, 
+      {double? metricValue, 
+      String? metricUnit}) async {
     try {
+      final body = <String, dynamic>{};
+      if (metricValue != null) body["metric_value"] = metricValue;
+      if (metricUnit != null) body["metric_unit"] = metricUnit;
+
       final response = await http.post(
         Uri.parse("$baseUrl/habits/$habitId/checkin"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
+        body: jsonEncode(body),
       );
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) return data;
