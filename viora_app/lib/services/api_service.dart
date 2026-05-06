@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // true = điện thoại thật, false = máy ảo (emulator)
-  static const bool _isPhysicalDevice = true;
+  static const bool _isPhysicalDevice = false;
 
   static const String baseUrl = _isPhysicalDevice
       ? "http://192.168.1.5:3000"

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/app_theme.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -65,14 +67,29 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         .length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: const VioraAppBar(title: "Thành tích"),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: context.cardColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: context.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          "Thành tích",
+          style: TextStyle(
+            color: context.textGreen,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
+              child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
-              color: const Color(0xFF4CAF50),
+              color: AppColors.primary,
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
@@ -172,7 +189,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isUnlocked ? Colors.white : const Color(0xFFF0F0F0),
+          color: isUnlocked ? context.cardColor : context.surfaceColor.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isUnlocked
@@ -208,7 +225,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                 ach["icon"] as String,
                 style: TextStyle(
                     fontSize: isUnlocked ? 32 : 28,
-                    color: isUnlocked ? null : Colors.grey),
+                    color: isUnlocked ? null : context.textSecondary),
               ),
             ),
             const SizedBox(height: 6),
@@ -220,14 +237,14 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: isUnlocked ? const Color(0xFF1B5E20) : Colors.grey,
+                color: isUnlocked ? context.textGreen : context.textSecondary,
               ),
             ),
             if (!isUnlocked)
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
                 child: Icon(Icons.lock_outline,
-                    size: 14, color: Colors.grey),
+                    size: 14, color: context.textSecondary),
               ),
           ],
         ),
@@ -238,7 +255,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   void _showDetail(Map<String, dynamic> ach, String? date) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (ctx) => Dialog(
+        backgroundColor: ctx.cardColor,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
@@ -251,17 +269,17 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               const SizedBox(height: 12),
               Text(
                 ach["title"] as String,
-                style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1B5E20)),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: ctx.textGreen,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 ach["desc"] as String,
                 textAlign: TextAlign.center,
-                style:
-                    const TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: ctx.textSecondary),
               ),
               if (date != null) ...[
                 const SizedBox(height: 12),
@@ -269,15 +287,16 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
+                    color: ctx.infoBoxColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     "Mở khóa ngày $date",
-                    style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF2E7D32),
-                        fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: ctx.textGreenLight,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -285,9 +304,9 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -306,7 +325,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   void _showLocked(Map<String, dynamic> ach) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (ctx) => Dialog(
+        backgroundColor: ctx.cardColor,
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
@@ -318,30 +338,32 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
               const SizedBox(height: 12),
               Text(
                 ach["title"] as String,
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: ctx.textPrimary,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 ach["desc"] as String,
                 textAlign: TextAlign.center,
-                style:
-                    const TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 14, color: ctx.textSecondary),
               ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(ctx),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFDDDDDD)),
+                    side: BorderSide(color: ctx.textSecondary.withValues(alpha: 0.3)),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text("Đóng",
-                      style: TextStyle(color: Colors.grey)),
+                  child: Text(
+                    "Đóng",
+                    style: TextStyle(color: ctx.textSecondary),
+                  ),
                 ),
               ),
             ],

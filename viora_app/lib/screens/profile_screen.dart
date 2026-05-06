@@ -519,21 +519,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _buildSection("Giao diện", [
                   _buildThemeToggleTile(),
                 ]),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // Logout
-                SizedBox(
+                Container(
                   width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton.icon(
-                    onPressed: _handleLogout,
-                    icon: const Icon(Icons.logout, color: Colors.red),
-                    label: const Text("Đăng xuất",
-                        style: TextStyle(color: Colors.red, fontSize: 15)),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: context.isDark 
+                        ? Colors.red.shade900.withValues(alpha: 0.2)
+                        : Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: context.isDark 
+                          ? Colors.red.shade700
+                          : Colors.red.shade200,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _handleLogout,
+                      borderRadius: BorderRadius.circular(14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.logout, 
+                              color: context.isDark 
+                                  ? Colors.red.shade400
+                                  : Colors.red.shade700,
+                              size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            "Đăng xuất",
+                            style: TextStyle(
+                              color: context.isDark 
+                                  ? Colors.red.shade400
+                                  : Colors.red.shade700,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -556,11 +585,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           title: Text(
             isDark ? "Giao diện tối" : "Giao diện sáng",
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: context.textPrimary),
           ),
           subtitle: Text(
             isDark ? "Đang dùng chế độ tối" : "Đang dùng chế độ sáng",
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
           ),
           trailing: Switch(
             value: isDark,
@@ -568,7 +597,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               themeNotifier.value =
                   val ? ThemeMode.dark : ThemeMode.light;
             },
-            activeColor: AppColors.primary,
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+            activeThumbColor: AppColors.primary,
           ),
         );
       },
@@ -682,15 +712,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ListTile(
       leading: const Icon(Icons.calculate_outlined,
           color: Color(0xFF4CAF50), size: 22),
-      title: const Text("BMI",
-          style: TextStyle(fontSize: 14, color: Colors.grey)),
+      title: Text("BMI",
+          style: TextStyle(fontSize: 14, color: context.textSecondary)),
       subtitle: Row(
         children: [
           Text(bmi.toStringAsFixed(1),
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black87)),
+                  color: context.textPrimary)),
           const SizedBox(width: 8),
           Container(
             padding:
@@ -718,11 +748,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ListTile(
       leading: const Icon(Icons.flag_outlined,
           color: Color(0xFF4CAF50), size: 22),
-      title: const Text("Mục tiêu",
-          style: TextStyle(fontSize: 14, color: Colors.grey)),
+      title: Text("Mục tiêu",
+          style: TextStyle(fontSize: 14, color: context.textSecondary)),
       subtitle: activeGoals.isEmpty
-          ? const Text("Chưa chọn mục tiêu",
-              style: TextStyle(fontSize: 15, color: Colors.black87))
+          ? Text("Chưa chọn mục tiêu",
+              style: TextStyle(fontSize: 15, color: context.textPrimary))
           : Wrap(
               spacing: 6,
               runSpacing: 6,
@@ -743,7 +773,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ))
                   .toList(),
             ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+      trailing: Icon(Icons.chevron_right, color: context.textSecondary),
       onTap: _showEditGoalsSheet,
     );
   }

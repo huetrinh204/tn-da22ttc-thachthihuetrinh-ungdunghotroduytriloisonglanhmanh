@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_theme.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -123,7 +124,9 @@ class _StatsScreenState extends State<StatsScreen>
       children: [
         _buildSummaryCards(),
         const SizedBox(height: 16),
-        _buildBarChart(weeklyData, 7, "Tuần này"),
+        _buildLineChart(weeklyData, 7, "Xu hướng tuần này"),
+        const SizedBox(height: 16),
+        _buildBarChart(weeklyData, 7, "Chi tiết theo ngày"),
         const SizedBox(height: 16),
         _buildCategoryChart(),
       ],
@@ -136,7 +139,9 @@ class _StatsScreenState extends State<StatsScreen>
       children: [
         _buildSummaryCards(),
         const SizedBox(height: 16),
-        _buildBarChart(monthlyData, 30, "30 ngày qua"),
+        _buildLineChart(monthlyData, 30, "Xu hướng 30 ngày"),
+        const SizedBox(height: 16),
+        _buildBarChart(monthlyData, 30, "Chi tiết theo ngày"),
         const SizedBox(height: 16),
         _buildCategoryChart(),
       ],
@@ -166,7 +171,7 @@ class _StatsScreenState extends State<StatsScreen>
 
   Widget _buildSummaryCard(
       String label, String value, String emoji, Color color) {
-    final cardColor = Theme.of(context).cardTheme.color ?? Colors.white;
+    final cardColor = context.cardColor;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -194,8 +199,132 @@ class _StatsScreenState extends State<StatsScreen>
                       fontWeight: FontWeight.bold,
                       color: color)),
               Text(label,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  style: TextStyle(fontSize: 12, color: context.textSecondary)),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLineChart(List<dynamic> data, int days, String title) {
+    // Build map date → count
+    final Map<String, int> countMap = {};
+    for (final d in data) {
+      final date = (d["log_date"] as String).substring(5); // MM-DD
+      countMap[date] = (d["count"] as num).toInt();
+    }
+
+    // Generate last N days
+    final now = DateTime.now();
+    final dates = List.generate(days, (i) {
+      final d = now.subtract(Duration(days: days - 1 - i));
+      return "${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+    });
+
+    final spots = dates.asMap().entries.map((e) {
+      final count = countMap[e.value] ?? 0;
+      return FlSpot(e.key.toDouble(), count.toDouble());
+    }).toList();
+
+    final maxY = (data.isEmpty
+            ? 5
+            : data
+                .map((d) => (d["count"] as num).toInt())
+                .reduce((a, b) => a > b ? a : b)) +
+        2;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
+          const SizedBox(height: 4),
+          Text("Xu hướng hoàn thành thói quen",
+              style: TextStyle(fontSize: 12, color: context.textSecondary)),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: 180,
+            child: LineChart(
+              LineChartData(
+                maxY: maxY.toDouble(),
+                minY: 0,
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: AppColors.primary,
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 4,
+                          color: AppColors.primary,
+                          strokeWidth: 2,
+                          strokeColor: context.cardColor,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                ],
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 1,
+                  getDrawingHorizontalLine: (_) => FlLine(
+                    color: context.textSecondary.withValues(alpha: 0.1),
+                    strokeWidth: 1,
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+                titlesData: FlTitlesData(
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 28,
+                      interval: 1,
+                      getTitlesWidget: (v, _) => Text(
+                        v.toInt().toString(),
+                        style: TextStyle(
+                            fontSize: 10, color: context.textSecondary),
+                      ),
+                    ),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: days <= 7,
+                      getTitlesWidget: (v, _) {
+                        final idx = v.toInt();
+                        if (idx < 0 || idx >= dates.length) {
+                          return const SizedBox();
+                        }
+                        final parts = dates[idx].split("-");
+                        return Text(
+                          "${parts[1]}/${parts[0]}",
+                          style: TextStyle(
+                              fontSize: 10, color: context.textSecondary),
+                        );
+                      },
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -242,7 +371,7 @@ class _StatsScreenState extends State<StatsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -251,8 +380,8 @@ class _StatsScreenState extends State<StatsScreen>
           Text(title,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
           const SizedBox(height: 4),
-          const Text("Số habit hoàn thành mỗi ngày",
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
+          Text("Số habit hoàn thành mỗi ngày",
+              style: TextStyle(fontSize: 12, color: context.textSecondary)),
           const SizedBox(height: 20),
           SizedBox(
             height: 180,
@@ -265,7 +394,7 @@ class _StatsScreenState extends State<StatsScreen>
                   drawVerticalLine: false,
                   horizontalInterval: 1,
                   getDrawingHorizontalLine: (_) => FlLine(
-                    color: Colors.grey.shade100,
+                    color: context.textSecondary.withValues(alpha: 0.1),
                     strokeWidth: 1,
                   ),
                 ),
@@ -278,8 +407,8 @@ class _StatsScreenState extends State<StatsScreen>
                       interval: 1,
                       getTitlesWidget: (v, _) => Text(
                         v.toInt().toString(),
-                        style: const TextStyle(
-                            fontSize: 10, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: 10, color: context.textSecondary),
                       ),
                     ),
                   ),
@@ -294,8 +423,8 @@ class _StatsScreenState extends State<StatsScreen>
                         final parts = dates[idx].split("-");
                         return Text(
                           "${parts[1]}/${parts[0]}",
-                          style: const TextStyle(
-                              fontSize: 10, color: Colors.grey),
+                          style: TextStyle(
+                              fontSize: 10, color: context.textSecondary),
                         );
                       },
                     ),
@@ -338,17 +467,17 @@ class _StatsScreenState extends State<StatsScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Theo danh mục",
+          Text("Theo danh mục",
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
-                  color: Color(0xFF1B5E20))),
+                  color: context.textGreen)),
           const SizedBox(height: 20),
           Row(
             children: [
@@ -386,15 +515,15 @@ class _StatsScreenState extends State<StatsScreen>
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(label,
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.black87)),
+                                style: TextStyle(
+                                    fontSize: 12, color: context.textPrimary)),
                           ),
                           Text(
                             "${d["completed"]}",
-                            style: const TextStyle(
+                            style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF2E7D32)),
+                                color: context.textGreen),
                           ),
                         ],
                       ),

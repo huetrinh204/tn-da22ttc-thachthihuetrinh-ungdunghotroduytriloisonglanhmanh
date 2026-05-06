@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../theme/theme_extensions.dart';
+import '../theme/app_theme.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -48,8 +50,10 @@ class _NotificationSettingsScreenState
       eveningHour: eveningHour,
       eveningMinute: eveningMinute,
     );
+    // Tự động lên lịch thông báo luôn
+    await NotificationService.scheduleAll();
     if (!mounted) return;
-    AppSnackbar.showSuccess(context, "Đã lưu cài đặt thông báo");
+    AppSnackbar.showSuccess(context, "Đã lưu và áp dụng cài đặt");
   }
 
   Future<void> _pickTime(bool isMorning) async {
@@ -92,21 +96,26 @@ class _NotificationSettingsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: context.cardColor,
         elevation: 0,
-        title: const Text(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: context.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
           "Thông báo nhắc nhở",
           style: TextStyle(
-              color: Color(0xFF1B5E20),
-              fontWeight: FontWeight.bold,
-              fontSize: 18),
+            color: context.textGreen,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
+              child: CircularProgressIndicator(color: AppColors.primary))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -114,19 +123,21 @@ class _NotificationSettingsScreenState
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
+                    color: context.infoBoxColor,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFC8E6C9)),
+                    border: Border.all(color: context.infoBoxBorder),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Text("💡", style: TextStyle(fontSize: 20)),
-                      SizedBox(width: 10),
+                      const Text("💡", style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           "Thông báo sẽ nhắc bạn check-in thói quen mỗi ngày để cây phát triển.",
                           style: TextStyle(
-                              fontSize: 13, color: Color(0xFF2E7D32)),
+                            fontSize: 13,
+                            color: context.textGreenLight,
+                          ),
                         ),
                       ),
                     ],
@@ -164,56 +175,6 @@ class _NotificationSettingsScreenState
                   },
                   onTimeTap: () => _pickTime(false),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Test ngay
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      await NotificationService.sendTestNotification();
-                      if (!mounted) return;
-                      AppSnackbar.showSuccess(
-                          context, "Thông báo test sẽ hiện sau 10 giây!");
-                    },
-                    icon: const Icon(Icons.send, color: Colors.white),
-                    label: const Text("Gửi thông báo test ngay",
-                        style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // Áp dụng cài đặt
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      await NotificationService.scheduleAll();
-                      if (!mounted) return;
-                      AppSnackbar.showSuccess(
-                          context, "Đã lên lịch thông báo!");
-                    },
-                    icon: const Icon(Icons.notifications_active_outlined,
-                        color: Color(0xFF4CAF50)),
-                    label: const Text("Áp dụng cài đặt",
-                        style: TextStyle(color: Color(0xFF4CAF50))),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF4CAF50)),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                  ),
-                ),
               ],
             ),
     );
@@ -230,7 +191,7 @@ class _NotificationSettingsScreenState
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -244,36 +205,47 @@ class _NotificationSettingsScreenState
         children: [
           ListTile(
             leading: Text(emoji, style: const TextStyle(fontSize: 28)),
-            title: Text(title,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 15)),
-            subtitle: Text(subtitle,
-                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            title: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                color: context.textPrimary,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: TextStyle(fontSize: 12, color: context.textSecondary),
+            ),
             trailing: Switch(
               value: enabled,
               onChanged: onToggle,
-              activeColor: const Color(0xFF4CAF50),
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+              activeThumbColor: AppColors.primary,
             ),
           ),
           if (enabled) ...[
             const Divider(height: 1),
             ListTile(
-              leading: const Icon(Icons.access_time,
-                  color: Color(0xFF4CAF50), size: 22),
-              title: const Text("Giờ nhắc",
-                  style: TextStyle(fontSize: 14, color: Colors.grey)),
+              leading: Icon(Icons.access_time,
+                  color: AppColors.primary, size: 22),
+              title: Text(
+                "Giờ nhắc",
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     time,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1B5E20)),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: context.textGreen,
+                    ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right, color: Colors.grey),
+                  Icon(Icons.chevron_right, color: context.textSecondary),
                 ],
               ),
               onTap: onTimeTap,

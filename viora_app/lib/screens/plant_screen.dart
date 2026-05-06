@@ -171,11 +171,11 @@ class _PlantScreenState extends State<PlantScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Tiến trình phát triển",
+                        Text("Tiến trình phát triển",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
-                                color: Color(0xFF1B5E20))),
+                                color: context.textGreen)),
                         const SizedBox(height: 16),
                         PlantProgressBar(experience: plantExp, level: plantLevel),
                         const SizedBox(height: 16),
@@ -196,11 +196,11 @@ class _PlantScreenState extends State<PlantScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Lộ trình phát triển",
+                        Text("Lộ trình phát triển",
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
-                                color: Color(0xFF1B5E20))),
+                                color: context.textGreen)),
                         const SizedBox(height: 16),
                         ..._buildRoadmap(level),
                       ],
@@ -263,7 +263,7 @@ class _PlantScreenState extends State<PlantScreen>
         Text(value,
             style: TextStyle(
                 fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 12, color: context.textSecondary)),
       ],
     );
   }
@@ -325,8 +325,8 @@ class _PlantScreenState extends State<PlantScreen>
                   color: isDone
                       ? const Color(0xFF4CAF50)
                       : isCurrent
-                          ? const Color(0xFF1B5E20)
-                          : Colors.grey,
+                          ? context.textGreen
+                          : context.textSecondary,
                 ),
               ),
             ),
