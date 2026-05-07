@@ -25,12 +25,18 @@ function authMiddleware(req: any, res: any, next: any) {
 router.get("/weekly", authMiddleware, async (req: any, res) => {
   try {
     const [rows]: any = await pool.query(
-      `SELECT log_date, COUNT(*) as count
-       FROM habit_logs
-       WHERE user_id = ?
-         AND log_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-       GROUP BY log_date
-       ORDER BY log_date ASC`,
+      `WITH RECURSIVE dates AS (
+         SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY) as log_date
+         UNION ALL
+         SELECT DATE_ADD(log_date, INTERVAL 1 DAY)
+         FROM dates
+         WHERE log_date < CURDATE()
+       )
+       SELECT d.log_date, COALESCE(COUNT(hl.id), 0) as count
+       FROM dates d
+       LEFT JOIN habit_logs hl ON d.log_date = hl.log_date AND hl.user_id = ?
+       GROUP BY d.log_date
+       ORDER BY d.log_date ASC`,
       [req.user.id]
     );
     res.json({ data: rows });
@@ -45,12 +51,18 @@ router.get("/weekly", authMiddleware, async (req: any, res) => {
 router.get("/monthly", authMiddleware, async (req: any, res) => {
   try {
     const [rows]: any = await pool.query(
-      `SELECT log_date, COUNT(*) as count
-       FROM habit_logs
-       WHERE user_id = ?
-         AND log_date >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
-       GROUP BY log_date
-       ORDER BY log_date ASC`,
+      `WITH RECURSIVE dates AS (
+         SELECT DATE_SUB(CURDATE(), INTERVAL 29 DAY) as log_date
+         UNION ALL
+         SELECT DATE_ADD(log_date, INTERVAL 1 DAY)
+         FROM dates
+         WHERE log_date < CURDATE()
+       )
+       SELECT d.log_date, COALESCE(COUNT(hl.id), 0) as count
+       FROM dates d
+       LEFT JOIN habit_logs hl ON d.log_date = hl.log_date AND hl.user_id = ?
+       GROUP BY d.log_date
+       ORDER BY d.log_date ASC`,
       [req.user.id]
     );
     res.json({ data: rows });
@@ -108,6 +120,95 @@ router.get("/summary", authMiddleware, async (req: any, res) => {
         total_habits: habitRows[0].total_habits,
       },
     });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= HABIT METRICS =================
+// Lấy metrics chi tiết của một habit cụ thể
+router.get("/habits/:habitId/metrics", authMiddleware, async (req: any, res) => {
+  try {
+    const { habitId } = req.params;
+    const { days = 30 } = req.query; // Mặc định 30 ngày
+
+    // Lấy thông tin habit
+    const [habitRows]: any = await pool.query(
+      `SELECT h.*, 
+              (SELECT COUNT(*) FROM habit_logs WHERE habit_id = h.id) as total_logs
+       FROM habits h
+       WHERE h.id = ? AND h.user_id = ?`,
+      [habitId, req.user.id]
+    );
+
+    if (habitRows.length === 0) {
+      return res.status(404).json({ message: "Habit not found" });
+    }
+
+    const habit = habitRows[0];
+
+    // Lấy metrics theo ngày
+    const [metricsRows]: any = await pool.query(
+      `SELECT log_date, metric_value, metric_unit, note
+       FROM habit_logs
+       WHERE habit_id = ? AND user_id = ?
+         AND log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+       ORDER BY log_date ASC`,
+      [habitId, req.user.id, parseInt(days as string) - 1]
+    );
+
+    // Tính tổng và trung bình (chỉ tính với các log có metric_value)
+    const logsWithMetrics = metricsRows.filter((row: any) => row.metric_value !== null);
+    const totalValue = logsWithMetrics.reduce((sum: number, row: any) => 
+      sum + (parseFloat(row.metric_value) || 0), 0);
+    const avgValue = logsWithMetrics.length > 0 ? totalValue / logsWithMetrics.length : 0;
+
+    res.json({
+      habit: {
+        id: habit.id,
+        name: habit.name,
+        category: habit.category,
+        icon: habit.icon,
+        current_streak: habit.current_streak,
+        longest_streak: habit.longest_streak,
+        total_logs: habit.total_logs,
+        target_value: habit.target_value,
+        unit: habit.unit,
+      },
+      metrics: metricsRows,
+      summary: {
+        total_value: totalValue,
+        average_value: avgValue,
+        total_days: logsWithMetrics.length,
+        unit: logsWithMetrics[0]?.metric_unit || habit.unit || null,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= ALL HABITS WITH METRICS =================
+// Lấy danh sách tất cả habits với tổng metrics
+router.get("/habits/overview", authMiddleware, async (req: any, res) => {
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT h.id, h.name, h.category, h.icon, h.current_streak, h.longest_streak,
+              COUNT(hl.id) as total_logs,
+              SUM(hl.metric_value) as total_metric,
+              AVG(hl.metric_value) as avg_metric,
+              MAX(hl.metric_unit) as metric_unit
+       FROM habits h
+       LEFT JOIN habit_logs hl ON h.id = hl.habit_id
+       WHERE h.user_id = ? AND h.is_active = 1
+       GROUP BY h.id
+       ORDER BY h.created_at DESC`,
+      [req.user.id]
+    );
+
+    res.json({ habits: rows });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });

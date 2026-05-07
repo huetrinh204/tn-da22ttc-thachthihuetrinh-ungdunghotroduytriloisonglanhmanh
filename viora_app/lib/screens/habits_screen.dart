@@ -95,8 +95,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
         metricUnit = "ml";
         break;
       case "exercise":
-        metricLabel = "Khoảng cách (km)";
-        metricUnit = "km";
+        metricLabel = "Khoảng cách (m)";
+        metricUnit = "m";
         break;
       case "sleep":
         metricLabel = "Số giờ ngủ";

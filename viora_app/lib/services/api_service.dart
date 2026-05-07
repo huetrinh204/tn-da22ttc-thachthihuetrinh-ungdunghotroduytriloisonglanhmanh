@@ -364,6 +364,36 @@ class ApiService {
     }
   }
 
+  // ================= HABIT METRICS =================
+  static Future<Map<String, dynamic>> getHabitMetrics(
+      String token, int habitId, {int days = 30}) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/stats/habits/$habitId/metrics?days=$days"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"metrics": [], "summary": {}};
+    } catch (e) {
+      return {"metrics": [], "summary": {}};
+    }
+  }
+
+  static Future<Map<String, dynamic>> getHabitsOverview(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/stats/habits/overview"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"habits": []};
+    } catch (e) {
+      return {"habits": []};
+    }
+  }
+
   // ================= UPDATE PASSWORD =================
   static Future<Map<String, dynamic>> updatePassword({
     required String token,

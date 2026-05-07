@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
+import 'habit_detail_screen.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -29,6 +30,7 @@ class _StatsScreenState extends State<StatsScreen>
   List<dynamic> weeklyData = [];
   List<dynamic> monthlyData = [];
   List<dynamic> categoryData = [];
+  List<dynamic> habitsOverview = [];
 
   static const Map<String, String> _categoryLabels = {
     "eat": "Ăn uống",
@@ -47,7 +49,7 @@ class _StatsScreenState extends State<StatsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadData();
   }
 
@@ -66,6 +68,7 @@ class _StatsScreenState extends State<StatsScreen>
       ApiService.getWeeklyStats(token),
       ApiService.getMonthlyStats(token),
       ApiService.getCategoryStats(token),
+      ApiService.getHabitsOverview(token),
     ]);
 
     if (!mounted) return;
@@ -79,6 +82,7 @@ class _StatsScreenState extends State<StatsScreen>
       weeklyData = results[1]["data"] ?? [];
       monthlyData = results[2]["data"] ?? [];
       categoryData = results[3]["data"] ?? [];
+      habitsOverview = results[4]["habits"] ?? [];
       isLoading = false;
     });
   }
@@ -98,6 +102,7 @@ class _StatsScreenState extends State<StatsScreen>
           tabs: const [
             Tab(text: "Tuần này"),
             Tab(text: "Tháng này"),
+            Tab(text: "Chi tiết"),
           ],
         ),
       ),
@@ -112,6 +117,7 @@ class _StatsScreenState extends State<StatsScreen>
                 children: [
                   _buildWeeklyTab(),
                   _buildMonthlyTab(),
+                  _buildDetailTab(),
                 ],
               ),
             ),
@@ -124,9 +130,7 @@ class _StatsScreenState extends State<StatsScreen>
       children: [
         _buildSummaryCards(),
         const SizedBox(height: 16),
-        _buildLineChart(weeklyData, 7, "Xu hướng tuần này"),
-        const SizedBox(height: 16),
-        _buildBarChart(weeklyData, 7, "Chi tiết theo ngày"),
+        _buildSimpleBarChart(weeklyData, 7, "Thói quen hoàn thành mỗi ngày"),
         const SizedBox(height: 16),
         _buildCategoryChart(),
       ],
@@ -139,12 +143,185 @@ class _StatsScreenState extends State<StatsScreen>
       children: [
         _buildSummaryCards(),
         const SizedBox(height: 16),
-        _buildLineChart(monthlyData, 30, "Xu hướng 30 ngày"),
-        const SizedBox(height: 16),
-        _buildBarChart(monthlyData, 30, "Chi tiết theo ngày"),
+        _buildSimpleBarChart(monthlyData, 30, "Thói quen hoàn thành 30 ngày"),
         const SizedBox(height: 16),
         _buildCategoryChart(),
       ],
+    );
+  }
+
+  Widget _buildDetailTab() {
+    if (habitsOverview.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("📊", style: TextStyle(fontSize: 64)),
+            const SizedBox(height: 16),
+            Text(
+              "Chưa có thói quen nào",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Tạo thói quen để xem thống kê chi tiết",
+              style: TextStyle(
+                fontSize: 14,
+                color: context.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: habitsOverview.length,
+      itemBuilder: (context, index) {
+        final habit = habitsOverview[index];
+        return _buildHabitOverviewCard(habit);
+      },
+    );
+  }
+
+  Widget _buildHabitOverviewCard(Map habit) {
+    final totalLogs = habit["total_logs"] ?? 0;
+    final currentStreak = habit["current_streak"] ?? 0;
+    final totalMetric = habit["total_metric"];
+    final avgMetric = habit["avg_metric"];
+    final unit = habit["metric_unit"];
+
+    // Parse to double safely
+    double? totalMetricValue;
+    if (totalMetric != null) {
+      if (totalMetric is num) {
+        totalMetricValue = totalMetric.toDouble();
+      } else if (totalMetric is String) {
+        totalMetricValue = double.tryParse(totalMetric);
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => HabitDetailScreen(
+              habitId: habit["id"],
+              habitName: habit["name"],
+              habitIcon: habit["icon"] ?? "⭐",
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  habit["icon"] ?? "⭐",
+                  style: const TextStyle(fontSize: 32),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        habit["name"],
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "$totalLogs lần check-in",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: context.textSecondary,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                if (currentStreak > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text("🔥", style: TextStyle(fontSize: 14)),
+                        const SizedBox(width: 4),
+                        Text(
+                          "$currentStreak ngày",
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFFF9800),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                if (unit != null && totalMetricValue != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      "Tổng: ${totalMetricValue.toStringAsFixed(1)} $unit",
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -207,32 +384,51 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  Widget _buildLineChart(List<dynamic> data, int days, String title) {
-    // Build map date → count
-    final Map<String, int> countMap = {};
-    for (final d in data) {
-      final date = (d["log_date"] as String).substring(5); // MM-DD
-      countMap[date] = (d["count"] as num).toInt();
+  Widget _buildSimpleBarChart(List<dynamic> data, int days, String title) {
+    // Nếu không có dữ liệu
+    if (data.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        decoration: BoxDecoration(
+          color: context.cardColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            const Text("📊", style: TextStyle(fontSize: 48)),
+            const SizedBox(height: 16),
+            Text(
+              "Chưa có dữ liệu",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Hoàn thành thói quen để xem thống kê",
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
+            ),
+          ],
+        ),
+      );
     }
 
-    // Generate last N days
-    final now = DateTime.now();
-    final dates = List.generate(days, (i) {
-      final d = now.subtract(Duration(days: days - 1 - i));
-      return "${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-    });
+    // Tạo spots cho biểu đồ đường
+    final spots = <FlSpot>[];
+    double maxValue = 0;
+    
+    for (int i = 0; i < data.length; i++) {
+      final count = (data[i]["count"] as num).toDouble();
+      spots.add(FlSpot(i.toDouble(), count));
+      if (count > maxValue) maxValue = count;
+    }
 
-    final spots = dates.asMap().entries.map((e) {
-      final count = countMap[e.value] ?? 0;
-      return FlSpot(e.key.toDouble(), count.toDouble());
-    }).toList();
-
-    final maxY = (data.isEmpty
-            ? 5
-            : data
-                .map((d) => (d["count"] as num).toInt())
-                .reduce((a, b) => a > b ? a : b)) +
-        2;
+    // Đảm bảo maxY > 0 và làm tròn lên số chẵn
+    final maxY = maxValue > 0 ? ((maxValue + 2) / 2).ceil() * 2.0 : 6.0;
+    // Interval phải là số nguyên >= 1
+    final interval = maxY <= 6 ? 2.0 : (maxY / 3).ceilToDouble();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -246,15 +442,15 @@ class _StatsScreenState extends State<StatsScreen>
           Text(title,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
           const SizedBox(height: 4),
-          Text("Xu hướng hoàn thành thói quen",
+          Text("Số lượng thói quen hoàn thành mỗi ngày",
               style: TextStyle(fontSize: 12, color: context.textSecondary)),
           const SizedBox(height: 20),
           SizedBox(
-            height: 180,
+            height: 200,
             child: LineChart(
               LineChartData(
-                maxY: maxY.toDouble(),
                 minY: 0,
+                maxY: maxY,
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots,
@@ -265,10 +461,10 @@ class _StatsScreenState extends State<StatsScreen>
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
-                          radius: 4,
+                          radius: 5,
                           color: AppColors.primary,
                           strokeWidth: 2,
-                          strokeColor: context.cardColor,
+                          strokeColor: Colors.white,
                         );
                       },
                     ),
@@ -281,7 +477,7 @@ class _StatsScreenState extends State<StatsScreen>
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 1,
+                  horizontalInterval: interval,
                   getDrawingHorizontalLine: (_) => FlLine(
                     color: context.textSecondary.withValues(alpha: 0.1),
                     strokeWidth: 1,
@@ -292,36 +488,66 @@ class _StatsScreenState extends State<StatsScreen>
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 28,
-                      interval: 1,
-                      getTitlesWidget: (v, _) => Text(
-                        v.toInt().toString(),
-                        style: TextStyle(
-                            fontSize: 10, color: context.textSecondary),
-                      ),
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: days <= 7,
-                      getTitlesWidget: (v, _) {
-                        final idx = v.toInt();
-                        if (idx < 0 || idx >= dates.length) {
-                          return const SizedBox();
-                        }
-                        final parts = dates[idx].split("-");
+                      reservedSize: 30,
+                      interval: interval,
+                      getTitlesWidget: (value, meta) {
+                        // Chỉ hiển thị số nguyên
+                        if (value % 1 != 0) return const SizedBox();
                         return Text(
-                          "${parts[1]}/${parts[0]}",
+                          value.toInt().toString(),
                           style: TextStyle(
-                              fontSize: 10, color: context.textSecondary),
+                            color: context.textSecondary,
+                            fontSize: 11,
+                          ),
                         );
                       },
                     ),
                   ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 1,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index < 0 || index >= data.length) {
+                          return const SizedBox();
+                        }
+                        
+                        // Chỉ hiển thị một số ngày để không bị chật
+                        if (days > 7 && index % 2 != 0) {
+                          return const SizedBox();
+                        }
+                        if (days > 14 && index % 5 != 0) {
+                          return const SizedBox();
+                        }
+                        
+                        // Parse date từ format YYYY-MM-DD
+                        final dateStr = data[index]["log_date"] as String;
+                        try {
+                          final date = DateTime.parse(dateStr);
+                          // Format: 4/5 (bỏ số 0 đầu)
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              "${date.day}/${date.month}",
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 10,
+                              ),
+                            ),
+                          );
+                        } catch (e) {
+                          return const SizedBox();
+                        }
+                      },
+                    ),
+                  ),
                   topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
               ),
             ),
@@ -331,7 +557,7 @@ class _StatsScreenState extends State<StatsScreen>
     );
   }
 
-  Widget _buildBarChart(List<dynamic> data, int days, String title) {
+  Widget _buildCompletionRateChart(List<dynamic> data, int days, String title) {
     // Build map date → count
     final Map<String, int> countMap = {};
     for (final d in data) {
@@ -346,27 +572,27 @@ class _StatsScreenState extends State<StatsScreen>
       return "${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
     });
 
+    // Tính % hoàn thành cho mỗi ngày
     final bars = dates.asMap().entries.map((e) {
       final count = countMap[e.value] ?? 0;
+      final percentage = totalHabits > 0 ? (count / totalHabits * 100) : 0.0;
+      
       return BarChartGroupData(
         x: e.key,
         barRods: [
           BarChartRodData(
-            toY: count.toDouble(),
-            color: count > 0 ? const Color(0xFF4CAF50) : const Color(0xFFE0E0E0),
-            width: days <= 7 ? 20 : 8,
-            borderRadius: BorderRadius.circular(4),
+            toY: percentage,
+            color: percentage >= 80
+                ? const Color(0xFF4CAF50)
+                : percentage >= 50
+                    ? const Color(0xFFFF9800)
+                    : const Color(0xFFE57373),
+            width: 24,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),
         ],
       );
     }).toList();
-
-    final maxY = (data.isEmpty
-            ? 5
-            : data
-                .map((d) => (d["count"] as num).toInt())
-                .reduce((a, b) => a > b ? a : b)) +
-        2;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -380,19 +606,20 @@ class _StatsScreenState extends State<StatsScreen>
           Text(title,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
           const SizedBox(height: 4),
-          Text("Số habit hoàn thành mỗi ngày",
+          Text("Phần trăm thói quen hoàn thành mỗi ngày",
               style: TextStyle(fontSize: 12, color: context.textSecondary)),
           const SizedBox(height: 20),
           SizedBox(
-            height: 180,
+            height: 200,
             child: BarChart(
               BarChartData(
-                maxY: maxY.toDouble(),
+                maxY: 100,
+                minY: 0,
                 barGroups: bars,
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
-                  horizontalInterval: 1,
+                  horizontalInterval: 25,
                   getDrawingHorizontalLine: (_) => FlLine(
                     color: context.textSecondary.withValues(alpha: 0.1),
                     strokeWidth: 1,
@@ -403,39 +630,234 @@ class _StatsScreenState extends State<StatsScreen>
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 28,
-                      interval: 1,
+                      reservedSize: 35,
+                      interval: 25,
                       getTitlesWidget: (v, _) => Text(
-                        v.toInt().toString(),
-                        style: TextStyle(
-                            fontSize: 10, color: context.textSecondary),
+                        "${v.toInt()}%",
+                        style: TextStyle(fontSize: 10, color: context.textSecondary),
                       ),
                     ),
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
-                      showTitles: days <= 7,
+                      showTitles: true,
                       getTitlesWidget: (v, _) {
                         final idx = v.toInt();
                         if (idx < 0 || idx >= dates.length) {
                           return const SizedBox();
                         }
                         final parts = dates[idx].split("-");
-                        return Text(
-                          "${parts[1]}/${parts[0]}",
-                          style: TextStyle(
-                              fontSize: 10, color: context.textSecondary),
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            "${parts[1]}/${parts[0]}",
+                            style: TextStyle(fontSize: 10, color: context.textSecondary),
+                          ),
                         );
                       },
                     ),
                   ),
-                  topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
               ),
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildLegendItem("Tốt (≥80%)", const Color(0xFF4CAF50)),
+              const SizedBox(width: 16),
+              _buildLegendItem("Khá (≥50%)", const Color(0xFFFF9800)),
+              const SizedBox(width: 16),
+              _buildLegendItem("Cần cố gắng", const Color(0xFFE57373)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: TextStyle(fontSize: 11, color: context.textSecondary)),
+      ],
+    );
+  }
+
+  Widget _buildStreakCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF6B35), Color(0xFFFF8C42), Color(0xFFFFA94D)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: Text("🔥", style: TextStyle(fontSize: 32)),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Streak hiện tại",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "$longestStreak ngày liên tiếp",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  longestStreak >= 7
+                      ? "Tuyệt vời! Tiếp tục phát huy! 💪"
+                      : "Hãy duy trì mỗi ngày nhé! 🌟",
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeatmapCalendar(List<dynamic> data) {
+    // Build map date → count
+    final Map<String, int> countMap = {};
+    for (final d in data) {
+      final date = d["log_date"] as String; // YYYY-MM-DD
+      countMap[date] = (d["count"] as num).toInt();
+    }
+
+    // Generate last 30 days
+    final now = DateTime.now();
+    final days = List.generate(30, (i) {
+      return now.subtract(Duration(days: 29 - i));
+    });
+
+    // Tính max count để scale màu
+    final maxCount = countMap.values.isEmpty ? 1 : countMap.values.reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Lịch hoạt động 30 ngày",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
+          const SizedBox(height: 4),
+          Text("Màu đậm = hoàn thành nhiều thói quen",
+              style: TextStyle(fontSize: 12, color: context.textSecondary)),
+          const SizedBox(height: 20),
+          // Heatmap grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              mainAxisSpacing: 6,
+              crossAxisSpacing: 6,
+            ),
+            itemCount: 30,
+            itemBuilder: (context, index) {
+              final day = days[index];
+              final dateStr = "${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
+              final count = countMap[dateStr] ?? 0;
+              final intensity = maxCount > 0 ? count / maxCount : 0.0;
+
+              Color cellColor;
+              if (count == 0) {
+                cellColor = context.inputFill;
+              } else if (intensity <= 0.25) {
+                cellColor = const Color(0xFFC8E6C9);
+              } else if (intensity <= 0.5) {
+                cellColor = const Color(0xFF81C784);
+              } else if (intensity <= 0.75) {
+                cellColor = const Color(0xFF4CAF50);
+              } else {
+                cellColor = const Color(0xFF2E7D32);
+              }
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: cellColor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Center(
+                  child: Text(
+                    "${day.day}",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: count > 0 ? Colors.white : context.textSecondary,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Ít", style: TextStyle(fontSize: 11, color: context.textSecondary)),
+              const SizedBox(width: 8),
+              Container(width: 16, height: 16, decoration: BoxDecoration(color: context.inputFill, borderRadius: BorderRadius.circular(3))),
+              const SizedBox(width: 4),
+              Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFFC8E6C9), borderRadius: BorderRadius.circular(3))),
+              const SizedBox(width: 4),
+              Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFF81C784), borderRadius: BorderRadius.circular(3))),
+              const SizedBox(width: 4),
+              Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFF4CAF50), borderRadius: BorderRadius.circular(3))),
+              const SizedBox(width: 4),
+              Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFF2E7D32), borderRadius: BorderRadius.circular(3))),
+              const SizedBox(width: 8),
+              Text("Nhiều", style: TextStyle(fontSize: 11, color: context.textSecondary)),
+            ],
           ),
         ],
       ),
