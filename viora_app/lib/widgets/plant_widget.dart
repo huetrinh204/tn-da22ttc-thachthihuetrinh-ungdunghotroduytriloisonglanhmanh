@@ -43,12 +43,12 @@ class _PlantWidgetState extends State<PlantWidget>
   }
 
   static const Map<String, List<String>> _plantStages = {
-    'sprout':    ['🌰', '🌱', '🪴', '🌿', '🌳'],
-    'cactus':    ['🌰', '🌱', '🪴', '🌵', '🌵'],
-    'bonsai':    ['🌰', '🌱', '🪴', '🌲', '🌳'],
-    'flower':    ['🌰', '🌱', '🪴', '🌸', '💐'],
-    'bamboo':    ['🌰', '🌱', '🪴', '🎋', '🎍'],
-    'sunflower': ['🌰', '🌱', '🪴', '🌻', '🌻'],
+    'sprout':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌿', '🌳'],
+    'cactus':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌵', '🌵'],
+    'bonsai':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌲', '🌳'],
+    'flower':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌸', '💐'],
+    'bamboo':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🎋', '🎍'],
+    'sunflower': ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌻', '🌻'],
   };
 
   static const Map<String, String> _plantNames = {
@@ -70,6 +70,10 @@ class _PlantWidgetState extends State<PlantWidget>
     final idx = (widget.level - 1).clamp(0, stages.length - 1);
     return stages[idx];
   }
+  
+  bool get _isImagePath {
+    return _emoji.endsWith('.png') || _emoji.endsWith('.jpg');
+  }
 
   String get _levelName => _levelNames[widget.level.clamp(1, 5)];
   String get _plantName => _plantNames[widget.plantType] ?? 'Cây';
@@ -85,10 +89,24 @@ class _PlantWidgetState extends State<PlantWidget>
             angle: widget.isWilted ? 0.3 : _sway.value,
             child: child,
           ),
-          child: Text(
-            _emoji,
-            style: TextStyle(fontSize: widget.size),
-          ),
+          child: _isImagePath
+              ? Image.asset(
+                  _emoji,
+                  width: widget.size * 1.5,
+                  height: widget.size * 1.5,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback to emoji if image fails to load
+                    return Text(
+                      '🌰',
+                      style: TextStyle(fontSize: widget.size),
+                    );
+                  },
+                )
+              : Text(
+                  _emoji,
+                  style: TextStyle(fontSize: widget.size),
+                ),
         ),
         const SizedBox(height: 6),
         Text(

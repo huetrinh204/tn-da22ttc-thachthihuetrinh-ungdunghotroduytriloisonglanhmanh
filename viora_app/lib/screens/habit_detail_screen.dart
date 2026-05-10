@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:ui' as ui;
 import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
+import '../widgets/image_dot_painter.dart';
 
 class HabitDetailScreen extends StatefulWidget {
   final int habitId;
@@ -29,11 +31,25 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   Map<String, dynamic> habitInfo = {};
   List<dynamic> metrics = [];
   Map<String, dynamic> summary = {};
+  
+  ui.Image? dotImage;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _loadDotImage();
+  }
+  
+  Future<void> _loadDotImage() async {
+    final image = await ImageDotPainter.loadImageFromAssets(
+      'assets/images/tree/1_hatgiong.png',
+    );
+    if (mounted) {
+      setState(() {
+        dotImage = image;
+      });
+    }
   }
 
   Future<void> _loadData() async {
@@ -362,10 +378,9 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 6,
-                          color: AppColors.primary,
-                          strokeWidth: 0,
+                        return ImageDotPainter(
+                          image: dotImage,
+                          size: 24,
                         );
                       },
                     ),

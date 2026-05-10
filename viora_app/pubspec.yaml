@@ -71,6 +71,7 @@ flutter:
     - assets/images/logo.png
     - assets/images/dangnhap.png
     - assets/images/favicon.png
+    - assets/images/tree/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
