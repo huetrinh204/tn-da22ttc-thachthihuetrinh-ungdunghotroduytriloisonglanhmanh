@@ -275,14 +275,19 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   Widget _buildMetricsChart() {
     final unit = summary["unit"] ?? habitInfo["unit"] ?? "";
     
-    // Build list of spots chỉ với các ngày có metric_value
+    // Build list of spots với TẤT CẢ các ngày (bao gồm cả ngày không có dữ liệu)
     final List<FlSpot> spots = [];
-    final List<String> dateLabels = [];
+    final List<String> allDateLabels = [];
     
     for (int i = 0; i < metrics.length; i++) {
       final m = metrics[i];
       final metricValue = m["metric_value"];
+      final logDate = m["log_date"] as String;
       
+      // Thêm tất cả các ngày vào dateLabels
+      allDateLabels.add(logDate);
+      
+      // Chỉ thêm spot nếu có metric_value
       if (metricValue != null) {
         double value = 0.0;
         if (metricValue is num) {
@@ -292,9 +297,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
         }
         
         if (value > 0) {
-          spots.add(FlSpot(spots.length.toDouble(), value));
-          final date = (m["log_date"] as String).substring(5); // MM-DD
-          dateLabels.add(date);
+          // Sử dụng index thực tế từ metrics array làm X
+          spots.add(FlSpot(i.toDouble(), value));
         }
       }
     }
@@ -308,8 +312,13 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
     final maxValue = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
     final maxY = maxValue * 1.3; // Thêm 30% để có khoảng trống phía trên
     
-    // Tính interval cho grid
+    // Tính interval cho grid Y
     final interval = (maxY / 5).clamp(0.1, double.infinity);
+    
+    // Tính interval cho X axis dựa trên số lượng ngày
+    final xInterval = allDateLabels.length <= 7 ? 1.0 : 
+                      allDateLabels.length <= 30 ? (allDateLabels.length / 7).ceilToDouble() :
+                      (allDateLabels.length / 10).ceilToDouble();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -342,6 +351,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
               LineChartData(
                 maxY: maxY,
                 minY: 0,
+                maxX: (allDateLabels.length - 1).toDouble(),
+                minX: 0,
                 lineBarsData: [
                   LineChartBarData(
                     spots: spots,
@@ -352,10 +363,9 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
                         return FlDotCirclePainter(
-                          radius: 5,
+                          radius: 6,
                           color: AppColors.primary,
-                          strokeWidth: 2,
-                          strokeColor: context.cardColor,
+                          strokeWidth: 0,
                         );
                       },
                     ),
@@ -370,7 +380,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                   drawVerticalLine: false,
                   horizontalInterval: interval,
                   getDrawingHorizontalLine: (_) => FlLine(
-                    color: context.textSecondary.withValues(alpha: 0.1),
+                    color: context.textSecondary.withValues(alpha: 0.15),
                     strokeWidth: 1,
                   ),
                 ),
@@ -379,15 +389,15 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 45,
+                      reservedSize: 40,
                       interval: interval,
                       getTitlesWidget: (v, _) {
-                        // Hiển thị số thập phân nếu giá trị nhỏ
-                        if (maxY < 10) {
+                        // Chỉ hiển thị số nguyên
+                        if (v == 0 || v == maxY) {
                           return Text(
-                            v.toStringAsFixed(1),
+                            v.toInt().toString(),
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               color: context.textSecondary,
                             ),
                           );
@@ -395,7 +405,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                         return Text(
                           v.toInt().toString(),
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 11,
                             color: context.textSecondary,
                           ),
                         );
@@ -405,23 +415,58 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 1,
+                      interval: xInterval,
                       getTitlesWidget: (v, _) {
                         final idx = v.toInt();
-                        if (idx < 0 || idx >= dateLabels.length) {
+                        if (idx < 0 || idx >= allDateLabels.length) {
                           return const SizedBox();
                         }
-                        final parts = dateLabels[idx].split("-");
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            "${parts[1]}/${parts[0]}",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                        );
+                        
+                        // Format: "YYYY-MM-DD" -> "D/M" (không có số 0 đứng đầu)
+                        final dateStr = allDateLabels[idx];
+                        
+                        try {
+                          // Nếu là ISO format (2026-05-07T00:00:00.000Z)
+                          if (dateStr.contains('T')) {
+                            final datePart = dateStr.split('T')[0]; // Lấy phần trước T
+                            final parts = datePart.split("-"); // [YYYY, MM, DD]
+                            if (parts.length == 3) {
+                              final day = int.parse(parts[2]); // Bỏ số 0 đứng đầu
+                              final month = int.parse(parts[1]); // Bỏ số 0 đứng đầu
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  "$day/$month", // D/M
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: context.textSecondary,
+                                  ),
+                                ),
+                              );
+                            }
+                          }
+                          
+                          // Nếu là format YYYY-MM-DD
+                          final parts = dateStr.split("-"); // [YYYY, MM, DD]
+                          if (parts.length == 3) {
+                            final day = int.parse(parts[2]); // Bỏ số 0 đứng đầu
+                            final month = int.parse(parts[1]); // Bỏ số 0 đứng đầu
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                "$day/$month", // D/M
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: context.textSecondary,
+                                ),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          // Nếu có lỗi, không hiển thị gì
+                        }
+                        
+                        return const SizedBox();
                       },
                     ),
                   ),
