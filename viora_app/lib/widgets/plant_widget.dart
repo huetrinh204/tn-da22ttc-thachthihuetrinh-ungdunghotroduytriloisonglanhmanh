@@ -43,12 +43,108 @@ class _PlantWidgetState extends State<PlantWidget>
   }
 
   static const Map<String, List<String>> _plantStages = {
-    'sprout':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌿', '🌳'],
-    'cactus':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌵', '🌵'],
-    'bonsai':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌲', '🌳'],
-    'flower':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌸', '💐'],
-    'bamboo':    ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🎋', '🎍'],
-    'sunflower': ['assets/images/tree/1_hatgiong.png', '🌱', '🪴', '🌻', '🌻'],
+    'sprout': [
+      'assets/images/tree/1_hatgiong.png',
+      'assets/images/tree/2_hatnaymam.png',
+      'assets/images/tree/3_mamnon.png',
+      'assets/images/tree/4_caynon.png',
+      'assets/images/tree/5_caycon.png',
+      'assets/images/tree/6_caynho.png',
+      'assets/images/tree/7_caydanglon.png',
+      'assets/images/tree/8_caytruongthanh.png',
+      'assets/images/tree/9_cayphattrientot.png',
+      'assets/images/tree/10_cayrahoa.png',
+      'assets/images/tree/11_caykettrainon.png',
+      'assets/images/tree/12_caytrailondan.png',
+      'assets/images/tree/13_caykettraichin.png',
+      'assets/images/tree/14_caysaiqua.png',
+      'assets/images/tree/15_caytruongthanh.png',
+    ],
+    'cactus': [
+      'assets/images/tree/1_hatgiong.png',
+      'assets/images/tree/2_hatnaymam.png',
+      'assets/images/tree/3_mamnon.png',
+      'assets/images/tree/4_caynon.png',
+      'assets/images/tree/5_caycon.png',
+      'assets/images/tree/6_caynho.png',
+      'assets/images/tree/7_caydanglon.png',
+      'assets/images/tree/8_caytruongthanh.png',
+      'assets/images/tree/9_cayphattrientot.png',
+      'assets/images/tree/10_cayrahoa.png',
+      'assets/images/tree/11_caykettrainon.png',
+      'assets/images/tree/12_caytrailondan.png',
+      'assets/images/tree/13_caykettraichin.png',
+      'assets/images/tree/14_caysaiqua.png',
+      'assets/images/tree/15_caytruongthanh.png',
+    ],
+    'bonsai': [
+      'assets/images/tree/1_hatgiong.png',
+      'assets/images/tree/2_hatnaymam.png',
+      'assets/images/tree/3_mamnon.png',
+      'assets/images/tree/4_caynon.png',
+      'assets/images/tree/5_caycon.png',
+      'assets/images/tree/6_caynho.png',
+      'assets/images/tree/7_caydanglon.png',
+      'assets/images/tree/8_caytruongthanh.png',
+      'assets/images/tree/9_cayphattrientot.png',
+      'assets/images/tree/10_cayrahoa.png',
+      'assets/images/tree/11_caykettrainon.png',
+      'assets/images/tree/12_caytrailondan.png',
+      'assets/images/tree/13_caykettraichin.png',
+      'assets/images/tree/14_caysaiqua.png',
+      'assets/images/tree/15_caytruongthanh.png',
+    ],
+    'flower': [
+      'assets/images/tree/1_hatgiong.png',
+      'assets/images/tree/2_hatnaymam.png',
+      'assets/images/tree/3_mamnon.png',
+      'assets/images/tree/4_caynon.png',
+      'assets/images/tree/5_caycon.png',
+      'assets/images/tree/6_caynho.png',
+      'assets/images/tree/7_caydanglon.png',
+      'assets/images/tree/8_caytruongthanh.png',
+      'assets/images/tree/9_cayphattrientot.png',
+      'assets/images/tree/10_cayrahoa.png',
+      'assets/images/tree/11_caykettrainon.png',
+      'assets/images/tree/12_caytrailondan.png',
+      'assets/images/tree/13_caykettraichin.png',
+      'assets/images/tree/14_caysaiqua.png',
+      'assets/images/tree/15_caytruongthanh.png',
+    ],
+    'bamboo': [
+      'assets/images/tree/1_hatgiong.png',
+      'assets/images/tree/2_hatnaymam.png',
+      'assets/images/tree/3_mamnon.png',
+      'assets/images/tree/4_caynon.png',
+      'assets/images/tree/5_caycon.png',
+      'assets/images/tree/6_caynho.png',
+      'assets/images/tree/7_caydanglon.png',
+      'assets/images/tree/8_caytruongthanh.png',
+      'assets/images/tree/9_cayphattrientot.png',
+      'assets/images/tree/10_cayrahoa.png',
+      'assets/images/tree/11_caykettrainon.png',
+      'assets/images/tree/12_caytrailondan.png',
+      'assets/images/tree/13_caykettraichin.png',
+      'assets/images/tree/14_caysaiqua.png',
+      'assets/images/tree/15_caytruongthanh.png',
+    ],
+    'sunflower': [
+      'assets/images/tree/1_hatgiong.png',
+      'assets/images/tree/2_hatnaymam.png',
+      'assets/images/tree/3_mamnon.png',
+      'assets/images/tree/4_caynon.png',
+      'assets/images/tree/5_caycon.png',
+      'assets/images/tree/6_caynho.png',
+      'assets/images/tree/7_caydanglon.png',
+      'assets/images/tree/8_caytruongthanh.png',
+      'assets/images/tree/9_cayphattrientot.png',
+      'assets/images/tree/10_cayrahoa.png',
+      'assets/images/tree/11_caykettrainon.png',
+      'assets/images/tree/12_caytrailondan.png',
+      'assets/images/tree/13_caykettraichin.png',
+      'assets/images/tree/14_caysaiqua.png',
+      'assets/images/tree/15_caytruongthanh.png',
+    ],
   };
 
   static const Map<String, String> _plantNames = {
@@ -61,7 +157,22 @@ class _PlantWidgetState extends State<PlantWidget>
   };
 
   static const List<String> _levelNames = [
-    '', 'Hạt giống', 'Mầm nhú', 'Cây non', 'Trưởng thành', 'Đầy hoa/quả'
+    '',
+    'Hạt giống',
+    'Hạt nảy mầm',
+    'Mầm non',
+    'Cây non',
+    'Cây con',
+    'Cây nhỏ',
+    'Cây đang lớn',
+    'Cây trưởng thành',
+    'Cây phát triển tốt',
+    'Cây ra hoa',
+    'Cây kết trái non',
+    'Cây trái lớn dần',
+    'Cây kết trái chín',
+    'Cây sai quả',
+    'Cây trưởng thành hoàn hảo',
   ];
 
   String get _emoji {
@@ -75,7 +186,7 @@ class _PlantWidgetState extends State<PlantWidget>
     return _emoji.endsWith('.png') || _emoji.endsWith('.jpg');
   }
 
-  String get _levelName => _levelNames[widget.level.clamp(1, 5)];
+  String get _levelName => _levelNames[widget.level.clamp(1, 15)];
   String get _plantName => _plantNames[widget.plantType] ?? 'Cây';
 
   @override
@@ -140,11 +251,13 @@ class PlantProgressBar extends StatelessWidget {
     required this.level,
   });
 
-  static const List<int> _thresholds = [0, 10, 30, 100, 300, 999999];
+  static const List<int> _thresholds = [
+    0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525, 999999
+  ];
 
   @override
   Widget build(BuildContext context) {
-    if (level >= 5) {
+    if (level >= 15) {
       return Text(
         '🏆 Cây đã đạt cấp độ tối đa!',
         style: TextStyle(

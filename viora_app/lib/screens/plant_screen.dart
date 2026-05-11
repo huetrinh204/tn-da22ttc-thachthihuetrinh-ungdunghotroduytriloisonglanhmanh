@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/level_up_animation.dart';
 import '../theme/theme_extensions.dart';
 
 class PlantScreen extends StatefulWidget {
@@ -19,16 +20,28 @@ class _PlantScreenState extends State<PlantScreen>
   int plantExp = 0;
   bool plantWilted = false;
   bool isLoading = true;
+  bool showLevelUpAnimation = false;
+  int? previousLevel;
 
   @override
   bool get wantKeepAlive => false; // Không cache → reload mỗi lần vào tab
 
   static const List<Map<String, dynamic>> _levelInfo = [
-    {"name": "Hạt giống",      "desc": "Hành trình bắt đầu từ đây",          "color": 0xFF8D6E63},
-    {"name": "Mầm nhú",        "desc": "Cây đang nảy mầm, tiếp tục nhé!",    "color": 0xFF66BB6A},
-    {"name": "Cây non",        "desc": "Cây đang lớn dần mỗi ngày",          "color": 0xFF43A047},
-    {"name": "Trưởng thành",   "desc": "Cây đã vững chắc, bạn thật kiên trì","color": 0xFF2E7D32},
-    {"name": "Đầy hoa/quả",    "desc": "Tuyệt vời! Cây đã đạt đỉnh cao 🏆", "color": 0xFF1B5E20},
+    {"name": "Hạt giống", "desc": "Hành trình bắt đầu từ đây", "color": 0xFF8D6E63},
+    {"name": "Hạt nảy mầm", "desc": "Hạt đang nảy mầm", "color": 0xFFA1887F},
+    {"name": "Mầm non", "desc": "Cây đang nảy mầm, tiếp tục nhé!", "color": 0xFF81C784},
+    {"name": "Cây non", "desc": "Cây đang lớn dần mỗi ngày", "color": 0xFF66BB6A},
+    {"name": "Cây con", "desc": "Cây đang phát triển tốt", "color": 0xFF4CAF50},
+    {"name": "Cây nhỏ", "desc": "Cây đang vững chắc hơn", "color": 0xFF43A047},
+    {"name": "Cây đang lớn", "desc": "Cây đang lớn mạnh", "color": 0xFF388E3C},
+    {"name": "Cây trưởng thành", "desc": "Cây đã vững chắc", "color": 0xFF2E7D32},
+    {"name": "Cây phát triển tốt", "desc": "Cây đang phát triển rất tốt", "color": 0xFF1B5E20},
+    {"name": "Cây ra hoa", "desc": "Cây bắt đầu ra hoa", "color": 0xFFE91E63},
+    {"name": "Cây kết trái non", "desc": "Cây đang kết trái", "color": 0xFFF06292},
+    {"name": "Cây trái lớn dần", "desc": "Trái đang lớn dần", "color": 0xFFFF9800},
+    {"name": "Cây kết trái chín", "desc": "Trái đã chín", "color": 0xFFFFA726},
+    {"name": "Cây sai quả", "desc": "Cây đầy trái chín", "color": 0xFFFFB74D},
+    {"name": "Cây trưởng thành hoàn hảo", "desc": "Tuyệt vời! Cây đã đạt đỉnh cao 🏆", "color": 0xFFFFD54F},
   ];
 
   @override
@@ -54,34 +67,51 @@ class _PlantScreenState extends State<PlantScreen>
     final token = prefs.getString("token") ?? "";
     final res = await ApiService.getPlant(token);
     if (!mounted) return;
-    setState(() {
-      final plant = res["plant"];
-      if (plant != null) {
+    
+    final plant = res["plant"];
+    if (plant != null) {
+      final newLevel = plant["level"] ?? 1;
+      
+      // Check if level up happened
+      if (previousLevel != null && newLevel > previousLevel!) {
+        setState(() {
+          showLevelUpAnimation = true;
+        });
+      }
+      
+      setState(() {
         plantType = prefs.getString("plant_type") ?? plant["plant_type"] ?? "sprout";
-        plantLevel = plant["level"] ?? 1;
+        plantLevel = newLevel;
         plantExp = plant["experience"] ?? 0;
         plantWilted = plant["is_wilted"] == true;
-      }
-      isLoading = false;
-    });
+        isLoading = false;
+        previousLevel = newLevel;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final level = plantLevel.clamp(1, 5);
+    final level = plantLevel.clamp(1, 15);
     final info = _levelInfo[level - 1];
     final cardColor = Theme.of(context).cardTheme.color ?? Colors.white;
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const VioraAppBar(title: "Cây của tôi"),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
-          : RefreshIndicator(
-              onRefresh: _loadPlant,
-              color: const Color(0xFF4CAF50),
-              child: ListView(
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: const VioraAppBar(title: "Cây của tôi"),
+          body: isLoading
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
+              : RefreshIndicator(
+                  onRefresh: _loadPlant,
+                  color: const Color(0xFF4CAF50),
+                  child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
                   // Plant display card
@@ -242,6 +272,21 @@ class _PlantScreenState extends State<PlantScreen>
                 ],
               ),
             ),
+        ),
+        
+        // Level-up animation overlay
+        if (showLevelUpAnimation && previousLevel != null)
+          LevelUpAnimation(
+            plantType: plantType,
+            oldLevel: previousLevel! - 1,
+            newLevel: plantLevel,
+            onComplete: () {
+              setState(() {
+                showLevelUpAnimation = false;
+              });
+            },
+          ),
+      ],
     );
   }
 
@@ -250,7 +295,7 @@ class _PlantScreenState extends State<PlantScreen>
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildStatChip("Tổng điểm", "$plantExp", Icons.star_rounded, Colors.amber),
-        _buildStatChip("Cấp độ", "$plantLevel / 5", Icons.trending_up, const Color(0xFF4CAF50)),
+        _buildStatChip("Cấp độ", "$plantLevel / 15", Icons.trending_up, const Color(0xFF4CAF50)),
       ],
     );
   }
@@ -271,10 +316,20 @@ class _PlantScreenState extends State<PlantScreen>
   List<Widget> _buildRoadmap(int currentLevel) {
     final stages = [
       {"level": 1, "name": "Hạt giống", "exp": 0},
-      {"level": 2, "name": "Mầm nhú", "exp": 10},
-      {"level": 3, "name": "Cây non", "exp": 30},
-      {"level": 4, "name": "Trưởng thành", "exp": 100},
-      {"level": 5, "name": "Đầy hoa/quả", "exp": 300},
+      {"level": 2, "name": "Hạt nảy mầm", "exp": 5},
+      {"level": 3, "name": "Mầm non", "exp": 15},
+      {"level": 4, "name": "Cây non", "exp": 30},
+      {"level": 5, "name": "Cây con", "exp": 50},
+      {"level": 6, "name": "Cây nhỏ", "exp": 75},
+      {"level": 7, "name": "Cây đang lớn", "exp": 105},
+      {"level": 8, "name": "Cây trưởng thành", "exp": 140},
+      {"level": 9, "name": "Cây phát triển tốt", "exp": 180},
+      {"level": 10, "name": "Cây ra hoa", "exp": 225},
+      {"level": 11, "name": "Cây kết trái non", "exp": 275},
+      {"level": 12, "name": "Cây trái lớn dần", "exp": 330},
+      {"level": 13, "name": "Cây kết trái chín", "exp": 390},
+      {"level": 14, "name": "Cây sai quả", "exp": 455},
+      {"level": 15, "name": "Cây trưởng thành hoàn hảo", "exp": 525},
     ];
 
     return stages.map((s) {
