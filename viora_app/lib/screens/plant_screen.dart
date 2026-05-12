@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
 import '../widgets/level_up_animation.dart';
+import '../widgets/treasure_reward_animation.dart';
 import '../theme/theme_extensions.dart';
 
 class PlantScreen extends StatefulWidget {
@@ -78,6 +79,16 @@ class _PlantScreenState extends State<PlantScreen>
       if (previousLevel != null && newLevel > previousLevel!) {
         setState(() {
           showLevelUpAnimation = true;
+        });
+      }
+      
+      // Check if reached treasure milestone (15-30 points = level 3)
+      if (previousLevel != null && previousLevel! < 3 && newLevel >= 3) {
+        // Show treasure reward after level up animation
+        Future.delayed(const Duration(milliseconds: 2500), () {
+          if (mounted) {
+            _showTreasureReward();
+          }
         });
       }
       
@@ -246,7 +257,11 @@ class _PlantScreenState extends State<PlantScreen>
                                 fontSize: 15,
                                 color: context.textGreen)),
                         const SizedBox(height: 16),
-                        ..._buildRoadmap(level),
+                        Center(
+                          child: Column(
+                            children: _buildRoadmap(level),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -346,7 +361,9 @@ class _PlantScreenState extends State<PlantScreen>
       {"level": 15, "name": "Cây trưởng thành hoàn hảo", "exp": 525},
     ];
 
-    return stages.asMap().entries.map((entry) {
+    final List<Widget> roadmapWidgets = [];
+
+    for (var entry in stages.asMap().entries) {
       final index = entry.key;
       final stage = entry.value;
       final lvl = stage["level"] as int;
@@ -354,28 +371,144 @@ class _PlantScreenState extends State<PlantScreen>
       final isCurrent = currentLevel == lvl;
       final isLocked = currentLevel < lvl;
 
-      // Calculate horizontal offset for wave effect
-      // Using sine wave: offset = amplitude * sin(frequency * index)
-      final amplitude = 30.0; // How far left/right the wave goes
-      final frequency = 0.5; // How many waves
+      // Calculate horizontal offset for wave effect with more curve
+      final amplitude = 60.0; // Increased from 30 to 60 for more curve
+      final frequency = 0.8; // Increased from 0.5 to 0.8 for more waves
       final offset = amplitude * math.sin(frequency * index);
 
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: 20,
-          left: offset > 0 ? offset : 0,
-          right: offset < 0 ? -offset : 0,
-        ),
-        child: _buildLevelNode(
-          level: lvl,
-          name: stage["name"] as String,
-          exp: stage["exp"] as int,
-          isDone: isDone,
-          isCurrent: isCurrent,
-          isLocked: isLocked,
+      roadmapWidgets.add(
+        Padding(
+          padding: EdgeInsets.only(
+            bottom: 20,
+            left: offset > 0 ? offset : 0,
+            right: offset < 0 ? -offset : 0,
+          ),
+          child: _buildLevelNode(
+            level: lvl,
+            name: stage["name"] as String,
+            exp: stage["exp"] as int,
+            isDone: isDone,
+            isCurrent: isCurrent,
+            isLocked: isLocked,
+          ),
         ),
       );
-    }).toList();
+
+      // Add treasure chest every 3 levels (after level 3, 6, 9, 12)
+      if (lvl % 3 == 0 && lvl < 15) {
+        final treasureUnlocked = currentLevel > lvl;
+        roadmapWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: _buildTreasureChest(
+              isUnlocked: treasureUnlocked,
+              afterLevel: lvl,
+            ),
+          ),
+        );
+      }
+    }
+
+    return roadmapWidgets;
+  }
+
+  Widget _buildTreasureChest({
+    required bool isUnlocked,
+    required int afterLevel,
+  }) {
+    return GestureDetector(
+      onTap: isUnlocked
+          ? () {
+              // Show treasure reward animation
+              _showTreasureReward();
+            }
+          : null,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isUnlocked
+                  ? const Color(0xFFFFD700).withValues(alpha: 0.2)
+                  : Colors.grey.shade200,
+              border: Border.all(
+                color: isUnlocked ? const Color(0xFFFFD700) : Colors.grey.shade400,
+                width: 3,
+              ),
+              boxShadow: isUnlocked
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Center(
+              child: isUnlocked
+                  ? Image.asset(
+                      'assets/images/khobau.png',
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.contain,
+                    )
+                  : RepaintBoundary(
+                      child: ColorFiltered(
+                        colorFilter: const ColorFilter.matrix([
+                          0.2126, 0.7152, 0.0722, 0, 0,
+                          0.2126, 0.7152, 0.0722, 0, 0,
+                          0.2126, 0.7152, 0.0722, 0, 0,
+                          0,      0,      0,      1, 0,
+                        ]),
+                        child: Opacity(
+                          opacity: 0.7,
+                          child: Image.asset(
+                            'assets/images/khobau.png',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: isUnlocked
+                  ? const Color(0xFFFFD700).withValues(alpha: 0.2)
+                  : Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isUnlocked ? const Color(0xFFFFD700) : Colors.grey.shade400,
+                width: 1,
+              ),
+            ),
+            child: Text(
+              isUnlocked ? '🏆 Nước thần' : '🔒 Khóa',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: isUnlocked ? const Color(0xFFFF8F00) : Colors.grey.shade600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTreasureReward() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const TreasureRewardAnimation(),
+    );
   }
 
   Widget _buildLevelNode({
@@ -437,8 +570,32 @@ class _PlantScreenState extends State<PlantScreen>
         ),
       );
     } else {
-      nodeColor = Colors.grey.shade300;
-      icon = Icon(Icons.lock, color: Colors.grey.shade600, size: 20);
+      nodeColor = Colors.grey.shade400; // Medium gray background for locked nodes
+      // Show grayscale plant image for locked levels with RepaintBoundary isolation
+      icon = RepaintBoundary(
+        child: ClipOval(
+          child: ColorFiltered(
+            colorFilter: const ColorFilter.matrix([
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0,      0,      0,      1, 0,
+            ]),
+            child: Opacity(
+              opacity: 0.7,
+              child: Image.asset(
+                plantImages[level - 1],
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.lock, color: Colors.grey.shade600, size: 20);
+                },
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return Column(
