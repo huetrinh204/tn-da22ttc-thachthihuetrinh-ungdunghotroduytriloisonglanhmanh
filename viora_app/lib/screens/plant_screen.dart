@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math' as math;
 import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
@@ -70,7 +71,8 @@ class _PlantScreenState extends State<PlantScreen>
     
     final plant = res["plant"];
     if (plant != null) {
-      final newLevel = plant["level"] ?? 1;
+      final exp = plant["experience"] ?? 0;
+      final newLevel = _calculateLevel(exp);
       
       // Check if level up happened
       if (previousLevel != null && newLevel > previousLevel!) {
@@ -82,7 +84,7 @@ class _PlantScreenState extends State<PlantScreen>
       setState(() {
         plantType = prefs.getString("plant_type") ?? plant["plant_type"] ?? "sprout";
         plantLevel = newLevel;
-        plantExp = plant["experience"] ?? 0;
+        plantExp = exp;
         plantWilted = plant["is_wilted"] == true;
         isLoading = false;
         previousLevel = newLevel;
@@ -92,6 +94,18 @@ class _PlantScreenState extends State<PlantScreen>
         isLoading = false;
       });
     }
+  }
+  
+  // Calculate level based on experience (15 levels system)
+  int _calculateLevel(int exp) {
+    const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+    
+    for (int i = thresholds.length - 1; i >= 0; i--) {
+      if (exp >= thresholds[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
   }
 
   @override
@@ -332,74 +346,179 @@ class _PlantScreenState extends State<PlantScreen>
       {"level": 15, "name": "Cây trưởng thành hoàn hảo", "exp": 525},
     ];
 
-    return stages.map((s) {
-      final lvl = s["level"] as int;
+    return stages.asMap().entries.map((entry) {
+      final index = entry.key;
+      final stage = entry.value;
+      final lvl = stage["level"] as int;
       final isDone = currentLevel > lvl;
       final isCurrent = currentLevel == lvl;
+      final isLocked = currentLevel < lvl;
+
+      // Calculate horizontal offset for wave effect
+      // Using sine wave: offset = amplitude * sin(frequency * index)
+      final amplitude = 30.0; // How far left/right the wave goes
+      final frequency = 0.5; // How many waves
+      final offset = amplitude * math.sin(frequency * index);
+
       return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: isDone
-                    ? const Color(0xFF4CAF50)
-                    : isCurrent
-                        ? const Color(0xFFE8F5E9)
-                        : const Color(0xFFF5F5F5),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isCurrent
-                      ? const Color(0xFF4CAF50)
-                      : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: isDone
-                    ? const Icon(Icons.check, color: Colors.white, size: 16)
-                    : Text("$lvl",
-                        style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: isCurrent
-                                ? const Color(0xFF2E7D32)
-                                : Colors.grey)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                "${s["name"]} — ${s["exp"]} điểm",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight:
-                      isCurrent ? FontWeight.bold : FontWeight.normal,
-                  color: isDone
-                      ? const Color(0xFF4CAF50)
-                      : isCurrent
-                          ? context.textGreen
-                          : context.textSecondary,
-                ),
-              ),
-            ),
-            if (isCurrent)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF4CAF50),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text("Hiện tại",
-                    style: TextStyle(color: Colors.white, fontSize: 11)),
-              ),
-          ],
+        padding: EdgeInsets.only(
+          bottom: 20,
+          left: offset > 0 ? offset : 0,
+          right: offset < 0 ? -offset : 0,
+        ),
+        child: _buildLevelNode(
+          level: lvl,
+          name: stage["name"] as String,
+          exp: stage["exp"] as int,
+          isDone: isDone,
+          isCurrent: isCurrent,
+          isLocked: isLocked,
         ),
       );
     }).toList();
+  }
+
+  Widget _buildLevelNode({
+    required int level,
+    required String name,
+    required int exp,
+    required bool isDone,
+    required bool isCurrent,
+    required bool isLocked,
+  }) {
+    Color nodeColor;
+    Widget icon;
+
+    // Get plant image path
+    final plantImages = [
+      'assets/images/tree/1_hatgiong.png',
+      'assets/images/tree/2_hatnaymam.png',
+      'assets/images/tree/3_mamnon.png',
+      'assets/images/tree/4_caynon.png',
+      'assets/images/tree/5_caycon.png',
+      'assets/images/tree/6_caynho.png',
+      'assets/images/tree/7_caydanglon.png',
+      'assets/images/tree/8_caytruongthanh.png',
+      'assets/images/tree/9_cayphattrientot.png',
+      'assets/images/tree/10_cayrahoa.png',
+      'assets/images/tree/11_caykettrainon.png',
+      'assets/images/tree/12_caytrailondan.png',
+      'assets/images/tree/13_caykettraichin.png',
+      'assets/images/tree/14_caysaiqua.png',
+      'assets/images/tree/15_caytruongthanh.png',
+    ];
+
+    if (isDone) {
+      nodeColor = const Color(0xFF4CAF50);
+      // Show plant image for completed levels
+      icon = ClipOval(
+        child: Image.asset(
+          plantImages[level - 1],
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(Icons.check, color: Colors.white, size: 24);
+          },
+        ),
+      );
+    } else if (isCurrent) {
+      nodeColor = const Color(0xFF4CAF50);
+      // Show plant image for current level
+      icon = ClipOval(
+        child: Image.asset(
+          plantImages[level - 1],
+          width: 50,
+          height: 50,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(Icons.star, color: Colors.white, size: 24);
+          },
+        ),
+      );
+    } else {
+      nodeColor = Colors.grey.shade300;
+      icon = Icon(Icons.lock, color: Colors.grey.shade600, size: 20);
+    }
+
+    return Column(
+      children: [
+        // Level badge
+        if (isCurrent)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF4CAF50),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Cấp $level',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        if (isCurrent) const SizedBox(height: 8),
+
+        // Node circle
+        Container(
+          width: 70,
+          height: 70,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: nodeColor,
+            boxShadow: isCurrent
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : [],
+            border: Border.all(
+              color: Colors.white,
+              width: 4,
+            ),
+          ),
+          child: Center(child: icon),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Level info
+        SizedBox(
+          width: 100,
+          child: Column(
+            children: [
+              Text(
+                name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                  color: isDone || isCurrent
+                      ? context.textGreen
+                      : context.textSecondary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$exp điểm',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: context.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildTip(String text, String reward) {
