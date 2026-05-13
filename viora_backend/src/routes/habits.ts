@@ -144,7 +144,14 @@ router.delete("/:id", authMiddleware, async (req: any, res) => {
 // ================= CHECK-IN HABIT =================
 router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
   const { note, metric_value, metric_unit } = req.body;
-  const today = new Date().toISOString().split("T")[0];
+  
+  // Tính ngày hôm nay theo timezone Việt Nam (UTC+7)
+  const now = new Date();
+  // Chuyển sang giờ Việt Nam bằng cách thêm 7 giờ
+  const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+  const today = vietnamTime.toISOString().split('T')[0];
+  
+  console.log(`[Check-in] UTC time: ${now.toISOString()}, Vietnam time: ${vietnamTime.toISOString()}, today: ${today}`);
 
   try {
     // check xem đã check-in hôm nay chưa
@@ -158,12 +165,14 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
       return res.json({ message: "Already checked in", is_completed: true });
     }
 
-    // check-in mới
+    // check-in mới - dùng CAST để đảm bảo lưu đúng ngày
     await pool.query(
       `INSERT INTO habit_logs (habit_id, user_id, log_date, note, metric_value, metric_unit)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, CAST(? AS DATE), ?, ?, ?)`,
       [req.params.id, req.user.id, today, note || null, metric_value || null, metric_unit || null]
     );
+
+    console.log(`[Check-in] Saved to database with log_date: ${today}`);
 
     // cập nhật streak tổng
     await updateStreak(req.user.id);
@@ -223,7 +232,10 @@ async function updateHabitStreak(habitId: number, today: string) {
 
 // helper: cập nhật streak
 async function updateStreak(userId: number) {
-  const today = new Date().toISOString().split("T")[0];
+  // Tính ngày hôm nay theo timezone Việt Nam (UTC+7)
+  const now = new Date();
+  const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+  const today = vietnamTime.toISOString().split('T')[0];
 
   const [streakRows]: any = await pool.query(
     "SELECT * FROM streaks WHERE user_id = ?",

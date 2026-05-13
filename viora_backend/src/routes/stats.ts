@@ -8,6 +8,23 @@ dotenv.config();
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 
+// Helper function to convert MySQL date (UTC) to Vietnam date string
+function convertToVietnamDateString(mysqlDate: any): string {
+  let utcDate: Date;
+  
+  if (mysqlDate instanceof Date) {
+    utcDate = mysqlDate;
+  } else if (typeof mysqlDate === 'string') {
+    utcDate = new Date(mysqlDate);
+  } else {
+    utcDate = new Date(String(mysqlDate));
+  }
+  
+  // MySQL trả về UTC, cộng 7 giờ để convert sang Vietnam timezone
+  const vietnamDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
+  return vietnamDate.toISOString().split('T')[0];
+}
+
 function authMiddleware(req: any, res: any, next: any) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
@@ -24,21 +41,54 @@ function authMiddleware(req: any, res: any, next: any) {
 // Trả về số habit hoàn thành theo từng ngày trong 7 ngày gần nhất
 router.get("/weekly", authMiddleware, async (req: any, res) => {
   try {
-    const [rows]: any = await pool.query(
-      `WITH RECURSIVE dates AS (
-         SELECT DATE_SUB(CURDATE(), INTERVAL 6 DAY) as log_date
-         UNION ALL
-         SELECT DATE_ADD(log_date, INTERVAL 1 DAY)
-         FROM dates
-         WHERE log_date < CURDATE()
-       )
-       SELECT d.log_date, COALESCE(COUNT(hl.id), 0) as count
-       FROM dates d
-       LEFT JOIN habit_logs hl ON d.log_date = hl.log_date AND hl.user_id = ?
-       GROUP BY d.log_date
-       ORDER BY d.log_date ASC`,
-      [req.user.id]
+    // Tính 7 ngày bằng JavaScript
+    const today = new Date();
+    const allDates: string[] = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      allDates.push(date.toISOString().split('T')[0]);
+    }
+    
+    const startDate = allDates[0];
+    const endDate = allDates[allDates.length - 1];
+    
+    console.log(`[Weekly Stats] userId=${req.user.id} startDate=${startDate} endDate=${endDate}`);
+    
+    // Lấy dữ liệu từ DB - không dùng DATE() để tránh timezone issue
+    // Dùng < endDate + 1 day thay vì <= endDate để bao gồm cả ngày
+    const nextDay = new Date(today);
+    nextDay.setDate(today.getDate() + 1);
+    const nextDayStr = nextDay.toISOString().split('T')[0];
+    
+    const [dbRows]: any = await pool.query(
+      `SELECT DATE(log_date) as log_date, COUNT(*) as count
+       FROM habit_logs
+       WHERE user_id = ? AND log_date >= ? AND log_date < ?
+       GROUP BY DATE(log_date)
+       ORDER BY DATE(log_date) ASC`,
+      [req.user.id, startDate, nextDayStr]
     );
+    
+    console.log(`[Weekly Stats] DB returned ${dbRows.length} rows:`, dbRows);
+    
+    // Map dữ liệu
+    const dbMap = new Map();
+    dbRows.forEach((row: any) => {
+      const dateStr = convertToVietnamDateString(row.log_date);
+      console.log(`[Weekly Stats] Mapping: ${row.log_date} -> ${dateStr}, count: ${row.count}`);
+      dbMap.set(dateStr, row.count);
+    });
+    
+    // Tạo kết quả với tất cả các ngày
+    const rows = allDates.map(dateStr => ({
+      log_date: dateStr,
+      count: dbMap.get(dateStr) || 0
+    }));
+    
+    console.log(`[Weekly Stats] Final result:`, rows);
+    
     res.json({ data: rows });
   } catch (error) {
     console.log(error);
@@ -50,21 +100,47 @@ router.get("/weekly", authMiddleware, async (req: any, res) => {
 // Trả về số habit hoàn thành theo từng ngày trong 30 ngày gần nhất
 router.get("/monthly", authMiddleware, async (req: any, res) => {
   try {
-    const [rows]: any = await pool.query(
-      `WITH RECURSIVE dates AS (
-         SELECT DATE_SUB(CURDATE(), INTERVAL 29 DAY) as log_date
-         UNION ALL
-         SELECT DATE_ADD(log_date, INTERVAL 1 DAY)
-         FROM dates
-         WHERE log_date < CURDATE()
-       )
-       SELECT d.log_date, COALESCE(COUNT(hl.id), 0) as count
-       FROM dates d
-       LEFT JOIN habit_logs hl ON d.log_date = hl.log_date AND hl.user_id = ?
-       GROUP BY d.log_date
-       ORDER BY d.log_date ASC`,
-      [req.user.id]
+    // Tính 30 ngày bằng JavaScript
+    const today = new Date();
+    const allDates: string[] = [];
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      allDates.push(date.toISOString().split('T')[0]);
+    }
+    
+    const startDate = allDates[0];
+    const endDate = allDates[allDates.length - 1];
+    
+    // Tính ngày mai để query < nextDay (bao gồm cả hôm nay)
+    const nextDay = new Date(today);
+    nextDay.setDate(today.getDate() + 1);
+    const nextDayStr = nextDay.toISOString().split('T')[0];
+    
+    // Lấy dữ liệu từ DB
+    const [dbRows]: any = await pool.query(
+      `SELECT DATE(log_date) as log_date, COUNT(*) as count
+       FROM habit_logs
+       WHERE user_id = ? AND log_date >= ? AND log_date < ?
+       GROUP BY DATE(log_date)
+       ORDER BY DATE(log_date) ASC`,
+      [req.user.id, startDate, nextDayStr]
     );
+    
+    // Map dữ liệu
+    const dbMap = new Map();
+    dbRows.forEach((row: any) => {
+      const dateStr = convertToVietnamDateString(row.log_date);
+      dbMap.set(dateStr, row.count);
+    });
+    
+    // Tạo kết quả với tất cả các ngày
+    const rows = allDates.map(dateStr => ({
+      log_date: dateStr,
+      count: dbMap.get(dateStr) || 0
+    }));
+    
     res.json({ data: rows });
   } catch (error) {
     console.log(error);
@@ -148,15 +224,61 @@ router.get("/habits/:habitId/metrics", authMiddleware, async (req: any, res) => 
 
     const habit = habitRows[0];
 
-    // Lấy metrics theo ngày
-    const [metricsRows]: any = await pool.query(
+    // Lấy metrics theo ngày - bao gồm cả ngày hôm nay
+    // Tính ngày bắt đầu và kết thúc bằng JavaScript
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - (parseInt(days as string) - 1));
+    
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = today.toISOString().split('T')[0];
+    
+    // Tính ngày mai để query < nextDay
+    const nextDay = new Date(today);
+    nextDay.setDate(today.getDate() + 1);
+    const nextDayStr = nextDay.toISOString().split('T')[0];
+    
+    console.log(`[Metrics] habitId=${habitId} days=${days} startDate=${startDateStr} endDate=${endDateStr} nextDay=${nextDayStr}`);
+    
+    // Tạo danh sách tất cả các ngày từ startDate đến today
+    const allDates: string[] = [];
+    const currentDate = new Date(startDate);
+    while (currentDate <= today) {
+      allDates.push(currentDate.toISOString().split('T')[0]);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Lấy dữ liệu từ database - dùng < nextDay để bao gồm cả hôm nay
+    const [dbRows]: any = await pool.query(
       `SELECT log_date, metric_value, metric_unit, note
        FROM habit_logs
-       WHERE habit_id = ? AND user_id = ?
-         AND log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+       WHERE habit_id = ? AND user_id = ? 
+         AND log_date >= ? AND log_date < ?
        ORDER BY log_date ASC`,
-      [habitId, req.user.id, parseInt(days as string) - 1]
+      [habitId, req.user.id, startDateStr, nextDayStr]
     );
+    
+    // Map dữ liệu từ DB vào allDates
+    const dbMap = new Map();
+    dbRows.forEach((row: any) => {
+      const dateStr = convertToVietnamDateString(row.log_date);
+      dbMap.set(dateStr, row);
+    });
+    
+    // Tạo metricsRows với tất cả các ngày
+    const metricsRows = allDates.map(dateStr => {
+      if (dbMap.has(dateStr)) {
+        return dbMap.get(dateStr);
+      }
+      return {
+        log_date: dateStr,
+        metric_value: null,
+        metric_unit: null,
+        note: null
+      };
+    });
+    
+    console.log(`[Metrics] Total dates: ${metricsRows.length}, First: ${metricsRows[0]?.log_date}, Last: ${metricsRows[metricsRows.length - 1]?.log_date}`);
 
     // Tính tổng và trung bình (chỉ tính với các log có metric_value)
     const logsWithMetrics = metricsRows.filter((row: any) => row.metric_value !== null);

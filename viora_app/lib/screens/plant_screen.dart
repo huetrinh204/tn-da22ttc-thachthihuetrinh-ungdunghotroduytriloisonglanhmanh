@@ -74,16 +74,17 @@ class _PlantScreenState extends State<PlantScreen>
     if (plant != null) {
       final exp = plant["experience"] ?? 0;
       final newLevel = _calculateLevel(exp);
+      final oldLevel = previousLevel ?? newLevel;
       
       // Check if level up happened
-      if (previousLevel != null && newLevel > previousLevel!) {
+      if (oldLevel < newLevel) {
         setState(() {
           showLevelUpAnimation = true;
         });
       }
       
       // Check if reached treasure milestone (15-30 points = level 3)
-      if (previousLevel != null && previousLevel! < 3 && newLevel >= 3) {
+      if (oldLevel < 3 && newLevel >= 3) {
         // Show treasure reward after level up animation
         Future.delayed(const Duration(milliseconds: 2500), () {
           if (mounted) {
@@ -307,7 +308,7 @@ class _PlantScreenState extends State<PlantScreen>
         if (showLevelUpAnimation && previousLevel != null)
           LevelUpAnimation(
             plantType: plantType,
-            oldLevel: previousLevel! - 1,
+            oldLevel: (previousLevel! - 1).clamp(1, 15),
             newLevel: plantLevel,
             onComplete: () {
               setState(() {

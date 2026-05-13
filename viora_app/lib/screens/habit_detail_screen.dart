@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:ui' as ui;
 import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
-import '../widgets/image_dot_painter.dart';
+import '../widgets/category_icon_dot_painter.dart';
 
 class HabitDetailScreen extends StatefulWidget {
   final int habitId;
@@ -31,25 +30,11 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   Map<String, dynamic> habitInfo = {};
   List<dynamic> metrics = [];
   Map<String, dynamic> summary = {};
-  
-  ui.Image? dotImage;
 
   @override
   void initState() {
     super.initState();
     _loadData();
-    _loadDotImage();
-  }
-  
-  Future<void> _loadDotImage() async {
-    final image = await ImageDotPainter.loadImageFromAssets(
-      'assets/images/tree/1_hatgiong.png',
-    );
-    if (mounted) {
-      setState(() {
-        dotImage = image;
-      });
-    }
   }
 
   Future<void> _loadData() async {
@@ -290,6 +275,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
 
   Widget _buildMetricsChart() {
     final unit = summary["unit"] ?? habitInfo["unit"] ?? "";
+    final category = habitInfo["category"] ?? "other";
     
     // Build list of spots với TẤT CẢ các ngày (bao gồm cả ngày không có dữ liệu)
     final List<FlSpot> spots = [];
@@ -378,8 +364,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
-                        return ImageDotPainter(
-                          image: dotImage,
+                        return CategoryIconDotPainter(
+                          category: category,
                           size: 24,
                         );
                       },
