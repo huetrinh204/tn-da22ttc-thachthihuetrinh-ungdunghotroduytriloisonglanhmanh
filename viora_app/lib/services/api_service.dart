@@ -464,4 +464,199 @@ class ApiService {
       return {"message": "Network error"};
     }
   }
+
+  // ================= COMMUNITY - GET POSTS =================
+  static Future<Map<String, dynamic>> getPosts(
+    String token, {
+    String type = "trending", // trending, following, achievements
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/posts?type=$type&page=$page&limit=$limit"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"posts": [], "message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"posts": [], "message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - CREATE POST =================
+  static Future<Map<String, dynamic>> createPost({
+    required String token,
+    required String content,
+    String? imageUrl,
+    List<String>? hashtags,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        "content": content,
+      };
+      if (imageUrl != null) body["image_url"] = imageUrl;
+      if (hashtags != null && hashtags.isNotEmpty) body["hashtags"] = hashtags;
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/posts"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - LIKE POST =================
+  static Future<Map<String, dynamic>> likePost(
+      String token, String postId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/posts/$postId/like"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - UNLIKE POST =================
+  static Future<Map<String, dynamic>> unlikePost(
+      String token, String postId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/community/posts/$postId/like"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - GET COMMENTS =================
+  static Future<Map<String, dynamic>> getComments(
+    String token,
+    String postId, {
+    int page = 1,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/posts/$postId/comments?page=$page&limit=$limit"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"comments": [], "message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"comments": [], "message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - CREATE COMMENT =================
+  static Future<Map<String, dynamic>> createComment({
+    required String token,
+    required String postId,
+    required String content,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/posts/$postId/comments"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"content": content}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - LIKE COMMENT =================
+  static Future<Map<String, dynamic>> likeComment(
+      String token, String commentId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/comments/$commentId/like"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - UNLIKE COMMENT =================
+  static Future<Map<String, dynamic>> unlikeComment(
+      String token, String commentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/community/comments/$commentId/like"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - DELETE POST =================
+  static Future<Map<String, dynamic>> deletePost(
+      String token, String postId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/community/posts/$postId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - UPLOAD IMAGE =================
+  static Future<Map<String, dynamic>> uploadImage(
+      String token, String imagePath) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/community/upload"),
+      );
+      request.headers["Authorization"] = "Bearer $token";
+      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Upload failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
 }

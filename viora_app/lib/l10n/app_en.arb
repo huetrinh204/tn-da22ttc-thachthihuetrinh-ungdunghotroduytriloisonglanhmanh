@@ -521,5 +521,69 @@
   "average": "📊 Average",
   "totalSum": "📈 Total",
   "noDataForPeriod": "No data for this period",
-  "startTrackingHabit": "Start tracking habit to see chart"
+  "startTrackingHabit": "Start tracking habit to see chart",
+  
+  "community": "Community",
+  "shareYourProgress": "Share your progress...",
+  "photo": "Photo",
+  "achievement": "Achievement",
+  "trending": "Trending",
+  "following": "Following",
+  "achievements": "Achievements",
+  "searchCommunity": "Search posts or users...",
+  "noPosts": "No posts yet",
+  "createFirstPost": "Be the first to share!",
+  "createPost": "Create Post",
+  "postContent": "Post Content",
+  "shareYourThoughts": "Share your thoughts...",
+  "addPhoto": "Add Photo",
+  "publish": "Publish",
+  "likes": "{count} likes",
+  "@likes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "comments": "{count} comments",
+  "@comments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "share": "Share",
+  "writeComment": "Write a comment...",
+  "send": "Send",
+  "deletePost": "Delete Post?",
+  "confirmDeletePost": "Are you sure you want to delete this post?",
+  "postDeleted": "Post deleted",
+  "postCreated": "Post created successfully!",
+  "justNow": "Just now",
+  "minutesAgo": "{count} minutes ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} hours ago",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} days ago",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -8,6 +8,7 @@ import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import 'habits_screen.dart';
 import 'plant_screen.dart';
+import 'community_screen.dart';
 import 'stats_screen.dart';
 import 'profile_screen.dart';
 
@@ -27,8 +28,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0: return _DashboardTab(key: _dashboardKey);
       case 1: return const HabitsScreen();
       case 2: return const PlantScreen();
-      case 3: return const StatsScreen();
-      case 4: return const ProfileScreen();
+      case 3: return const CommunityScreen();
+      case 4: return const StatsScreen();
+      case 5: return const ProfileScreen();
       default: return _DashboardTab(key: _dashboardKey);
     }
   }
@@ -87,6 +89,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: const Icon(Icons.eco_outlined, size: 24),
                 activeIcon: const Icon(Icons.eco_rounded, size: 24),
                 label: AppLocalizations.of(context)!.plant,
+              ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.people_outline_rounded, size: 24),
+                activeIcon: const Icon(Icons.people_rounded, size: 24),
+                label: AppLocalizations.of(context)!.community,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.bar_chart_outlined, size: 24),

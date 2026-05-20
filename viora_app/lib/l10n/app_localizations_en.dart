@@ -1137,4 +1137,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startTrackingHabit => 'Start tracking habit to see chart';
+
+  @override
+  String get community => 'Community';
+
+  @override
+  String get shareYourProgress => 'Share your progress...';
+
+  @override
+  String get photo => 'Photo';
+
+  @override
+  String get achievement => 'Achievement';
+
+  @override
+  String get trending => 'Trending';
+
+  @override
+  String get following => 'Following';
+
+  @override
+  String get searchCommunity => 'Search posts or users...';
+
+  @override
+  String get noPosts => 'No posts yet';
+
+  @override
+  String get createFirstPost => 'Be the first to share!';
+
+  @override
+  String get createPost => 'Create Post';
+
+  @override
+  String get postContent => 'Post Content';
+
+  @override
+  String get shareYourThoughts => 'Share your thoughts...';
+
+  @override
+  String get addPhoto => 'Add Photo';
+
+  @override
+  String get publish => 'Publish';
+
+  @override
+  String likes(int count) {
+    return '$count likes';
+  }
+
+  @override
+  String comments(int count) {
+    return '$count comments';
+  }
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get writeComment => 'Write a comment...';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get deletePost => 'Delete Post?';
+
+  @override
+  String get confirmDeletePost => 'Are you sure you want to delete this post?';
+
+  @override
+  String get postDeleted => 'Post deleted';
+
+  @override
+  String get postCreated => 'Post created successfully!';
+
+  @override
+  String get justNow => 'Just now';
+
+  @override
+  String minutesAgo(int count) {
+    return '$count minutes ago';
+  }
+
+  @override
+  String hoursAgo(int count) {
+    return '$count hours ago';
+  }
+
+  @override
+  String daysAgo(int count) {
+    return '$count days ago';
+  }
 }

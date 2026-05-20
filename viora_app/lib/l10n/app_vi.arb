@@ -521,5 +521,69 @@
   "average": "📊 Trung bình",
   "totalSum": "📈 Tổng cộng",
   "noDataForPeriod": "Chưa có dữ liệu trong khoảng thời gian này",
-  "startTrackingHabit": "Bắt đầu theo dõi thói quen để xem biểu đồ"
+  "startTrackingHabit": "Bắt đầu theo dõi thói quen để xem biểu đồ",
+  
+  "community": "Cộng đồng",
+  "shareYourProgress": "Chia sẻ tiến độ của bạn...",
+  "photo": "Ảnh",
+  "achievement": "Thành tích",
+  "trending": "Xu hướng",
+  "following": "Đang theo dõi",
+  "achievements": "Thành tích",
+  "searchCommunity": "Tìm kiếm bài viết hoặc người dùng...",
+  "noPosts": "Chưa có bài viết nào",
+  "createFirstPost": "Hãy là người đầu tiên chia sẻ!",
+  "createPost": "Tạo bài viết",
+  "postContent": "Nội dung bài viết",
+  "shareYourThoughts": "Chia sẻ suy nghĩ của bạn...",
+  "addPhoto": "Thêm ảnh",
+  "publish": "Đăng bài",
+  "likes": "{count} thích",
+  "@likes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "comments": "{count} bình luận",
+  "@comments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "share": "Chia sẻ",
+  "writeComment": "Viết bình luận...",
+  "send": "Gửi",
+  "deletePost": "Xóa bài viết?",
+  "confirmDeletePost": "Bạn có chắc muốn xóa bài viết này không?",
+  "postDeleted": "Đã xóa bài viết",
+  "postCreated": "Đã đăng bài thành công!",
+  "justNow": "Vừa xong",
+  "minutesAgo": "{count} phút trước",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{count} giờ trước",
+  "@hoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{count} ngày trước",
+  "@daysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1140,4 +1140,95 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get startTrackingHabit => 'Bắt đầu theo dõi thói quen để xem biểu đồ';
+
+  @override
+  String get community => 'Cộng đồng';
+
+  @override
+  String get shareYourProgress => 'Chia sẻ tiến độ của bạn...';
+
+  @override
+  String get photo => 'Ảnh';
+
+  @override
+  String get achievement => 'Thành tích';
+
+  @override
+  String get trending => 'Xu hướng';
+
+  @override
+  String get following => 'Đang theo dõi';
+
+  @override
+  String get searchCommunity => 'Tìm kiếm bài viết hoặc người dùng...';
+
+  @override
+  String get noPosts => 'Chưa có bài viết nào';
+
+  @override
+  String get createFirstPost => 'Hãy là người đầu tiên chia sẻ!';
+
+  @override
+  String get createPost => 'Tạo bài viết';
+
+  @override
+  String get postContent => 'Nội dung bài viết';
+
+  @override
+  String get shareYourThoughts => 'Chia sẻ suy nghĩ của bạn...';
+
+  @override
+  String get addPhoto => 'Thêm ảnh';
+
+  @override
+  String get publish => 'Đăng bài';
+
+  @override
+  String likes(int count) {
+    return '$count thích';
+  }
+
+  @override
+  String comments(int count) {
+    return '$count bình luận';
+  }
+
+  @override
+  String get share => 'Chia sẻ';
+
+  @override
+  String get writeComment => 'Viết bình luận...';
+
+  @override
+  String get send => 'Gửi';
+
+  @override
+  String get deletePost => 'Xóa bài viết?';
+
+  @override
+  String get confirmDeletePost => 'Bạn có chắc muốn xóa bài viết này không?';
+
+  @override
+  String get postDeleted => 'Đã xóa bài viết';
+
+  @override
+  String get postCreated => 'Đã đăng bài thành công!';
+
+  @override
+  String get justNow => 'Vừa xong';
+
+  @override
+  String minutesAgo(int count) {
+    return '$count phút trước';
+  }
+
+  @override
+  String hoursAgo(int count) {
+    return '$count giờ trước';
+  }
+
+  @override
+  String daysAgo(int count) {
+    return '$count ngày trước';
+  }
 }

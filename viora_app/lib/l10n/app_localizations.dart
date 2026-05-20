@@ -2281,6 +2281,168 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bắt đầu theo dõi thói quen để xem biểu đồ'**
   String get startTrackingHabit;
+
+  /// No description provided for @community.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cộng đồng'**
+  String get community;
+
+  /// No description provided for @shareYourProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ tiến độ của bạn...'**
+  String get shareYourProgress;
+
+  /// No description provided for @photo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ảnh'**
+  String get photo;
+
+  /// No description provided for @achievement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành tích'**
+  String get achievement;
+
+  /// No description provided for @trending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xu hướng'**
+  String get trending;
+
+  /// No description provided for @following.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang theo dõi'**
+  String get following;
+
+  /// No description provided for @searchCommunity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm bài viết hoặc người dùng...'**
+  String get searchCommunity;
+
+  /// No description provided for @noPosts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bài viết nào'**
+  String get noPosts;
+
+  /// No description provided for @createFirstPost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy là người đầu tiên chia sẻ!'**
+  String get createFirstPost;
+
+  /// No description provided for @createPost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo bài viết'**
+  String get createPost;
+
+  /// No description provided for @postContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung bài viết'**
+  String get postContent;
+
+  /// No description provided for @shareYourThoughts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ suy nghĩ của bạn...'**
+  String get shareYourThoughts;
+
+  /// No description provided for @addPhoto.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm ảnh'**
+  String get addPhoto;
+
+  /// No description provided for @publish.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng bài'**
+  String get publish;
+
+  /// No description provided for @likes.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} thích'**
+  String likes(int count);
+
+  /// No description provided for @comments.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} bình luận'**
+  String comments(int count);
+
+  /// No description provided for @share.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ'**
+  String get share;
+
+  /// No description provided for @writeComment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Viết bình luận...'**
+  String get writeComment;
+
+  /// No description provided for @send.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi'**
+  String get send;
+
+  /// No description provided for @deletePost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa bài viết?'**
+  String get deletePost;
+
+  /// No description provided for @confirmDeletePost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xóa bài viết này không?'**
+  String get confirmDeletePost;
+
+  /// No description provided for @postDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa bài viết'**
+  String get postDeleted;
+
+  /// No description provided for @postCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng bài thành công!'**
+  String get postCreated;
+
+  /// No description provided for @justNow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vừa xong'**
+  String get justNow;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} phút trước'**
+  String minutesAgo(int count);
+
+  /// No description provided for @hoursAgo.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} giờ trước'**
+  String hoursAgo(int count);
+
+  /// No description provided for @daysAgo.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày trước'**
+  String daysAgo(int count);
 }
 
 class _AppLocalizationsDelegate
