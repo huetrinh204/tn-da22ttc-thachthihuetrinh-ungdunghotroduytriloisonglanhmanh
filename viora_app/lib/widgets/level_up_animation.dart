@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../l10n/app_localizations.dart';
 
 class LevelUpAnimation extends StatefulWidget {
   final String plantType;
@@ -77,8 +78,8 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
     await Future.delayed(const Duration(milliseconds: 300));
     await _scaleController.forward();
 
-    // Wait for all animations to complete
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Wait longer for user to read the message
+    await Future.delayed(const Duration(milliseconds: 1500));
     widget.onComplete();
   }
 
@@ -158,10 +159,10 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                 },
                 child: Column(
                   children: [
-                    const Text(
-                      '🎉 LEVEL UP! 🎉',
-                      style: TextStyle(
-                        fontSize: 32,
+                    Text(
+                      AppLocalizations.of(context)!.congratulations,
+                      style: const TextStyle(
+                        fontSize: 36,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         shadows: [
@@ -172,13 +173,37 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                         ],
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Text(
+                      AppLocalizations.of(context)!.plantLeveledUp,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Text(
-                      'Cấp ${widget.oldLevel} → Cấp ${widget.newLevel}',
+                      AppLocalizations.of(context)!.levelRange(widget.oldLevel, widget.newLevel),
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 24,
+                        color: Color(0xFF4CAF50),
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.white,
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      AppLocalizations.of(context)!.keepGrowing,
+                      style: const TextStyle(
+                        fontSize: 18,
                         color: Colors.white70,
-                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ],

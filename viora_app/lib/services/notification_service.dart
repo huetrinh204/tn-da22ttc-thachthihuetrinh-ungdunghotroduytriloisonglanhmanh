@@ -31,24 +31,29 @@ class NotificationService {
       const InitializationSettings(android: android, iOS: ios),
     );
 
+    // Get locale for channel names
+    final prefs = await SharedPreferences.getInstance();
+    final locale = prefs.getString('locale') ?? 'vi';
+    final isVietnamese = locale == 'vi';
+
     // Tạo notification channels cho Android
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
+        AndroidNotificationChannel(
           'viora_daily_1',
-          'Nhắc sáng',
-          description: 'Nhắc nhở thói quen buổi sáng',
+          isVietnamese ? 'Nhắc sáng' : 'Morning Reminder',
+          description: isVietnamese ? 'Nhắc nhở thói quen buổi sáng' : 'Morning habit reminders',
           importance: Importance.high,
         ),
       );
       await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
+        AndroidNotificationChannel(
           'viora_daily_2',
-          'Nhắc tối',
-          description: 'Nhắc nhở thói quen buổi tối',
+          isVietnamese ? 'Nhắc tối' : 'Evening Reminder',
+          description: isVietnamese ? 'Nhắc nhở thói quen buổi tối' : 'Evening habit reminders',
           importance: Importance.high,
         ),
       );
@@ -86,26 +91,36 @@ class NotificationService {
     final morningMinute = prefs.getInt(_morningMinuteKey) ?? 0;
     final eveningHour = prefs.getInt(_eveningHourKey) ?? 21;
     final eveningMinute = prefs.getInt(_eveningMinuteKey) ?? 0;
+    
+    // Get locale from SharedPreferences
+    final locale = prefs.getString('locale') ?? 'vi';
+    final isVietnamese = locale == 'vi';
 
     await _plugin.cancelAll();
 
     if (morningEnabled) {
       await _scheduleDailyNotification(
         id: 1,
-        title: "🌱 Chào buổi sáng!",
-        body: "Hôm nay bạn đã sẵn sàng cho thói quen của mình chưa?",
+        title: isVietnamese ? "🌱 Chào buổi sáng!" : "🌱 Good morning!",
+        body: isVietnamese 
+            ? "Hôm nay bạn đã sẵn sàng cho thói quen của mình chưa?" 
+            : "Are you ready for your habits today?",
         hour: morningHour,
         minute: morningMinute,
+        channelName: isVietnamese ? "Nhắc sáng" : "Morning Reminder",
       );
     }
 
     if (eveningEnabled) {
       await _scheduleDailyNotification(
         id: 2,
-        title: "🌙 Nhắc nhở buổi tối",
-        body: "Đừng quên hoàn thành thói quen hôm nay nhé! Cây của bạn đang chờ 🌿",
+        title: isVietnamese ? "🌙 Nhắc nhở buổi tối" : "🌙 Evening Reminder",
+        body: isVietnamese 
+            ? "Đừng quên hoàn thành thói quen hôm nay nhé! Cây của bạn đang chờ 🌿" 
+            : "Don't forget to complete your habits today! Your plant is waiting 🌿",
         hour: eveningHour,
         minute: eveningMinute,
+        channelName: isVietnamese ? "Nhắc tối" : "Evening Reminder",
       );
     }
   }
@@ -116,6 +131,7 @@ class NotificationService {
     required String body,
     required int hour,
     required int minute,
+    required String channelName,
   }) async {
     try {
       final now = tz.TZDateTime.now(tz.local);
@@ -131,6 +147,11 @@ class NotificationService {
       if (scheduled.isBefore(now)) {
         scheduled = scheduled.add(const Duration(days: 1));
       }
+      
+      final prefs = await SharedPreferences.getInstance();
+      final locale = prefs.getString('locale') ?? 'vi';
+      final isVietnamese = locale == 'vi';
+      final channelDesc = isVietnamese ? 'Nhắc nhở thói quen hàng ngày' : 'Daily habit reminders';
 
       await _plugin.zonedSchedule(
         id,
@@ -140,8 +161,8 @@ class NotificationService {
         NotificationDetails(
           android: AndroidNotificationDetails(
             'viora_daily_$id',
-            id == 1 ? 'Nhắc sáng' : 'Nhắc tối',
-            channelDescription: 'Nhắc nhở thói quen hàng ngày',
+            channelName,
+            channelDescription: channelDesc,
             importance: Importance.high,
             priority: Priority.high,
             icon: '@mipmap/ic_launcher',

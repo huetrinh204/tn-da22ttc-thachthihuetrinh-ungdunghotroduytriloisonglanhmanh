@@ -3,6 +3,7 @@ import '../services/notification_service.dart';
 import '../widgets/app_snackbar.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -42,6 +43,7 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     await NotificationService.saveSettings(
       morningEnabled: morningEnabled,
       eveningEnabled: eveningEnabled,
@@ -53,7 +55,7 @@ class _NotificationSettingsScreenState
     // Tự động lên lịch thông báo luôn
     await NotificationService.scheduleAll();
     if (!mounted) return;
-    AppSnackbar.showSuccess(context, "Đã lưu và áp dụng cài đặt");
+    AppSnackbar.showSuccess(context, l10n.savedSettings);
   }
 
   Future<void> _pickTime(bool isMorning) async {
@@ -95,6 +97,7 @@ class _NotificationSettingsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -105,7 +108,7 @@ class _NotificationSettingsScreenState
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Thông báo nhắc nhở",
+          l10n.notificationSettingsTitle,
           style: TextStyle(
             color: context.textGreen,
             fontWeight: FontWeight.bold,
@@ -133,7 +136,7 @@ class _NotificationSettingsScreenState
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          "Thông báo sẽ nhắc bạn check-in thói quen mỗi ngày để cây phát triển.",
+                          l10n.notificationInfo,
                           style: TextStyle(
                             fontSize: 13,
                             color: context.textGreenLight,
@@ -149,8 +152,8 @@ class _NotificationSettingsScreenState
                 // Morning notification
                 _buildNotifCard(
                   emoji: "🌅",
-                  title: "Nhắc buổi sáng",
-                  subtitle: "Bắt đầu ngày mới với thói quen lành mạnh",
+                  title: l10n.morningReminder,
+                  subtitle: l10n.morningReminderDesc,
                   enabled: morningEnabled,
                   time: _formatTime(morningHour, morningMinute),
                   onToggle: (val) async {
@@ -165,8 +168,8 @@ class _NotificationSettingsScreenState
                 // Evening notification
                 _buildNotifCard(
                   emoji: "🌙",
-                  title: "Nhắc buổi tối",
-                  subtitle: "Hoàn thành thói quen trước khi ngủ",
+                  title: l10n.eveningReminder,
+                  subtitle: l10n.eveningReminderDesc,
                   enabled: eveningEnabled,
                   time: _formatTime(eveningHour, eveningMinute),
                   onToggle: (val) async {
@@ -189,6 +192,7 @@ class _NotificationSettingsScreenState
     required ValueChanged<bool> onToggle,
     required VoidCallback onTimeTap,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: context.cardColor,
@@ -230,7 +234,7 @@ class _NotificationSettingsScreenState
               leading: Icon(Icons.access_time,
                   color: AppColors.primary, size: 22),
               title: Text(
-                "Giờ nhắc",
+                l10n.reminderTime,
                 style: TextStyle(fontSize: 14, color: context.textSecondary),
               ),
               trailing: Row(

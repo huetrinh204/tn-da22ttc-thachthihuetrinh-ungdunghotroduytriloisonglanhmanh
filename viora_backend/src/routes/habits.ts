@@ -294,15 +294,15 @@ router.get("/achievements", authMiddleware, async (req: any, res) => {
 
 // helper: kiểm tra và unlock achievements
 const ACHIEVEMENTS = [
-  { key: "first_checkin",  title: "Bước đầu tiên",     icon: "🌱", desc: "Hoàn thành check-in đầu tiên" },
-  { key: "streak_3",       title: "3 ngày liên tiếp",   icon: "🔥", desc: "Duy trì streak 3 ngày" },
-  { key: "streak_7",       title: "Tuần kiên trì",      icon: "⚡", desc: "Duy trì streak 7 ngày" },
-  { key: "streak_30",      title: "Tháng bền bỉ",       icon: "🏆", desc: "Duy trì streak 30 ngày" },
-  { key: "habits_5",       title: "Đa nhiệm",           icon: "🎯", desc: "Tạo 5 thói quen" },
-  { key: "checkin_50",     title: "Nửa trăm",           icon: "💪", desc: "Hoàn thành 50 check-ins" },
-  { key: "checkin_100",    title: "Bách chiến",         icon: "🌟", desc: "Hoàn thành 100 check-ins" },
-  { key: "plant_level_3",  title: "Cây non",            icon: "🪴", desc: "Cây đạt cấp độ 3" },
-  { key: "plant_level_5",  title: "Vườn địa đàng",     icon: "🌳", desc: "Cây đạt cấp độ tối đa" },
+  { key: "first_checkin",   title: "Bước đầu tiên",     icon: "🌱", desc: "Hoàn thành check-in đầu tiên" },
+  { key: "streak_3",        title: "3 ngày liên tiếp",   icon: "🔥", desc: "Duy trì streak 3 ngày" },
+  { key: "streak_7",        title: "Tuần kiên trì",      icon: "⚡", desc: "Duy trì streak 7 ngày" },
+  { key: "streak_30",       title: "Tháng bền bỉ",       icon: "🏆", desc: "Duy trì streak 30 ngày" },
+  { key: "habits_5",        title: "Đa nhiệm",           icon: "🎯", desc: "Tạo 5 thói quen" },
+  { key: "checkin_50",      title: "Nửa trăm",           icon: "💪", desc: "Hoàn thành 50 check-ins" },
+  { key: "checkin_100",     title: "Bách chiến",         icon: "🌟", desc: "Hoàn thành 100 check-ins" },
+  { key: "plant_level_3",   title: "Cây non",            icon: "🪴", desc: "Cây đạt cấp độ 3" },
+  { key: "plant_level_15",  title: "Vườn địa đàng",     icon: "🌳", desc: "Cây đạt cấp độ tối đa" },
 ];
 
 async function checkAchievements(userId: number): Promise<any[]> {
@@ -334,15 +334,15 @@ async function checkAchievements(userId: number): Promise<any[]> {
 
   // Điều kiện cho từng achievement
   const conditions: Record<string, boolean> = {
-    first_checkin:  totalCheckins >= 1,
-    streak_3:       streak >= 3,
-    streak_7:       streak >= 7,
-    streak_30:      streak >= 30,
-    habits_5:       totalHabits >= 5,
-    checkin_50:     totalCheckins >= 50,
-    checkin_100:    totalCheckins >= 100,
-    plant_level_3:  plantLevel >= 3,
-    plant_level_5:  plantLevel >= 5,
+    first_checkin:   totalCheckins >= 1,
+    streak_3:        streak >= 3,
+    streak_7:        streak >= 7,
+    streak_30:       streak >= 30,
+    habits_5:        totalHabits >= 5,
+    checkin_50:      totalCheckins >= 50,
+    checkin_100:     totalCheckins >= 100,
+    plant_level_3:   plantLevel >= 3,
+    plant_level_15:  plantLevel >= 15,
   };
 
   for (const ach of ACHIEVEMENTS) {
@@ -493,15 +493,18 @@ async function updatePlant(userId: number, today: string) {
 
   const newExp = plant.experience + points;
 
-  // Ngưỡng level: 1→2: 10, 2→3: 30, 3→4: 100, 4→5: 300
-  const thresholds = [0, 10, 30, 100, 300];
-  let newLevel = plant.level;
+  // Hệ thống 15 level mới
+  // Ngưỡng: 0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525
+  const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+  let newLevel = 1;
   for (let i = thresholds.length - 1; i >= 0; i--) {
     if (newExp >= thresholds[i]) {
-      newLevel = Math.min(i + 1, 5);
+      newLevel = i + 1;
       break;
     }
   }
+
+  console.log(`[Plant] newExp=${newExp} newLevel=${newLevel} oldLevel=${plant.level}`);
 
   await pool.query(
     `UPDATE plants SET experience = ?, level = ?, last_watered = ? WHERE user_id = ?`,

@@ -6,6 +6,7 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import 'habit_detail_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -32,13 +33,13 @@ class _StatsScreenState extends State<StatsScreen>
   List<dynamic> categoryData = [];
   List<dynamic> habitsOverview = [];
 
-  static const Map<String, String> _categoryLabels = {
-    "eat": "Ăn uống",
-    "exercise": "Vận động",
-    "sleep": "Giấc ngủ",
-    "mental": "Tinh thần",
-    "hydration": "Uống nước",
-    "other": "Khác",
+  Map<String, String> get _categoryLabels => {
+    "eat": AppLocalizations.of(context)!.categoryEat,
+    "exercise": AppLocalizations.of(context)!.categoryExercise,
+    "sleep": AppLocalizations.of(context)!.categorySleep,
+    "mental": AppLocalizations.of(context)!.categoryMental,
+    "hydration": AppLocalizations.of(context)!.categoryHydration,
+    "other": AppLocalizations.of(context)!.categoryOther,
   };
 
   static const List<Color> _categoryColors = [
@@ -89,20 +90,22 @@ class _StatsScreenState extends State<StatsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
-        title: "Thống kê",
+        title: l10n.statsTitle,
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF4CAF50),
           unselectedLabelColor: Colors.grey,
           indicatorColor: const Color(0xFF4CAF50),
           indicatorWeight: 3,
-          tabs: const [
-            Tab(text: "Tuần này"),
-            Tab(text: "Tháng này"),
-            Tab(text: "Chi tiết"),
+          tabs: [
+            Tab(text: l10n.thisWeek),
+            Tab(text: l10n.thisMonth),
+            Tab(text: l10n.details),
           ],
         ),
       ),
@@ -125,12 +128,14 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildWeeklyTab() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _buildSummaryCards(),
         const SizedBox(height: 16),
-        _buildSimpleBarChart(weeklyData, 7, "Thói quen hoàn thành mỗi ngày"),
+        _buildSimpleBarChart(weeklyData, 7, l10n.habitsCompletedDaily),
         const SizedBox(height: 16),
         _buildCategoryChart(),
       ],
@@ -138,12 +143,14 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildMonthlyTab() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         _buildSummaryCards(),
         const SizedBox(height: 16),
-        _buildSimpleBarChart(monthlyData, 30, "Thói quen hoàn thành 30 ngày"),
+        _buildSimpleBarChart(monthlyData, 30, l10n.habitsCompleted30Days),
         const SizedBox(height: 16),
         _buildCategoryChart(),
       ],
@@ -151,6 +158,8 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildDetailTab() {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (habitsOverview.isEmpty) {
       return Center(
         child: Column(
@@ -159,7 +168,7 @@ class _StatsScreenState extends State<StatsScreen>
             const Text("📊", style: TextStyle(fontSize: 64)),
             const SizedBox(height: 16),
             Text(
-              "Chưa có thói quen nào",
+              l10n.noHabitsYetStats,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -168,7 +177,7 @@ class _StatsScreenState extends State<StatsScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              "Tạo thói quen để xem thống kê chi tiết",
+              l10n.createHabitsToSeeStats,
               style: TextStyle(
                 fontSize: 14,
                 color: context.textSecondary,
@@ -190,6 +199,7 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildHabitOverviewCard(Map habit) {
+    final l10n = AppLocalizations.of(context)!;
     final totalLogs = habit["total_logs"] ?? 0;
     final currentStreak = habit["current_streak"] ?? 0;
     final totalMetric = habit["total_metric"];
@@ -257,7 +267,7 @@ class _StatsScreenState extends State<StatsScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "$totalLogs lần check-in",
+                        "$totalLogs ${l10n.timesCheckin}",
                         style: TextStyle(
                           fontSize: 13,
                           color: context.textSecondary,
@@ -288,7 +298,7 @@ class _StatsScreenState extends State<StatsScreen>
                         const Text("🔥", style: TextStyle(fontSize: 14)),
                         const SizedBox(width: 4),
                         Text(
-                          "$currentStreak ngày",
+                          "$currentStreak ${l10n.days}",
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFFFF9800),
@@ -308,7 +318,7 @@ class _StatsScreenState extends State<StatsScreen>
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      "Tổng: ${totalMetricValue.toStringAsFixed(1)} $unit",
+                      "${l10n.totalLabel}: ${totalMetricValue.toStringAsFixed(1)} $unit",
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.primary,
@@ -326,6 +336,8 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildSummaryCards() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -334,13 +346,13 @@ class _StatsScreenState extends State<StatsScreen>
       mainAxisSpacing: 12,
       childAspectRatio: 1.5,
       children: [
-        _buildSummaryCard("Tổng check-in", "$totalCheckins", "✅",
+        _buildSummaryCard(l10n.totalCheckins, "$totalCheckins", "✅",
             const Color(0xFF4CAF50)),
-        _buildSummaryCard("Ngày hoạt động", "$activeDays", "📅",
+        _buildSummaryCard(l10n.activeDaysLabel, "$activeDays", "📅",
             const Color(0xFF2196F3)),
-        _buildSummaryCard("Streak dài nhất", "$longestStreak ngày", "🔥",
+        _buildSummaryCard(l10n.longestStreakLabel, "$longestStreak ${l10n.days}", "🔥",
             const Color(0xFFFF9800)),
-        _buildSummaryCard("Thói quen", "$totalHabits", "🎯",
+        _buildSummaryCard(l10n.habitsCount, "$totalHabits", "🎯",
             const Color(0xFF9C27B0)),
       ],
     );
@@ -385,6 +397,8 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildSimpleBarChart(List<dynamic> data, int days, String title) {
+    final l10n = AppLocalizations.of(context)!;
+    
     // Nếu không có dữ liệu
     if (data.isEmpty) {
       return Container(
@@ -398,7 +412,7 @@ class _StatsScreenState extends State<StatsScreen>
             const Text("📊", style: TextStyle(fontSize: 48)),
             const SizedBox(height: 16),
             Text(
-              "Chưa có dữ liệu",
+              l10n.noDataYet,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -407,7 +421,7 @@ class _StatsScreenState extends State<StatsScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              "Hoàn thành thói quen để xem thống kê",
+              l10n.completeHabitsToSeeStats,
               style: TextStyle(fontSize: 14, color: context.textSecondary),
             ),
           ],
@@ -442,7 +456,7 @@ class _StatsScreenState extends State<StatsScreen>
           Text(title,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
           const SizedBox(height: 4),
-          Text("Số lượng thói quen hoàn thành mỗi ngày",
+          Text(l10n.quantityLabel,
               style: TextStyle(fontSize: 12, color: context.textSecondary)),
           const SizedBox(height: 20),
           SizedBox(
@@ -524,18 +538,23 @@ class _StatsScreenState extends State<StatsScreen>
                         // Parse date từ format YYYY-MM-DD
                         final dateStr = data[index]["log_date"] as String;
                         try {
-                          final date = DateTime.parse(dateStr);
-                          // Format: 4/5 (bỏ số 0 đầu)
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              "${date.day}/${date.month}",
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 10,
+                          final parts = dateStr.split('-');
+                          if (parts.length == 3) {
+                            final day = int.parse(parts[2]);
+                            final month = int.parse(parts[1]);
+                            // Format: 14/5 (bỏ số 0 đầu)
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                "$day/$month",
+                                style: TextStyle(
+                                  color: context.textSecondary,
+                                  fontSize: 10,
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
+                          return const SizedBox();
                         } catch (e) {
                           return const SizedBox();
                         }
@@ -558,6 +577,8 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildCompletionRateChart(List<dynamic> data, int days, String title) {
+    final l10n = AppLocalizations.of(context)!;
+    
     // Build map date → count
     final Map<String, int> countMap = {};
     for (final d in data) {
@@ -606,7 +627,7 @@ class _StatsScreenState extends State<StatsScreen>
           Text(title,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
           const SizedBox(height: 4),
-          Text("Phần trăm thói quen hoàn thành mỗi ngày",
+          Text(l10n.completionPercentageDaily,
               style: TextStyle(fontSize: 12, color: context.textSecondary)),
           const SizedBox(height: 20),
           SizedBox(
@@ -667,11 +688,11 @@ class _StatsScreenState extends State<StatsScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegendItem("Tốt (≥80%)", const Color(0xFF4CAF50)),
+              _buildLegendItem(l10n.goodPercent, const Color(0xFF4CAF50)),
               const SizedBox(width: 16),
-              _buildLegendItem("Khá (≥50%)", const Color(0xFFFF9800)),
+              _buildLegendItem(l10n.fairPercent, const Color(0xFFFF9800)),
               const SizedBox(width: 16),
-              _buildLegendItem("Cần cố gắng", const Color(0xFFE57373)),
+              _buildLegendItem(l10n.needsImprovementPercent, const Color(0xFFE57373)),
             ],
           ),
         ],
@@ -698,6 +719,8 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildStreakCard() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -726,9 +749,9 @@ class _StatsScreenState extends State<StatsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Streak hiện tại",
-                  style: TextStyle(
+                Text(
+                  l10n.currentStreak,
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -736,7 +759,7 @@ class _StatsScreenState extends State<StatsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "$longestStreak ngày liên tiếp",
+                  "$longestStreak ${l10n.consecutiveDaysLabel}",
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -746,8 +769,8 @@ class _StatsScreenState extends State<StatsScreen>
                 const SizedBox(height: 4),
                 Text(
                   longestStreak >= 7
-                      ? "Tuyệt vời! Tiếp tục phát huy! 💪"
-                      : "Hãy duy trì mỗi ngày nhé! 🌟",
+                      ? l10n.greatKeepGoing
+                      : l10n.maintainDaily,
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -762,6 +785,8 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildHeatmapCalendar(List<dynamic> data) {
+    final l10n = AppLocalizations.of(context)!;
+    
     // Build map date → count
     final Map<String, int> countMap = {};
     for (final d in data) {
@@ -787,10 +812,10 @@ class _StatsScreenState extends State<StatsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Lịch hoạt động 30 ngày",
+          Text(l10n.activityCalendar30Days,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen)),
           const SizedBox(height: 4),
-          Text("Màu đậm = hoàn thành nhiều thói quen",
+          Text(l10n.darkerMoreHabits,
               style: TextStyle(fontSize: 12, color: context.textSecondary)),
           const SizedBox(height: 20),
           // Heatmap grid
@@ -844,7 +869,7 @@ class _StatsScreenState extends State<StatsScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Ít", style: TextStyle(fontSize: 11, color: context.textSecondary)),
+              Text(l10n.less, style: TextStyle(fontSize: 11, color: context.textSecondary)),
               const SizedBox(width: 8),
               Container(width: 16, height: 16, decoration: BoxDecoration(color: context.inputFill, borderRadius: BorderRadius.circular(3))),
               const SizedBox(width: 4),
@@ -856,7 +881,7 @@ class _StatsScreenState extends State<StatsScreen>
               const SizedBox(width: 4),
               Container(width: 16, height: 16, decoration: BoxDecoration(color: const Color(0xFF2E7D32), borderRadius: BorderRadius.circular(3))),
               const SizedBox(width: 8),
-              Text("Nhiều", style: TextStyle(fontSize: 11, color: context.textSecondary)),
+              Text(l10n.more, style: TextStyle(fontSize: 11, color: context.textSecondary)),
             ],
           ),
         ],
@@ -865,6 +890,8 @@ class _StatsScreenState extends State<StatsScreen>
   }
 
   Widget _buildCategoryChart() {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (categoryData.isEmpty) return const SizedBox();
 
     final total = categoryData.fold<int>(
@@ -895,7 +922,7 @@ class _StatsScreenState extends State<StatsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Theo danh mục",
+          Text(l10n.byCategory,
               style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,

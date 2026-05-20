@@ -5,6 +5,7 @@ import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 import 'habits_screen.dart';
 import 'plant_screen.dart';
 import 'stats_screen.dart';
@@ -19,15 +20,25 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  final GlobalKey<_DashboardTabState> _dashboardKey = GlobalKey<_DashboardTabState>();
 
   Widget _buildScreen(int index) {
     switch (index) {
-      case 0: return const _DashboardTab();
+      case 0: return _DashboardTab(key: _dashboardKey);
       case 1: return const HabitsScreen();
       case 2: return const PlantScreen();
       case 3: return const StatsScreen();
       case 4: return const ProfileScreen();
-      default: return const _DashboardTab();
+      default: return _DashboardTab(key: _dashboardKey);
+    }
+  }
+
+  void _onTabTapped(int index) {
+    setState(() => _currentIndex = index);
+    
+    // Reload dashboard when switching back to home tab
+    if (index == 0 && _dashboardKey.currentState != null) {
+      _dashboardKey.currentState!._loadData();
     }
   }
 
@@ -51,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SafeArea(
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
-            onTap: (i) => setState(() => _currentIndex = i),
+            onTap: _onTabTapped,
             selectedItemColor: AppColors.primary,
             unselectedItemColor: const Color(0xFFBDBDBD),
             backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -61,31 +72,31 @@ class _HomeScreenState extends State<HomeScreen> {
             type: BottomNavigationBarType.fixed,
             selectedFontSize: 11,
             unselectedFontSize: 11,
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined, size: 24),
-                activeIcon: Icon(Icons.home_rounded, size: 24),
-                label: "Trang chủ",
+                icon: const Icon(Icons.home_outlined, size: 24),
+                activeIcon: const Icon(Icons.home_rounded, size: 24),
+                label: AppLocalizations.of(context)!.home,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.check_circle_outline_rounded, size: 24),
-                activeIcon: Icon(Icons.check_circle_rounded, size: 24),
-                label: "Thói quen",
+                icon: const Icon(Icons.check_circle_outline_rounded, size: 24),
+                activeIcon: const Icon(Icons.check_circle_rounded, size: 24),
+                label: AppLocalizations.of(context)!.habits,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.eco_outlined, size: 24),
-                activeIcon: Icon(Icons.eco_rounded, size: 24),
-                label: "Cây",
+                icon: const Icon(Icons.eco_outlined, size: 24),
+                activeIcon: const Icon(Icons.eco_rounded, size: 24),
+                label: AppLocalizations.of(context)!.plant,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.bar_chart_outlined, size: 24),
-                activeIcon: Icon(Icons.bar_chart_rounded, size: 24),
-                label: "Thống kê",
+                icon: const Icon(Icons.bar_chart_outlined, size: 24),
+                activeIcon: const Icon(Icons.bar_chart_rounded, size: 24),
+                label: AppLocalizations.of(context)!.stats,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline_rounded, size: 24),
-                activeIcon: Icon(Icons.person_rounded, size: 24),
-                label: "Hồ sơ",
+                icon: const Icon(Icons.person_outline_rounded, size: 24),
+                activeIcon: const Icon(Icons.person_rounded, size: 24),
+                label: AppLocalizations.of(context)!.profile,
               ),
             ],
           ),
@@ -96,13 +107,13 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _DashboardTab extends StatefulWidget {
-  const _DashboardTab();
+  const _DashboardTab({super.key});
 
   @override
   State<_DashboardTab> createState() => _DashboardTabState();
 }
 
-class _DashboardTabState extends State<_DashboardTab> {
+class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserver {
   String userName = "";
   int currentStreak = 0;
   int completedToday = 0;
@@ -118,7 +129,21 @@ class _DashboardTabState extends State<_DashboardTab> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadData();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadData();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -142,9 +167,9 @@ class _DashboardTabState extends State<_DashboardTab> {
       // Plant
       final plant = plantRes["plant"];
       if (plant != null) {
-        plantType = prefs.getString("plant_type") ?? plant["plant_type"] ?? "sprout";
-        plantLevel = plant["level"] ?? 1;
+        plantType = plant["plant_type"] ?? "sprout";
         plantExp = plant["experience"] ?? 0;
+        plantLevel = _calculateLevel(plantExp);
         plantWilted = plant["is_wilted"] == true;
       }
 
@@ -152,11 +177,24 @@ class _DashboardTabState extends State<_DashboardTab> {
     });
   }
 
+  // Calculate level based on experience (15 levels system)
+  int _calculateLevel(int exp) {
+    const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+    
+    for (int i = thresholds.length - 1; i >= 0; i--) {
+      if (exp >= thresholds[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
+
   String _getGreeting() {
+    final l10n = AppLocalizations.of(context)!;
     final hour = DateTime.now().hour;
-    if (hour < 12) return "Chào buổi sáng";
-    if (hour < 18) return "Chào buổi chiều";
-    return "Chào buổi tối";
+    if (hour < 12) return l10n.goodMorning;
+    if (hour < 18) return l10n.goodAfternoon;
+    return l10n.goodEvening;
   }
 
   @override
@@ -227,13 +265,15 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 
   String _getTodayLabel() {
+    final l10n = AppLocalizations.of(context)!;
     final now = DateTime.now();
-    const days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
+    final days = [l10n.monday, l10n.tuesday, l10n.wednesday, l10n.thursday, l10n.friday, l10n.saturday, l10n.sunday];
     final dayName = days[now.weekday - 1];
     return "$dayName, ${now.day}/${now.month}/${now.year}";
   }
 
   Widget _buildPlantCard() {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
     return Container(
@@ -257,7 +297,7 @@ class _DashboardTabState extends State<_DashboardTab> {
               const Text("🌿", style: TextStyle(fontSize: 18)),
               const SizedBox(width: 8),
               Text(
-                "Cây của bạn",
+                l10n.yourPlant,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -288,9 +328,9 @@ class _DashboardTabState extends State<_DashboardTab> {
                           color: Colors.red.shade50,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          "Hãy check-in để cây hồi phục! 💧",
-                          style: TextStyle(
+                        child: Text(
+                          l10n.plantWilted,
+                          style: const TextStyle(
                               fontSize: 12, color: Colors.red),
                         ),
                       )
@@ -302,8 +342,8 @@ class _DashboardTabState extends State<_DashboardTab> {
                     const SizedBox(height: 8),
                     Text(
                       plantWilted
-                          ? "Cây chưa được tưới 3 ngày rồi..."
-                          : "Hoàn thành thói quen để cây lớn lên!",
+                          ? l10n.plantNotWatered
+                          : l10n.completeHabitsToGrow,
                       style: const TextStyle(
                           fontSize: 12, color: Colors.grey),
                     ),
@@ -318,6 +358,7 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 
   Widget _buildStreakCard() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -354,7 +395,7 @@ class _DashboardTabState extends State<_DashboardTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "$currentStreak ngày liên tiếp",
+                  l10n.daysStreak(currentStreak),
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -362,9 +403,9 @@ class _DashboardTabState extends State<_DashboardTab> {
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  "Giữ vững phong độ nhé! 💪",
-                  style: TextStyle(fontSize: 13, color: Colors.white70),
+                Text(
+                  l10n.keepItUp,
+                  style: const TextStyle(fontSize: 13, color: Colors.white70),
                 ),
               ],
             ),
@@ -374,7 +415,7 @@ class _DashboardTabState extends State<_DashboardTab> {
               const Text("🏆", style: TextStyle(fontSize: 20)),
               const SizedBox(height: 2),
               Text(
-                "Best",
+                l10n.best,
                 style: TextStyle(
                     fontSize: 10,
                     color: Colors.white.withValues(alpha: 0.7)),
@@ -387,6 +428,7 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 
   Widget _buildTodayCard(double progress) {
+    final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
     final allDone = completedToday == totalToday && totalToday > 0;
@@ -422,7 +464,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    "Hôm nay",
+                    l10n.today,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -440,7 +482,7 @@ class _DashboardTabState extends State<_DashboardTab> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  "$completedToday/$totalToday",
+                  l10n.completed(completedToday, totalToday),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -467,10 +509,10 @@ class _DashboardTabState extends State<_DashboardTab> {
           const SizedBox(height: 12),
           Text(
             totalToday == 0
-                ? "Chưa có thói quen nào. Thêm ngay nhé! ✨"
+                ? l10n.noHabitsYet
                 : allDone
-                    ? "Tuyệt vời! Bạn đã hoàn thành tất cả hôm nay 🎉"
-                    : "Còn ${totalToday - completedToday} thói quen chưa hoàn thành",
+                    ? l10n.allDoneToday
+                    : l10n.habitsRemaining(totalToday - completedToday),
             style: TextStyle(
               fontSize: 13,
               color: allDone ? const Color(0xFF2E7D32) : Colors.grey,
@@ -483,12 +525,13 @@ class _DashboardTabState extends State<_DashboardTab> {
   }
 
   Widget _buildQuoteCard() {
-    const quotes = [
-      "Mỗi ngày một bước nhỏ, tạo nên thay đổi lớn. 💪",
-      "Thói quen tốt là nền tảng của cuộc sống lành mạnh. 🌿",
-      "Kiên trì là chìa khóa của thành công. 🗝️",
-      "Hôm nay tốt hơn hôm qua là đủ rồi. ✨",
-      "Sức khỏe là tài sản quý giá nhất. 🏃",
+    final l10n = AppLocalizations.of(context)!;
+    final quotes = [
+      l10n.quote1,
+      l10n.quote2,
+      l10n.quote3,
+      l10n.quote4,
+      l10n.quote5,
     ];
     final quote = quotes[DateTime.now().day % quotes.length];
 

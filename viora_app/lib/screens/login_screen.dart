@@ -9,6 +9,7 @@ import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
 import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
+import '../l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -159,12 +160,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
 
                   // Quote dưới logo
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      '"Sự thay đổi không đến từ điều lớn lao,\nmà từ những thói quen nhỏ được lặp lại mỗi ngày."',
+                      AppLocalizations.of(context)!.quote,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF1B5E20),
                         fontStyle: FontStyle.italic,

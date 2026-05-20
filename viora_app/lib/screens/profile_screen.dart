@@ -5,6 +5,8 @@ import '../widgets/app_snackbar.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
+import '../main.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'notification_settings_screen.dart';
@@ -71,6 +73,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _handleLogout() async {
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.logout),
+        content: Text(l10n.logoutConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.no),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: Text(l10n.yes),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed != true) return;
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("token");
     // Không xóa onboarding_done — giữ lại để lần sau login không phải onboard lại
@@ -82,6 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showEditNameSheet() {
+    final l10n = AppLocalizations.of(context)!;
     final ctrl = TextEditingController(text: name);
     showModalBottomSheet(
       context: context,
@@ -97,13 +126,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Đổi tên",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(l10n.editName,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: ctrl,
               autofocus: true,
-              decoration: _inputDeco("Họ và tên", Icons.person_outline),
+              decoration: _inputDeco(l10n.fullName, Icons.person_outline),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -120,13 +149,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!mounted) return;
                   if (res["message"] == "Profile updated") {
                     setState(() => name = ctrl.text.trim());
-                    AppSnackbar.showSuccess(context, "Đã cập nhật tên");
+                    AppSnackbar.showSuccess(context, l10n.nameUpdated);
                   } else {
-                    AppSnackbar.showError(context, res["message"] ?? "Thất bại");
+                    AppSnackbar.showError(context, res["message"] ?? l10n.failed);
                   }
                 },
                 style: _btnStyle(),
-                child: const Text("Lưu"),
+                child: Text(l10n.save),
               ),
             ),
           ],
@@ -136,6 +165,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showEditBodySheet() {
+    final l10n = AppLocalizations.of(context)!;
     final hCtrl = TextEditingController(
         text: height != null ? height!.toStringAsFixed(1) : "");
     final wCtrl = TextEditingController(
@@ -157,8 +187,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Thông số cơ thể",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(l10n.bodyStatsTitle,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               TextField(
                 controller: hCtrl,
@@ -166,10 +196,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onChanged: (v) {
                   final h = double.tryParse(v);
                   setSheet(() => hError = (h == null || h < 100 || h > 250)
-                      ? "Chiều cao từ 100–250 cm"
+                      ? l10n.heightRange
                       : null);
                 },
-                decoration: _inputDeco("Chiều cao (cm)", Icons.height,
+                decoration: _inputDeco(l10n.height, Icons.height,
                     suffixText: "cm", error: hError),
               ),
               const SizedBox(height: 16),
@@ -179,10 +209,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onChanged: (v) {
                   final w = double.tryParse(v);
                   setSheet(() => wError = (w == null || w < 15 || w > 300)
-                      ? "Cân nặng từ 15–300 kg"
+                      ? l10n.weightRange
                       : null);
                 },
-                decoration: _inputDeco("Cân nặng (kg)", Icons.monitor_weight_outlined,
+                decoration: _inputDeco(l10n.weight, Icons.monitor_weight_outlined,
                     suffixText: "kg", error: wError),
               ),
               const SizedBox(height: 20),
@@ -202,10 +232,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               weight: w, goals: goals);
                           setState(() { height = h; weight = w; });
                           if (!mounted) return;
-                          AppSnackbar.showSuccess(context, "Đã cập nhật thông số");
+                          AppSnackbar.showSuccess(context, l10n.statsUpdated);
                         },
                   style: _btnStyle(),
-                  child: const Text("Lưu"),
+                  child: Text(l10n.save),
                 ),
               ),
             ],
@@ -216,6 +246,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showEditGoalsSheet() {
+    final l10n = AppLocalizations.of(context)!;
     final selected = Set<String>.from(goals);
     showModalBottomSheet(
       context: context,
@@ -232,8 +263,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Mục tiêu cá nhân",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(l10n.personalGoals,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 10,
@@ -288,10 +319,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         weight: weight, goals: selected.toList());
                     setState(() => goals = selected.toList());
                     if (!mounted) return;
-                    AppSnackbar.showSuccess(context, "Đã cập nhật mục tiêu");
+                    AppSnackbar.showSuccess(context, l10n.goalsUpdated);
                   },
                   style: _btnStyle(),
-                  child: const Text("Lưu"),
+                  child: Text(l10n.save),
                 ),
               ),
             ],
@@ -302,6 +333,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showChangePasswordSheet() {
+    final l10n = AppLocalizations.of(context)!;
     final curCtrl = TextEditingController();
     final newCtrl = TextEditingController();
     final cfCtrl = TextEditingController();
@@ -322,8 +354,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Đổi mật khẩu",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Text(l10n.changePassword,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               // Link quên mật khẩu
               GestureDetector(
@@ -335,9 +367,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         builder: (_) => const ForgotPasswordScreen()),
                   );
                 },
-                child: const Text(
-                  "Quên mật khẩu hiện tại? Đặt lại qua email →",
-                  style: TextStyle(
+                child: Text(
+                  l10n.forgotPassword,
+                  style: const TextStyle(
                       fontSize: 13,
                       color: Color(0xFF4CAF50),
                       fontWeight: FontWeight.w500),
@@ -347,7 +379,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: curCtrl,
                 obscureText: obscureCur,
-                decoration: _inputDeco("Mật khẩu hiện tại", Icons.lock_outline,
+                decoration: _inputDeco(l10n.currentPassword, Icons.lock_outline,
                     suffix: IconButton(
                       icon: Icon(obscureCur
                           ? Icons.visibility_off_outlined
@@ -360,7 +392,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: newCtrl,
                 obscureText: obscureNew,
-                decoration: _inputDeco("Mật khẩu mới", Icons.lock_outline,
+                decoration: _inputDeco(l10n.newPassword, Icons.lock_outline,
                     suffix: IconButton(
                       icon: Icon(obscureNew
                           ? Icons.visibility_off_outlined
@@ -373,7 +405,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: cfCtrl,
                 obscureText: obscureCf,
-                decoration: _inputDeco("Xác nhận mật khẩu mới", Icons.lock_outline,
+                decoration: _inputDeco(l10n.confirmPassword, Icons.lock_outline,
                     suffix: IconButton(
                       icon: Icon(obscureCf
                           ? Icons.visibility_off_outlined
@@ -389,11 +421,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (newCtrl.text != cfCtrl.text) {
-                      AppSnackbar.showError(context, "Mật khẩu xác nhận không khớp");
+                      AppSnackbar.showError(context, l10n.passwordMismatch);
                       return;
                     }
                     if (newCtrl.text.length < 8) {
-                      AppSnackbar.showError(context, "Mật khẩu tối thiểu 8 ký tự");
+                      AppSnackbar.showError(context, l10n.passwordTooShort);
                       return;
                     }
                     Navigator.pop(ctx);
@@ -404,13 +436,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                     if (!mounted) return;
                     if (res["message"] == "Password updated") {
-                      AppSnackbar.showSuccess(context, "Đổi mật khẩu thành công");
+                      AppSnackbar.showSuccess(context, l10n.passwordUpdated);
                     } else {
-                      AppSnackbar.showError(context, res["message"] ?? "Thất bại");
+                      AppSnackbar.showError(context, res["message"] ?? l10n.failed);
                     }
                   },
                   style: _btnStyle(),
-                  child: const Text("Đổi mật khẩu"),
+                  child: Text(l10n.changePassword),
                 ),
               ),
             ],
@@ -422,9 +454,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const VioraAppBar(title: "Hồ sơ"),
+      appBar: VioraAppBar(title: l10n.profile),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
@@ -436,39 +469,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Personal info
-                _buildSection("Thông tin cá nhân", [
-                  _buildTile("Họ và tên", name, Icons.person_outline,
+                _buildSection(l10n.personalInfo, [
+                  _buildTile(l10n.fullName, name, Icons.person_outline,
                       onTap: _showEditNameSheet),
-                  _buildTile("Email", email, Icons.email_outlined),
+                  _buildTile(l10n.email, email, Icons.email_outlined),
                   _buildTile(
-                      "Giới tính",
+                      l10n.gender,
                       gender == "male"
-                          ? "Nam"
+                          ? l10n.male
                           : gender == "female"
-                              ? "Nữ"
-                              : gender ?? "Chưa cập nhật",
+                              ? l10n.female
+                              : gender ?? l10n.notUpdated,
                       Icons.wc),
                   _buildTile(
-                      "Năm sinh",
-                      birthYear?.toString() ?? "Chưa cập nhật",
+                      l10n.birthYear,
+                      birthYear?.toString() ?? l10n.notUpdated,
                       Icons.cake_outlined),
                 ]),
                 const SizedBox(height: 16),
 
                 // Body stats
-                _buildSection("Thông số cơ thể", [
+                _buildSection(l10n.bodyStats, [
                   _buildTile(
-                      "Chiều cao",
+                      l10n.height,
                       height != null
                           ? "${height!.toStringAsFixed(1)} cm"
-                          : "Chưa cập nhật",
+                          : l10n.notUpdated,
                       Icons.height,
                       onTap: _showEditBodySheet),
                   _buildTile(
-                      "Cân nặng",
+                      l10n.weight,
                       weight != null
                           ? "${weight!.toStringAsFixed(1)} kg"
-                          : "Chưa cập nhật",
+                          : l10n.notUpdated,
                       Icons.monitor_weight_outlined,
                       onTap: _showEditBodySheet),
                   if (height != null && weight != null)
@@ -477,22 +510,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Goals
-                _buildSection("Mục tiêu cá nhân", [
+                _buildSection(l10n.personalGoals, [
                   _buildGoalsTile(),
                 ]),
                 const SizedBox(height: 16),
 
                 // Security
-                _buildSection("Bảo mật", [
-                  _buildTile("Đổi mật khẩu", "Cập nhật mật khẩu",
+                _buildSection(l10n.security, [
+                  _buildTile(l10n.changePassword, l10n.updatePassword,
                       Icons.lock_outline,
                       onTap: _showChangePasswordSheet),
                 ]),
                 const SizedBox(height: 16),
 
                 // Achievements
-                _buildSection("Thành tích", [
-                  _buildTile("Thành tích của tôi", "Xem các thành tích đã mở khóa",
+                _buildSection(l10n.achievements, [
+                  _buildTile(l10n.myAchievements, l10n.viewUnlockedAchievements,
                       Icons.emoji_events_outlined,
                       onTap: () => Navigator.push(
                             context,
@@ -503,8 +536,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Notifications
-                _buildSection("Thông báo", [
-                  _buildTile("Nhắc nhở thói quen", "Cài đặt giờ nhắc hàng ngày",
+                _buildSection(l10n.notifications, [
+                  _buildTile(l10n.habitReminders, l10n.setDailyReminders,
                       Icons.notifications_outlined,
                       onTap: () => Navigator.push(
                             context,
@@ -516,8 +549,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Giao diện
-                _buildSection("Giao diện", [
+                _buildSection(l10n.appearance, [
                   _buildThemeToggleTile(),
+                  _buildLanguageTile(),
                 ]),
                 const SizedBox(height: 24),
 
@@ -552,7 +586,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            "Đăng xuất",
+                            l10n.logout,
                             style: TextStyle(
                               color: context.isDark 
                                   ? Colors.red.shade400
@@ -573,6 +607,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildThemeToggleTile() {
+    final l10n = AppLocalizations.of(context)!;
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (context, mode, _) {
@@ -584,11 +619,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             size: 22,
           ),
           title: Text(
-            isDark ? "Giao diện tối" : "Giao diện sáng",
+            isDark ? l10n.darkMode : l10n.lightMode,
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: context.textPrimary),
           ),
           subtitle: Text(
-            isDark ? "Đang dùng chế độ tối" : "Đang dùng chế độ sáng",
+            isDark ? l10n.usingDarkMode : l10n.usingLightMode,
             style: TextStyle(fontSize: 13, color: context.textSecondary),
           ),
           trailing: Switch(
@@ -602,6 +637,207 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLanguageTile() {
+    final localeProvider = myAppKey.currentState?.localeProvider;
+    if (localeProvider == null) {
+      return const SizedBox.shrink();
+    }
+    
+    return ListenableBuilder(
+      listenable: localeProvider,
+      builder: (context, _) {
+        final l10n = AppLocalizations.of(context)!;
+        final languageCode = localeProvider.locale.languageCode;
+        final isVietnamese = languageCode == 'vi';
+        
+        return ListTile(
+          leading: const Icon(
+            Icons.language_rounded,
+            color: AppColors.primary,
+            size: 22,
+          ),
+          title: Text(
+            l10n.language,
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: context.textPrimary),
+          ),
+          subtitle: Text(
+            isVietnamese ? l10n.vietnamese : l10n.english,
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isVietnamese ? "🇻🇳 VI" : "🇬🇧 EN",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.arrow_drop_down,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+          onTap: () => _showLanguageSheet(languageCode),
+        );
+      },
+    );
+  }
+
+  void _showLanguageSheet(String currentLanguageCode) {
+    final l10n = AppLocalizations.of(context)!;
+    final localeProvider = myAppKey.currentState?.localeProvider;
+    if (localeProvider == null) return;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardTheme.color ?? Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.selectLanguage,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Vietnamese option
+            _buildLanguageOption(
+              context: ctx,
+              flag: "🇻🇳",
+              language: l10n.vietnamese,
+              code: "Vietnamese",
+              isSelected: currentLanguageCode == 'vi',
+              onTap: () async {
+                await localeProvider.setLocale(const Locale('vi'));
+                if (!mounted) return;
+                Navigator.pop(ctx);
+                AppSnackbar.showSuccess(context, l10n.languageChanged);
+              },
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // English option
+            _buildLanguageOption(
+              context: ctx,
+              flag: "🇬🇧",
+              language: l10n.english,
+              code: "English",
+              isSelected: currentLanguageCode == 'en',
+              onTap: () async {
+                await localeProvider.setLocale(const Locale('en'));
+                if (!mounted) return;
+                Navigator.pop(ctx);
+                AppSnackbar.showSuccess(context, l10n.languageChangedEn);
+              },
+            ),
+            
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required BuildContext context,
+    required String flag,
+    required String language,
+    required String code,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary
+                  : Colors.grey.withValues(alpha: 0.2),
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Text(
+                flag,
+                style: const TextStyle(fontSize: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      language,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? AppColors.primary
+                            : this.context.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      code,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: this.context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -692,27 +928,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildBmiTile() {
+    final l10n = AppLocalizations.of(context)!;
     final bmi = weight! / ((height! / 100) * (height! / 100));
     String category;
     Color color;
     if (bmi < 18.5) {
-      category = "Thiếu cân";
+      category = l10n.underweight;
       color = Colors.blue;
     } else if (bmi < 25) {
-      category = "Bình thường";
+      category = l10n.normal;
       color = const Color(0xFF4CAF50);
     } else if (bmi < 30) {
-      category = "Thừa cân";
+      category = l10n.overweight;
       color = Colors.orange;
     } else {
-      category = "Béo phì";
+      category = l10n.obese;
       color = Colors.red;
     }
 
     return ListTile(
       leading: const Icon(Icons.calculate_outlined,
           color: Color(0xFF4CAF50), size: 22),
-      title: Text("BMI",
+      title: Text(l10n.bmi,
           style: TextStyle(fontSize: 14, color: context.textSecondary)),
       subtitle: Row(
         children: [
@@ -741,6 +978,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildGoalsTile() {
+    final l10n = AppLocalizations.of(context)!;
     final activeGoals = goalOptions
         .where((g) => goals.contains(g["id"]))
         .toList();
@@ -748,10 +986,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ListTile(
       leading: const Icon(Icons.flag_outlined,
           color: Color(0xFF4CAF50), size: 22),
-      title: Text("Mục tiêu",
+      title: Text(l10n.goals,
           style: TextStyle(fontSize: 14, color: context.textSecondary)),
       subtitle: activeGoals.isEmpty
-          ? Text("Chưa chọn mục tiêu",
+          ? Text(l10n.noGoalsSelected,
               style: TextStyle(fontSize: 15, color: context.textPrimary))
           : Wrap(
               spacing: 6,

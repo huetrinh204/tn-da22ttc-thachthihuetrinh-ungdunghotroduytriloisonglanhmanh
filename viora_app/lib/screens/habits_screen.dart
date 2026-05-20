@@ -5,6 +5,7 @@ import '../widgets/achievement_popup.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -18,14 +19,17 @@ class _HabitsScreenState extends State<HabitsScreen> {
   bool isLoading = true;
   String token = "";
 
-  final List<Map<String, dynamic>> categories = [
-    {"id": "eat", "label": "Ăn uống", "icon": "🥗"},
-    {"id": "exercise", "label": "Vận động", "icon": "🏃"},
-    {"id": "sleep", "label": "Giấc ngủ", "icon": "😴"},
-    {"id": "mental", "label": "Tinh thần", "icon": "🧘"},
-    {"id": "hydration", "label": "Uống nước", "icon": "💧"},
-    {"id": "other", "label": "Khác", "icon": "⭐"},
-  ];
+  List<Map<String, dynamic>> get categories {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {"id": "eat", "label": l10n.categoryEat, "icon": "🥗"},
+      {"id": "exercise", "label": l10n.categoryExercise, "icon": "🏃"},
+      {"id": "sleep", "label": l10n.categorySleep, "icon": "😴"},
+      {"id": "mental", "label": l10n.categoryMental, "icon": "🧘"},
+      {"id": "hydration", "label": l10n.categoryHydration, "icon": "💧"},
+      {"id": "other", "label": l10n.categoryOther, "icon": "⭐"},
+    ];
+  }
 
   @override
   void initState() {
@@ -84,6 +88,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Widget _buildCheckInDialog(BuildContext ctx, String category) {
+    final l10n = AppLocalizations.of(context)!;
     final metricController = TextEditingController();
     String? metricUnit;
     String? metricLabel;
@@ -91,20 +96,20 @@ class _HabitsScreenState extends State<HabitsScreen> {
     // Xác định metric theo category
     switch (category) {
       case "hydration":
-        metricLabel = "Số ml nước";
-        metricUnit = "ml";
+        metricLabel = l10n.metricWater;
+        metricUnit = l10n.unitMl;
         break;
       case "exercise":
-        metricLabel = "Khoảng cách (m)";
-        metricUnit = "m";
+        metricLabel = l10n.metricDistance;
+        metricUnit = l10n.unitM;
         break;
       case "sleep":
-        metricLabel = "Số giờ ngủ";
-        metricUnit = "giờ";
+        metricLabel = l10n.metricSleepHours;
+        metricUnit = l10n.unitHours;
         break;
       case "eat":
-        metricLabel = "Calories";
-        metricUnit = "cal";
+        metricLabel = l10n.metricCalories;
+        metricUnit = l10n.unitCal;
         break;
       default:
         metricLabel = null;
@@ -118,7 +123,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         children: [
           const Text("✅ ", style: TextStyle(fontSize: 22)),
           Text(
-            "Xác nhận hoàn thành",
+            l10n.confirmCompletion,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -132,7 +137,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.",
+            l10n.confirmHabitMessage,
             style: TextStyle(
               fontSize: 14,
               color: ctx.textPrimary,
@@ -155,7 +160,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               style: TextStyle(color: ctx.textPrimary),
               decoration: InputDecoration(
-                hintText: "Nhập số (tùy chọn)",
+                hintText: l10n.enterNumberOptional,
                 hintStyle: TextStyle(color: ctx.textSecondary, fontSize: 14),
                 suffixText: metricUnit,
                 filled: true,
@@ -189,7 +194,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: const Text("Chưa chắc"),
+                child: Text(l10n.notSure),
               ),
             ),
             const SizedBox(width: 12),
@@ -214,7 +219,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: const Text("Đã hoàn thành!"),
+                child: Text(l10n.completedExclaim),
               ),
             ),
           ],
@@ -229,6 +234,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   void showAddHabitSheet() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
     String selectedCategory = "other";
     String selectedIcon = "⭐";
@@ -263,7 +269,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text("Thêm thói quen mới",
+              Text(l10n.addNewHabit,
                   style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -271,7 +277,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               const SizedBox(height: 24),
 
               // ICON PICKER
-              Text("Chọn icon",
+              Text(l10n.selectIcon,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -305,7 +311,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               const SizedBox(height: 20),
 
               // NAME
-              Text("Tên thói quen",
+              Text(l10n.habitName,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -316,7 +322,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 autofocus: true,
                 style: TextStyle(color: ctx.textPrimary),
                 decoration: InputDecoration(
-                  hintText: "VD: Uống 2L nước mỗi ngày",
+                  hintText: l10n.habitNameExample,
                   hintStyle: TextStyle(color: ctx.textSecondary, fontSize: 14),
                   filled: true,
                   fillColor: ctx.inputFill,
@@ -333,7 +339,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               const SizedBox(height: 20),
 
               // CATEGORY
-              Text("Danh mục",
+              Text(l10n.category,
                   style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -405,8 +411,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text("Thêm thói quen",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  child: Text(l10n.addHabit,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -418,6 +424,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final completed = habits.where((h) => h["is_completed"] == 1).length;
     final total = habits.length;
     final progress = total > 0 ? completed / total : 0.0;
@@ -425,7 +432,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
-        title: "Thói quen hôm nay",
+        title: l10n.habitsToday,
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded,
@@ -466,6 +473,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Widget _buildProgressCard(int completed, int total, double progress) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -482,8 +490,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
         children: [
           Text(
             completed == total && total > 0
-                ? "Tuyệt vời! Hoàn thành hết rồi 🎉"
-                : "Hôm nay của bạn",
+                ? l10n.amazingAllDone
+                : l10n.yourToday,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -502,9 +510,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
-                "thói quen",
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+              Text(
+                l10n.habitsLabel,
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
             ],
           ),
@@ -524,6 +532,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Widget _buildHabitCard(Map habit) {
+    final l10n = AppLocalizations.of(context)!;
     final isCompleted = habit["is_completed"] == 1;
     final currentStreak = habit["current_streak"] ?? 0;
     final categoryIcon = categories.firstWhere(
@@ -549,16 +558,16 @@ class _HabitsScreenState extends State<HabitsScreen> {
           context: context,
           builder: (_) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text("Xóa thói quen?"),
-            content: Text("Bạn có chắc muốn xóa \"${habit["name"]}\" không?"),
+            title: Text(l10n.deleteHabit),
+            content: Text(l10n.confirmDeleteHabit(habit["name"])),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text("Hủy", style: TextStyle(color: Colors.grey)),
+                child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey)),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text("Xóa", style: TextStyle(color: Colors.red)),
+                child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -631,7 +640,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "$categoryIcon ${categories.firstWhere((c) => c["id"] == habit["category"], orElse: () => {"label": "Khác"})["label"]}",
+                          "$categoryIcon ${categories.firstWhere((c) => c["id"] == habit["category"], orElse: () => {"label": l10n.categoryOther})["label"]}",
                           style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
@@ -676,7 +685,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                       const Text("🔥", style: TextStyle(fontSize: 14)),
                       const SizedBox(width: 4),
                       Text(
-                        "$currentStreak ngày liên tiếp",
+                        l10n.consecutiveDays(currentStreak),
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFFFF9800),
@@ -695,6 +704,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -702,7 +712,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           const Text("🌱", style: TextStyle(fontSize: 64)),
           const SizedBox(height: 16),
           Text(
-            "Chưa có thói quen nào",
+            l10n.noHabits,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -711,7 +721,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Thêm thói quen đầu tiên để bắt đầu\nhành trình sống lành mạnh",
+            l10n.addFirstHabit,
             textAlign: TextAlign.center,
             style: TextStyle(color: context.textSecondary, fontSize: 14),
           ),
@@ -719,7 +729,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           ElevatedButton.icon(
             onPressed: showAddHabitSheet,
             icon: const Icon(Icons.add),
-            label: const Text("Thêm thói quen"),
+            label: Text(l10n.addHabit),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4CAF50),
               foregroundColor: Colors.white,

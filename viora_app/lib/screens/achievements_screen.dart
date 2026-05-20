@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
-import '../widgets/viora_app_bar.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -17,17 +17,20 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   bool isLoading = true;
 
   // Danh sách tất cả achievements có thể unlock
-  static const List<Map<String, dynamic>> _allAchievements = [
-    {"key": "first_checkin",  "title": "Bước đầu tiên",    "icon": "🌱", "desc": "Hoàn thành check-in đầu tiên",      "color": 0xFF4CAF50},
-    {"key": "streak_3",       "title": "3 ngày liên tiếp", "icon": "🔥", "desc": "Duy trì streak 3 ngày liên tiếp",   "color": 0xFFFF7043},
-    {"key": "streak_7",       "title": "Tuần kiên trì",    "icon": "⚡", "desc": "Duy trì streak 7 ngày liên tiếp",   "color": 0xFFFFB300},
-    {"key": "streak_30",      "title": "Tháng bền bỉ",     "icon": "🏆", "desc": "Duy trì streak 30 ngày liên tiếp",  "color": 0xFFFFD700},
-    {"key": "habits_5",       "title": "Đa nhiệm",         "icon": "🎯", "desc": "Tạo 5 thói quen",                   "color": 0xFF7C4DFF},
-    {"key": "checkin_50",     "title": "Nửa trăm",         "icon": "💪", "desc": "Hoàn thành 50 check-ins",           "color": 0xFF00BCD4},
-    {"key": "checkin_100",    "title": "Bách chiến",       "icon": "🌟", "desc": "Hoàn thành 100 check-ins",          "color": 0xFFFF6F00},
-    {"key": "plant_level_3",  "title": "Cây non",          "icon": "🪴", "desc": "Cây ảo đạt cấp độ 3",              "color": 0xFF43A047},
-    {"key": "plant_level_5",  "title": "Vườn địa đàng",   "icon": "🌳", "desc": "Cây ảo đạt cấp độ tối đa",         "color": 0xFF1B5E20},
-  ];
+  List<Map<String, dynamic>> get _allAchievements {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {"key": "first_checkin",  "title": l10n.achievementFirstStep,    "icon": "🌱", "desc": l10n.achievementFirstStepDesc,      "color": 0xFF4CAF50},
+      {"key": "streak_3",       "title": l10n.achievementStreak3, "icon": "🔥", "desc": l10n.achievementStreak3Desc,   "color": 0xFFFF7043},
+      {"key": "streak_7",       "title": l10n.achievementStreak7,    "icon": "⚡", "desc": l10n.achievementStreak7Desc,   "color": 0xFFFFB300},
+      {"key": "streak_30",      "title": l10n.achievementStreak30,     "icon": "🏆", "desc": l10n.achievementStreak30Desc,  "color": 0xFFFFD700},
+      {"key": "habits_5",       "title": l10n.achievementHabits5,         "icon": "🎯", "desc": l10n.achievementHabits5Desc,                   "color": 0xFF7C4DFF},
+      {"key": "checkin_50",     "title": l10n.achievementCheckin50,         "icon": "💪", "desc": l10n.achievementCheckin50Desc,           "color": 0xFF00BCD4},
+      {"key": "checkin_100",    "title": l10n.achievementCheckin100,       "icon": "🌟", "desc": l10n.achievementCheckin100Desc,          "color": 0xFFFF6F00},
+      {"key": "plant_level_3",  "title": l10n.achievementPlantLevel3,          "icon": "🪴", "desc": l10n.achievementPlantLevel3Desc,              "color": 0xFF43A047},
+      {"key": "plant_level_5",  "title": l10n.achievementPlantLevel5,   "icon": "🌳", "desc": l10n.achievementPlantLevel5Desc,         "color": 0xFF1B5E20},
+    ];
+  }
 
   @override
   void initState() {
@@ -62,6 +65,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final unlockedCount = _allAchievements
         .where((a) => _isUnlocked(a["key"] as String))
         .length;
@@ -76,7 +80,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Thành tích",
+          l10n.achievementsTitle,
           style: TextStyle(
             color: context.textGreen,
             fontWeight: FontWeight.bold,
@@ -119,6 +123,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   Widget _buildProgressHeader(int unlockedCount) {
+    final l10n = AppLocalizations.of(context)!;
     final total = _allAchievements.length;
     final progress = unlockedCount / total;
 
@@ -143,7 +148,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "$unlockedCount / $total thành tích",
+                    l10n.achievementsCount(unlockedCount, total),
                     style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -151,8 +156,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                   ),
                   Text(
                     unlockedCount == total
-                        ? "Bạn đã mở khóa tất cả! 🎉"
-                        : "Còn ${total - unlockedCount} thành tích chưa mở",
+                        ? l10n.allAchievementsUnlocked
+                        : l10n.achievementsRemaining(total - unlockedCount),
                     style: const TextStyle(
                         fontSize: 13, color: Colors.white70),
                   ),
@@ -253,6 +258,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   void _showDetail(Map<String, dynamic> ach, String? date) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -291,7 +297,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    "Mở khóa ngày $date",
+                    l10n.unlockedOn(date),
                     style: TextStyle(
                       fontSize: 12,
                       color: ctx.textGreenLight,
@@ -312,7 +318,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text("Đóng"),
+                  child: Text(l10n.close),
                 ),
               ),
             ],
@@ -323,6 +329,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   void _showLocked(Map<String, dynamic> ach) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -361,7 +368,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text(
-                    "Đóng",
+                    l10n.close,
                     style: TextStyle(color: ctx.textSecondary),
                   ),
                 ),

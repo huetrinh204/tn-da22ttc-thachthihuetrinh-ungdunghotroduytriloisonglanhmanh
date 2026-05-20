@@ -1,0 +1,525 @@
+{
+  "@@locale": "vi",
+  
+  "appName": "Viora",
+  "home": "Trang chủ",
+  "habits": "Thói quen",
+  "plant": "Cây",
+  "stats": "Thống kê",
+  "profile": "Hồ sơ",
+  
+  "goodMorning": "Chào buổi sáng",
+  "goodAfternoon": "Chào buổi chiều",
+  "goodEvening": "Chào buổi tối",
+  
+  "daysStreak": "{count} ngày liên tiếp",
+  "@daysStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "keepItUp": "Giữ vững phong độ nhé! 💪",
+  "best": "Best",
+  
+  "yourPlant": "Cây của bạn",
+  "plantWilted": "Hãy check-in để cây hồi phục! 💧",
+  "plantNotWatered": "Cây chưa được tưới 3 ngày rồi...",
+  "completeHabitsToGrow": "Hoàn thành thói quen để cây lớn lên!",
+  
+  "today": "Hôm nay",
+  "completed": "{done}/{total}",
+  "@completed": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "noHabitsYet": "Chưa có thói quen nào. Thêm ngay nhé! ✨",
+  "allDoneToday": "Tuyệt vời! Bạn đã hoàn thành tất cả hôm nay 🎉",
+  "habitsRemaining": "Còn {count} thói quen chưa hoàn thành",
+  "@habitsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "quote1": "Mỗi ngày một bước nhỏ, tạo nên thay đổi lớn. 💪",
+  "quote2": "Thói quen tốt là nền tảng của cuộc sống lành mạnh. 🌿",
+  "quote3": "Kiên trì là chìa khóa của thành công. 🗝️",
+  "quote4": "Hôm nay tốt hơn hôm qua là đủ rồi. ✨",
+  "quote5": "Sức khỏe là tài sản quý giá nhất. 🏃",
+  
+  "myPlant": "Cây của tôi",
+  "level": "Cấp {level}",
+  "@level": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "levelRange": "Cấp {current} → {next}",
+  "@levelRange": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "points": "{count} điểm",
+  "@points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "totalPoints": "Tổng điểm",
+  "levelProgress": "Cấp độ",
+  "maxLevel": "🏆 Cây đã đạt cấp độ tối đa!",
+  
+  "developmentProgress": "Tiến trình phát triển",
+  "developmentRoadmap": "Lộ trình phát triển",
+  "howToEarnPoints": "Cách kiếm điểm",
+  
+  "earnTip1": "✅ Hoàn thành ≥ 1 habit trong ngày",
+  "earnReward1": "+1 điểm",
+  "earnTip2": "✅ Hoàn thành ≥ 50% habits trong ngày",
+  "earnReward2": "+2 điểm",
+  "earnTip3": "🏆 Hoàn thành 100% habits trong ngày",
+  "earnReward3": "+3 điểm",
+  "earnTip4": "⚠️ Không check-in 3 ngày liên tiếp",
+  "earnReward4": "Cây héo",
+  
+  "congratulations": "🎉 CHÚC MỪNG! 🎉",
+  "plantLeveledUp": "Cây của bạn đã lên cấp!",
+  "keepGrowing": "✨ Tiếp tục phát triển nhé! ✨",
+  
+  "treasureUnlocked": "🏆 Nước thần",
+  "treasureLocked": "🔒 Khóa",
+  
+  "plantLevel1": "Hạt giống",
+  "plantLevel2": "Hạt nảy mầm",
+  "plantLevel3": "Mầm non",
+  "plantLevel4": "Cây non",
+  "plantLevel5": "Cây con",
+  "plantLevel6": "Cây nhỏ",
+  "plantLevel7": "Cây đang lớn",
+  "plantLevel8": "Cây trưởng thành",
+  "plantLevel9": "Cây phát triển tốt",
+  "plantLevel10": "Cây ra hoa",
+  "plantLevel11": "Cây kết trái non",
+  "plantLevel12": "Cây trái lớn dần",
+  "plantLevel13": "Cây kết trái chín",
+  "plantLevel14": "Cây sai quả",
+  "plantLevel15": "Cây trưởng thành hoàn hảo",
+  
+  "plantWiltedWarning": "Cây đang héo! Hãy check-in ngay 💧",
+  "plantWiltingStatus": "Cây đang héo...",
+  
+  "monday": "Thứ 2",
+  "tuesday": "Thứ 3",
+  "wednesday": "Thứ 4",
+  "thursday": "Thứ 5",
+  "friday": "Thứ 6",
+  "saturday": "Thứ 7",
+  "sunday": "Chủ nhật",
+  
+  "achievementsTitle": "Thành tích",
+  "achievementsCount": "{unlocked} / {total} thành tích",
+  "@achievementsCount": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "allAchievementsUnlocked": "Bạn đã mở khóa tất cả! 🎉",
+  "achievementsRemaining": "Còn {count} thành tích chưa mở",
+  "@achievementsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "achievementFirstStep": "Bước đầu tiên",
+  "achievementFirstStepDesc": "Hoàn thành check-in đầu tiên",
+  "achievementStreak3": "3 ngày liên tiếp",
+  "achievementStreak3Desc": "Duy trì streak 3 ngày liên tiếp",
+  "achievementStreak7": "Tuần kiên trì",
+  "achievementStreak7Desc": "Duy trì streak 7 ngày liên tiếp",
+  "achievementStreak30": "Tháng bền bỉ",
+  "achievementStreak30Desc": "Duy trì streak 30 ngày liên tiếp",
+  "achievementHabits5": "Đa nhiệm",
+  "achievementHabits5Desc": "Tạo 5 thói quen",
+  "achievementCheckin50": "Nửa trăm",
+  "achievementCheckin50Desc": "Hoàn thành 50 check-ins",
+  "achievementCheckin100": "Bách chiến",
+  "achievementCheckin100Desc": "Hoàn thành 100 check-ins",
+  "achievementPlantLevel3": "Cây non",
+  "achievementPlantLevel3Desc": "Cây ảo đạt cấp độ 3",
+  "achievementPlantLevel5": "Vườn địa đàng",
+  "achievementPlantLevel5Desc": "Cây ảo đạt cấp độ tối đa",
+  
+  "notificationSettingsTitle": "Thông báo nhắc nhở",
+  "notificationInfo": "Thông báo sẽ nhắc bạn check-in thói quen mỗi ngày để cây phát triển.",
+  "morningReminder": "Nhắc buổi sáng",
+  "morningReminderDesc": "Bắt đầu ngày mới với thói quen lành mạnh",
+  "eveningReminder": "Nhắc buổi tối",
+  "eveningReminderDesc": "Hoàn thành thói quen trước khi ngủ",
+  "reminderTime": "Giờ nhắc",
+  
+  "settings": "Cài đặt",
+  "language": "Ngôn ngữ",
+  "vietnamese": "Tiếng Việt",
+  "english": "English",
+  "darkMode": "Chế độ tối",
+  "lightMode": "Chế độ sáng",
+  "usingDarkMode": "Đang dùng chế độ tối",
+  "usingLightMode": "Đang dùng chế độ sáng",
+  "notifications": "Thông báo",
+  "savedSettings": "Đã lưu và áp dụng cài đặt",
+  "logout": "Đăng xuất",
+  
+  "profile": "Hồ sơ",
+  "personalInfo": "Thông tin cá nhân",
+  "fullName": "Họ và tên",
+  "email": "Email",
+  "gender": "Giới tính",
+  "male": "Nam",
+  "female": "Nữ",
+  "other": "Khác",
+  "notUpdated": "Chưa cập nhật",
+  "birthYear": "Năm sinh",
+  
+  "bodyStats": "Thông số cơ thể",
+  "height": "Chiều cao",
+  "weight": "Cân nặng",
+  "bmi": "BMI",
+  "underweight": "Thiếu cân",
+  "normal": "Bình thường",
+  "overweight": "Thừa cân",
+  "obese": "Béo phì",
+  
+  "personalGoals": "Mục tiêu cá nhân",
+  "goals": "Mục tiêu",
+  "noGoalsSelected": "Chưa chọn mục tiêu",
+  
+  "security": "Bảo mật",
+  "changePassword": "Đổi mật khẩu",
+  "updatePassword": "Cập nhật mật khẩu",
+  "currentPassword": "Mật khẩu hiện tại",
+  "newPassword": "Mật khẩu mới",
+  "confirmPassword": "Xác nhận mật khẩu mới",
+  "forgotPassword": "Quên mật khẩu hiện tại? Đặt lại qua email →",
+  "passwordMismatch": "Mật khẩu xác nhận không khớp",
+  "passwordTooShort": "Mật khẩu tối thiểu 8 ký tự",
+  "passwordUpdated": "Đổi mật khẩu thành công",
+  "failed": "Thất bại",
+  
+  "achievements": "Thành tích",
+  "myAchievements": "Thành tích của tôi",
+  "viewUnlockedAchievements": "Xem các thành tích đã mở khóa",
+  
+  "habitReminders": "Nhắc nhở thói quen",
+  "setDailyReminders": "Cài đặt giờ nhắc hàng ngày",
+  
+  "appearance": "Giao diện",
+  "selectLanguage": "Chọn ngôn ngữ",
+  "languageChanged": "Đã chuyển sang Tiếng Việt. Khởi động lại app để áp dụng.",
+  "languageChangedEn": "Switched to English. Restart app to apply.",
+  
+  "editName": "Đổi tên",
+  "save": "Lưu",
+  "nameUpdated": "Đã cập nhật tên",
+  
+  "bodyStatsTitle": "Thông số cơ thể",
+  "heightRange": "Chiều cao từ 100–250 cm",
+  "weightRange": "Cân nặng từ 15–300 kg",
+  "statsUpdated": "Đã cập nhật thông số",
+  
+  "goalsUpdated": "Đã cập nhật mục tiêu",
+  
+  "login": "Đăng nhập",
+  "register": "Đăng ký",
+  "loginTitle": "ĐĂNG NHẬP",
+  "registerTitle": "Tạo tài khoản",
+  "password": "Mật khẩu",
+  "confirmPasswordLabel": "Xác nhận mật khẩu",
+  "enterEmail": "Nhập email của bạn",
+  "enterPassword": "Nhập mật khẩu của bạn",
+  "enterFullName": "Nhập họ và tên",
+  "enterPasswordAgain": "Nhập lại mật khẩu",
+  "minEightChars": "Tối thiểu 8 ký tự",
+  "forgotPasswordQuestion": "Quên mật khẩu?",
+  "or": "hoặc",
+  "loginWithGoogle": "Đăng nhập bằng Google",
+  "noAccount": "Chưa có tài khoản? ",
+  "registerNow": "Đăng ký ngay",
+  "haveAccount": "Đã có tài khoản? ",
+  "loginNow": "Đăng nhập",
+  "quote": "\"Sự thay đổi không đến từ điều lớn lao,\\nmà từ những thói quen nhỏ được lặp lại mỗi ngày.\"",
+  
+  "pleaseEnterAllInfo": "Vui lòng nhập đầy đủ thông tin",
+  "loginFailed": "Đăng nhập thất bại",
+  "loginFailedRetry": "Đăng nhập thất bại, thử lại",
+  "googleLoginFailed": "Google login thất bại",
+  "googleLoginError": "Lỗi Google login: {error}",
+  "@googleLoginError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registerFailed": "Đăng ký thất bại",
+  "pleaseEnterName": "Vui lòng nhập tên",
+  "nameTooShort": "Tên phải có ít nhất 2 ký tự",
+  "pleaseEnterEmail": "Vui lòng nhập email",
+  "invalidEmailFormat": "Email không đúng định dạng",
+  "pleaseEnterPassword": "Vui lòng nhập mật khẩu",
+  "passwordMinEightChars": "Mật khẩu tối thiểu 8 ký tự",
+  "passwordNeedsUppercase": "Phải có ít nhất 1 chữ hoa",
+  "passwordNeedsNumber": "Phải có ít nhất 1 chữ số",
+  "pleaseConfirmPassword": "Vui lòng xác nhận mật khẩu",
+  "passwordsDoNotMatch": "Mật khẩu không khớp",
+  
+  "forgotPasswordTitle": "Quên mật khẩu",
+  "enterYourEmail": "Nhập email của bạn",
+  "weWillSendOtp": "Chúng tôi sẽ gửi mã OTP 6 chữ số đến email của bạn",
+  "sendOtp": "Gửi mã OTP",
+  "resetPassword": "Đặt lại mật khẩu",
+  "enterOtpSentTo": "Nhập mã OTP đã gửi đến {email}",
+  "@enterOtpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "newPasswordMinEight": "Mật khẩu mới (tối thiểu 8 ký tự)",
+  "confirmNewPassword": "Xác nhận mật khẩu mới",
+  "resendOtp": "Gửi lại mã OTP",
+  "otpSent": "Mã OTP đã được gửi đến email của bạn",
+  "otpMustBeSixDigits": "Mã OTP gồm 6 chữ số",
+  "confirmPasswordMismatch": "Mật khẩu xác nhận không khớp",
+  "resetPasswordSuccess": "Đặt lại mật khẩu thành công!",
+  "stepEmail": "Email",
+  "stepConfirm": "Xác nhận",
+  
+  "habitsToday": "Thói quen hôm nay",
+  "confirmCompletion": "Xác nhận hoàn thành",
+  "confirmHabitMessage": "Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\\n\\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.",
+  "notSure": "Chưa chắc",
+  "completedExclaim": "Đã hoàn thành!",
+  "deleteHabit": "Xóa thói quen?",
+  "confirmDeleteHabit": "Bạn có chắc muốn xóa \\\"{name}\\\" không?",
+  "@confirmDeleteHabit": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Hủy",
+  "delete": "Xóa",
+  "close": "Đóng",
+  "unlockedOn": "Mở khóa ngày {date}",
+  "@unlockedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "addNewHabit": "Thêm thói quen mới",
+  "selectIcon": "Chọn icon",
+  "habitName": "Tên thói quen",
+  "habitNameExample": "VD: Uống 2L nước mỗi ngày",
+  "category": "Danh mục",
+  "addHabit": "Thêm thói quen",
+  "noHabits": "Chưa có thói quen nào",
+  "addFirstHabit": "Thêm thói quen đầu tiên để bắt đầu\\nhành trình sống lành mạnh",
+  "amazingAllDone": "Tuyệt vời! Hoàn thành hết rồi 🎉",
+  "yourToday": "Hôm nay của bạn",
+  "habitsLabel": "thói quen",
+  "consecutiveDays": "{count} ngày liên tiếp",
+  "@consecutiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "categoryEat": "Ăn uống",
+  "categoryExercise": "Vận động",
+  "categorySleep": "Giấc ngủ",
+  "categoryMental": "Tinh thần",
+  "categoryHydration": "Uống nước",
+  "categoryOther": "Khác",
+  
+  "metricWater": "Số ml nước",
+  "metricDistance": "Khoảng cách (m)",
+  "metricSleepHours": "Số giờ ngủ",
+  "metricCalories": "Calories",
+  "enterNumberOptional": "Nhập số (tùy chọn)",
+  "unitMl": "ml",
+  "unitM": "m",
+  "unitHours": "giờ",
+  "unitCal": "cal",
+  
+  "onboardingWhoAreYou": "Bạn là?",
+  "onboardingPersonalize": "Giúp chúng tôi cá nhân hóa cho bạn",
+  "onboardingBirthYear": "Năm sinh?",
+  "onboardingAgeRecommendation": "Để gợi ý phù hợp với độ tuổi của bạn",
+  "onboardingBodyStats": "Thông số cơ thể",
+  "onboardingOptionalLater": "Không bắt buộc — có thể cập nhật sau",
+  "onboardingYourGoals": "Mục tiêu của bạn?",
+  "onboardingSelectGoals": "Chọn một hoặc nhiều mục tiêu",
+  "onboardingChoosePlant": "Chọn cây của bạn",
+  "onboardingPlantCompanion": "Người bạn đồng hành trong hành trình",
+  "skip": "Bỏ qua",
+  "next": "Tiếp theo →",
+  "startJourney": "Bắt đầu hành trình 🌱",
+  
+  "enterBirthYear": "Nhập năm sinh (VD: 1995)",
+  "quickSelect": "Chọn nhanh:",
+  "invalidBirthYear": "Năm sinh không hợp lệ",
+  "birthYearBefore1930": "Năm sinh không thể trước 1930",
+  "mustBeAtLeast10": "Bạn phải ít nhất 10 tuổi",
+  
+  "heightLabel": "Chiều cao",
+  "weightLabel": "Cân nặng",
+  "heightExample": "Ví dụ: 165",
+  "weightExample": "Ví dụ: 55",
+  "unitCm": "cm",
+  "unitKg": "kg",
+  "bmiInfo": "Thông tin này giúp tính BMI và gợi ý thói quen phù hợp hơn.",
+  "invalidHeight": "Chiều cao không hợp lệ",
+  "heightMin": "Chiều cao tối thiểu 100 cm",
+  "heightMax": "Chiều cao tối đa 250 cm",
+  "invalidWeight": "Cân nặng không hợp lệ",
+  "weightMin": "Cân nặng tối thiểu 15 kg",
+  "weightMax": "Cân nặng tối đa 300 kg",
+  
+  "goalEatHealthy": "Ăn lành mạnh",
+  "goalExercise": "Vận động",
+  "goalSleep": "Giấc ngủ",
+  "goalMental": "Tinh thần",
+  "goalWeight": "Cân nặng",
+  "goalHydration": "Uống nước",
+  "goalOther": "Khác",
+  "whatIsYourGoal": "Mục tiêu của bạn là gì?",
+  
+  "plantSprout": "Mầm xanh",
+  "plantCactus": "Xương rồng",
+  "plantBonsai": "Bonsai",
+  "plantFlower": "Hoa anh đào",
+  "plantBamboo": "Tre xanh",
+  "plantSunflower": "Hướng dương",
+  "plantDescSprout": "Nhỏ bé nhưng đầy tiềm năng",
+  "plantDescCactus": "Kiên cường, không bỏ cuộc",
+  "plantDescBonsai": "Kiên nhẫn, từng bước vững chắc",
+  "plantDescFlower": "Tươi sáng và tràn đầy năng lượng",
+  "plantDescBamboo": "Dẻo dai, bền bỉ mỗi ngày",
+  "plantDescSunflower": "Luôn hướng về phía ánh sáng",
+  
+  "onboardingPlantGrowWithHabits": "Cây sẽ lớn lên cùng thói quen của bạn",
+  "onboardingPlantTip": "Hoàn thành thói quen mỗi ngày để cây phát triển và mở khóa thành tích mới!",
+  
+  "notifMorningTitle": "🌱 Chào buổi sáng!",
+  "notifMorningBody": "Hôm nay bạn đã sẵn sàng cho thói quen của mình chưa?",
+  "notifEveningTitle": "🌙 Nhắc nhở buổi tối",
+  "notifEveningBody": "Đừng quên hoàn thành thói quen hôm nay nhé! Cây của bạn đang chờ 🌿",
+  "notifChannelMorning": "Nhắc sáng",
+  "notifChannelEvening": "Nhắc tối",
+  "notifChannelMorningDesc": "Nhắc nhở thói quen buổi sáng",
+  "notifChannelEveningDesc": "Nhắc nhở thói quen buổi tối",
+  "notifDailyReminder": "Nhắc nhở thói quen hàng ngày",
+  
+  "statsTitle": "Thống kê",
+  "thisWeek": "Tuần này",
+  "thisMonth": "Tháng này",
+  "details": "Chi tiết",
+  "totalCheckins": "Tổng check-in",
+  "activeDaysLabel": "Ngày hoạt động",
+  "longestStreakLabel": "Streak dài nhất",
+  "habitsCount": "Thói quen",
+  "days": "ngày",
+  "habitsCompletedDaily": "Thói quen hoàn thành mỗi ngày",
+  "habitsCompleted30Days": "Thói quen hoàn thành 30 ngày",
+  "noDataYet": "Chưa có dữ liệu",
+  "completeHabitsToSeeStats": "Hoàn thành thói quen để xem thống kê",
+  "noHabitsYetStats": "Chưa có thói quen nào",
+  "createHabitsToSeeStats": "Tạo thói quen để xem thống kê chi tiết",
+  "timesCheckin": "lần check-in",
+  "totalLabel": "Tổng",
+  "byCategory": "Theo danh mục",
+  "completionPercentageDaily": "Phần trăm thói quen hoàn thành mỗi ngày",
+  "good": "Tốt",
+  "fair": "Khá",
+  "needsImprovement": "Cần cố gắng",
+  "goodPercent": "Tốt (≥80%)",
+  "fairPercent": "Khá (≥50%)",
+  "needsImprovementPercent": "Cần cố gắng",
+  "currentStreak": "Streak hiện tại",
+  "consecutiveDaysLabel": "ngày liên tiếp",
+  "greatKeepGoing": "Tuyệt vời! Tiếp tục phát huy! 💪",
+  "maintainDaily": "Hãy duy trì mỗi ngày nhé! 🌟",
+  "activityCalendar30Days": "Lịch hoạt động 30 ngày",
+  "darkerMoreHabits": "Màu đậm = hoàn thành nhiều thói quen",
+  "less": "Ít",
+  "more": "Nhiều",
+  "quantityLabel": "Số lượng thói quen hoàn thành mỗi ngày",
+  "trendOver7Days": "Xu hướng theo thời gian",
+  "trendSubtitle": "Giá trị ghi nhận mỗi ngày (P*)",
+  
+  "logoutConfirm": "Bạn có chắc muốn đăng xuất?",
+  "yes": "Có",
+  "no": "Không",
+  
+  "sevenDays": "7 ngày",
+  "thirtyDays": "30 ngày",
+  "ninetyDays": "90 ngày",
+  "currentStreakLabel": "🔥 Streak hiện tại",
+  "longestStreakDetail": "🏆 Streak dài nhất",
+  "totalCheckinsLabel": "✅ Tổng check-in",
+  "times": "lần",
+  "trendOverTime": "Xu hướng theo thời gian",
+  "dailyRecordedValues": "Giá trị ghi nhận mỗi ngày",
+  "dailyRecordedValuesWithUnit": "Giá trị ghi nhận mỗi ngày ({unit})",
+  "@dailyRecordedValuesWithUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "average": "📊 Trung bình",
+  "totalSum": "📈 Tổng cộng",
+  "noDataForPeriod": "Chưa có dữ liệu trong khoảng thời gian này",
+  "startTrackingHabit": "Bắt đầu theo dõi thói quen để xem biểu đồ"
+}

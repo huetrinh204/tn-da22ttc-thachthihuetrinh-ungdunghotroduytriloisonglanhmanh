@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import 'onboarding_screen.dart';
 import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
+import '../l10n/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -94,12 +95,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 16),
 
                   // Quote dưới logo — giống login
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      '"Sự thay đổi không đến từ điều lớn lao,\nmà từ những thói quen nhỏ được lặp lại mỗi ngày."',
+                      AppLocalizations.of(context)!.quote,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF1B5E20),
                         fontStyle: FontStyle.italic,

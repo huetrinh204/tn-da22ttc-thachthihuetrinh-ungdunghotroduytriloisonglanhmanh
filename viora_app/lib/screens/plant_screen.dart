@@ -7,6 +7,7 @@ import '../widgets/viora_app_bar.dart';
 import '../widgets/level_up_animation.dart';
 import '../widgets/treasure_reward_animation.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class PlantScreen extends StatefulWidget {
   const PlantScreen({super.key});
@@ -28,23 +29,35 @@ class _PlantScreenState extends State<PlantScreen>
   @override
   bool get wantKeepAlive => false; // Không cache → reload mỗi lần vào tab
 
-  static const List<Map<String, dynamic>> _levelInfo = [
-    {"name": "Hạt giống", "desc": "Hành trình bắt đầu từ đây", "color": 0xFF8D6E63},
-    {"name": "Hạt nảy mầm", "desc": "Hạt đang nảy mầm", "color": 0xFFA1887F},
-    {"name": "Mầm non", "desc": "Cây đang nảy mầm, tiếp tục nhé!", "color": 0xFF81C784},
-    {"name": "Cây non", "desc": "Cây đang lớn dần mỗi ngày", "color": 0xFF66BB6A},
-    {"name": "Cây con", "desc": "Cây đang phát triển tốt", "color": 0xFF4CAF50},
-    {"name": "Cây nhỏ", "desc": "Cây đang vững chắc hơn", "color": 0xFF43A047},
-    {"name": "Cây đang lớn", "desc": "Cây đang lớn mạnh", "color": 0xFF388E3C},
-    {"name": "Cây trưởng thành", "desc": "Cây đã vững chắc", "color": 0xFF2E7D32},
-    {"name": "Cây phát triển tốt", "desc": "Cây đang phát triển rất tốt", "color": 0xFF1B5E20},
-    {"name": "Cây ra hoa", "desc": "Cây bắt đầu ra hoa", "color": 0xFFE91E63},
-    {"name": "Cây kết trái non", "desc": "Cây đang kết trái", "color": 0xFFF06292},
-    {"name": "Cây trái lớn dần", "desc": "Trái đang lớn dần", "color": 0xFFFF9800},
-    {"name": "Cây kết trái chín", "desc": "Trái đã chín", "color": 0xFFFFA726},
-    {"name": "Cây sai quả", "desc": "Cây đầy trái chín", "color": 0xFFFFB74D},
-    {"name": "Cây trưởng thành hoàn hảo", "desc": "Tuyệt vời! Cây đã đạt đỉnh cao 🏆", "color": 0xFFFFD54F},
-  ];
+  String _getLevelDescription(int level, AppLocalizations l10n) {
+    const descriptions = [
+      "Hành trình bắt đầu từ đây",
+      "Hạt đang nảy mầm",
+      "Cây đang nảy mầm, tiếp tục nhé!",
+      "Cây đang lớn dần mỗi ngày",
+      "Cây đang phát triển tốt",
+      "Cây đang vững chắc hơn",
+      "Cây đang lớn mạnh",
+      "Cây đã vững chắc",
+      "Cây đang phát triển rất tốt",
+      "Cây bắt đầu ra hoa",
+      "Cây đang kết trái",
+      "Trái đang lớn dần",
+      "Trái đã chín",
+      "Cây đầy trái chín",
+      "Tuyệt vời! Cây đã đạt đỉnh cao 🏆",
+    ];
+    return descriptions[level - 1];
+  }
+
+  int _getLevelColor(int level) {
+    const colors = [
+      0xFF8D6E63, 0xFFA1887F, 0xFF81C784, 0xFF66BB6A, 0xFF4CAF50,
+      0xFF43A047, 0xFF388E3C, 0xFF2E7D32, 0xFF1B5E20, 0xFFE91E63,
+      0xFFF06292, 0xFFFF9800, 0xFFFFA726, 0xFFFFB74D, 0xFFFFD54F,
+    ];
+    return colors[level - 1];
+  }
 
   @override
   void initState() {
@@ -74,33 +87,41 @@ class _PlantScreenState extends State<PlantScreen>
     if (plant != null) {
       final exp = plant["experience"] ?? 0;
       final newLevel = _calculateLevel(exp);
-      final oldLevel = previousLevel ?? newLevel;
+      final oldLevel = previousLevel ?? plantLevel;
       
-      // Check if level up happened
-      if (oldLevel < newLevel) {
-        setState(() {
-          showLevelUpAnimation = true;
-        });
-      }
-      
-      // Check if reached treasure milestone (15-30 points = level 3)
-      if (oldLevel < 3 && newLevel >= 3) {
-        // Show treasure reward after level up animation
-        Future.delayed(const Duration(milliseconds: 2500), () {
-          if (mounted) {
-            _showTreasureReward();
-          }
-        });
-      }
-      
+      // Update state first
       setState(() {
-        plantType = prefs.getString("plant_type") ?? plant["plant_type"] ?? "sprout";
-        plantLevel = newLevel;
+        plantType = plant["plant_type"] ?? "sprout";
         plantExp = exp;
         plantWilted = plant["is_wilted"] == true;
         isLoading = false;
-        previousLevel = newLevel;
       });
+      
+      // Check if level up happened (only if we have a previous level and it's different)
+      if (previousLevel != null && oldLevel < newLevel) {
+        setState(() {
+          plantLevel = newLevel;
+          showLevelUpAnimation = true;
+        });
+        
+        // Check if reached treasure milestone (every 3 levels)
+        if (newLevel % 3 == 0 && newLevel > oldLevel) {
+          // Show treasure reward after level up animation
+          Future.delayed(const Duration(milliseconds: 2500), () {
+            if (mounted) {
+              _showTreasureReward();
+            }
+          });
+        }
+      } else {
+        // First load or no level change
+        setState(() {
+          plantLevel = newLevel;
+        });
+      }
+      
+      // Update previous level for next comparison
+      previousLevel = newLevel;
     } else {
       setState(() {
         isLoading = false;
@@ -123,15 +144,25 @@ class _PlantScreenState extends State<PlantScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final l10n = AppLocalizations.of(context)!;
     final level = plantLevel.clamp(1, 15);
-    final info = _levelInfo[level - 1];
+    final levelNames = [
+      l10n.plantLevel1, l10n.plantLevel2, l10n.plantLevel3, l10n.plantLevel4, l10n.plantLevel5,
+      l10n.plantLevel6, l10n.plantLevel7, l10n.plantLevel8, l10n.plantLevel9, l10n.plantLevel10,
+      l10n.plantLevel11, l10n.plantLevel12, l10n.plantLevel13, l10n.plantLevel14, l10n.plantLevel15,
+    ];
+    final info = {
+      "name": levelNames[level - 1],
+      "desc": _getLevelDescription(level, l10n),
+      "color": _getLevelColor(level),
+    };
     final cardColor = Theme.of(context).cardTheme.color ?? Colors.white;
 
     return Stack(
       children: [
         Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: const VioraAppBar(title: "Cây của tôi"),
+          appBar: VioraAppBar(title: AppLocalizations.of(context)!.myPlant),
           body: isLoading
               ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
               : RefreshIndicator(
@@ -173,7 +204,7 @@ class _PlantScreenState extends State<PlantScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            "Cấp $level — ${info["name"]}",
+                            "${AppLocalizations.of(context)!.level(level)} — ${info["name"]}",
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -196,15 +227,15 @@ class _PlantScreenState extends State<PlantScreen>
                               color: Colors.red.shade50,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.warning_amber_rounded,
+                                const Icon(Icons.warning_amber_rounded,
                                     color: Colors.red, size: 18),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Text(
-                                  "Cây đang héo! Hãy check-in ngay 💧",
-                                  style: TextStyle(
+                                  l10n.plantWiltedWarning,
+                                  style: const TextStyle(
                                       color: Colors.red, fontSize: 13),
                                 ),
                               ],
@@ -227,7 +258,7 @@ class _PlantScreenState extends State<PlantScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Tiến trình phát triển",
+                        Text(AppLocalizations.of(context)!.developmentProgress,
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
@@ -252,7 +283,7 @@ class _PlantScreenState extends State<PlantScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Lộ trình phát triển",
+                        Text(AppLocalizations.of(context)!.developmentRoadmap,
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
@@ -284,7 +315,7 @@ class _PlantScreenState extends State<PlantScreen>
                           children: [
                             const Text("💡", style: TextStyle(fontSize: 18)),
                             const SizedBox(width: 8),
-                            Text("Cách kiếm điểm",
+                            Text(AppLocalizations.of(context)!.howToEarnPoints,
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
@@ -292,10 +323,10 @@ class _PlantScreenState extends State<PlantScreen>
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildTip("✅ Hoàn thành ≥ 1 habit trong ngày", "+1 điểm"),
-                        _buildTip("✅ Hoàn thành ≥ 50% habits trong ngày", "+2 điểm"),
-                        _buildTip("🏆 Hoàn thành 100% habits trong ngày", "+3 điểm"),
-                        _buildTip("⚠️ Không check-in 3 ngày liên tiếp", "Cây héo"),
+                        _buildTip(AppLocalizations.of(context)!.earnTip1, AppLocalizations.of(context)!.earnReward1),
+                        _buildTip(AppLocalizations.of(context)!.earnTip2, AppLocalizations.of(context)!.earnReward2),
+                        _buildTip(AppLocalizations.of(context)!.earnTip3, AppLocalizations.of(context)!.earnReward3),
+                        _buildTip(AppLocalizations.of(context)!.earnTip4, AppLocalizations.of(context)!.earnReward4),
                       ],
                     ),
                   ),
@@ -321,11 +352,12 @@ class _PlantScreenState extends State<PlantScreen>
   }
 
   Widget _buildPointsInfo() {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildStatChip("Tổng điểm", "$plantExp", Icons.star_rounded, Colors.amber),
-        _buildStatChip("Cấp độ", "$plantLevel / 15", Icons.trending_up, const Color(0xFF4CAF50)),
+        _buildStatChip(l10n.totalPoints, l10n.points(plantExp), Icons.star_rounded, Colors.amber),
+        _buildStatChip(l10n.levelProgress, "$plantLevel / 15", Icons.trending_up, const Color(0xFF4CAF50)),
       ],
     );
   }
@@ -344,22 +376,28 @@ class _PlantScreenState extends State<PlantScreen>
   }
 
   List<Widget> _buildRoadmap(int currentLevel) {
+    final l10n = AppLocalizations.of(context)!;
+    final levelNames = [
+      l10n.plantLevel1, l10n.plantLevel2, l10n.plantLevel3, l10n.plantLevel4, l10n.plantLevel5,
+      l10n.plantLevel6, l10n.plantLevel7, l10n.plantLevel8, l10n.plantLevel9, l10n.plantLevel10,
+      l10n.plantLevel11, l10n.plantLevel12, l10n.plantLevel13, l10n.plantLevel14, l10n.plantLevel15,
+    ];
     final stages = [
-      {"level": 1, "name": "Hạt giống", "exp": 0},
-      {"level": 2, "name": "Hạt nảy mầm", "exp": 5},
-      {"level": 3, "name": "Mầm non", "exp": 15},
-      {"level": 4, "name": "Cây non", "exp": 30},
-      {"level": 5, "name": "Cây con", "exp": 50},
-      {"level": 6, "name": "Cây nhỏ", "exp": 75},
-      {"level": 7, "name": "Cây đang lớn", "exp": 105},
-      {"level": 8, "name": "Cây trưởng thành", "exp": 140},
-      {"level": 9, "name": "Cây phát triển tốt", "exp": 180},
-      {"level": 10, "name": "Cây ra hoa", "exp": 225},
-      {"level": 11, "name": "Cây kết trái non", "exp": 275},
-      {"level": 12, "name": "Cây trái lớn dần", "exp": 330},
-      {"level": 13, "name": "Cây kết trái chín", "exp": 390},
-      {"level": 14, "name": "Cây sai quả", "exp": 455},
-      {"level": 15, "name": "Cây trưởng thành hoàn hảo", "exp": 525},
+      {"level": 1, "name": levelNames[0], "exp": 0},
+      {"level": 2, "name": levelNames[1], "exp": 5},
+      {"level": 3, "name": levelNames[2], "exp": 15},
+      {"level": 4, "name": levelNames[3], "exp": 30},
+      {"level": 5, "name": levelNames[4], "exp": 50},
+      {"level": 6, "name": levelNames[5], "exp": 75},
+      {"level": 7, "name": levelNames[6], "exp": 105},
+      {"level": 8, "name": levelNames[7], "exp": 140},
+      {"level": 9, "name": levelNames[8], "exp": 180},
+      {"level": 10, "name": levelNames[9], "exp": 225},
+      {"level": 11, "name": levelNames[10], "exp": 275},
+      {"level": 12, "name": levelNames[11], "exp": 330},
+      {"level": 13, "name": levelNames[12], "exp": 390},
+      {"level": 14, "name": levelNames[13], "exp": 455},
+      {"level": 15, "name": levelNames[14], "exp": 525},
     ];
 
     final List<Widget> roadmapWidgets = [];
@@ -417,6 +455,7 @@ class _PlantScreenState extends State<PlantScreen>
     required bool isUnlocked,
     required int afterLevel,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return GestureDetector(
       onTap: isUnlocked
           ? () {
@@ -491,7 +530,7 @@ class _PlantScreenState extends State<PlantScreen>
               ),
             ),
             child: Text(
-              isUnlocked ? '🏆 Nước thần' : '🔒 Khóa',
+              isUnlocked ? l10n.treasureUnlocked : l10n.treasureLocked,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
@@ -520,6 +559,7 @@ class _PlantScreenState extends State<PlantScreen>
     required bool isCurrent,
     required bool isLocked,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     Color nodeColor;
     Widget icon;
 
@@ -610,7 +650,7 @@ class _PlantScreenState extends State<PlantScreen>
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Cấp $level',
+              l10n.level(level),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
@@ -666,7 +706,7 @@ class _PlantScreenState extends State<PlantScreen>
               ),
               const SizedBox(height: 2),
               Text(
-                '$exp điểm',
+                l10n.points(exp),
                 style: TextStyle(
                   fontSize: 10,
                   color: context.textSecondary,

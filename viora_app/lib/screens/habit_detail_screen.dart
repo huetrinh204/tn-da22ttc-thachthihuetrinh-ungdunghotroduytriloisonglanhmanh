@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import '../widgets/category_icon_dot_painter.dart';
+import '../l10n/app_localizations.dart';
 
 class HabitDetailScreen extends StatefulWidget {
   final int habitId;
@@ -111,6 +112,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   }
 
   Widget _buildTimeRangeSelector() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -119,9 +122,9 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
       ),
       child: Row(
         children: [
-          _buildRangeButton("7 ngày", 7),
-          _buildRangeButton("30 ngày", 30),
-          _buildRangeButton("90 ngày", 90),
+          _buildRangeButton(l10n.sevenDays, 7),
+          _buildRangeButton(l10n.thirtyDays, 30),
+          _buildRangeButton(l10n.ninetyDays, 90),
         ],
       ),
     );
@@ -159,6 +162,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   }
 
   Widget _buildSummaryCards() {
+    final l10n = AppLocalizations.of(context)!;
     final currentStreak = habitInfo["current_streak"] ?? 0;
     final longestStreak = habitInfo["longest_streak"] ?? 0;
     final totalLogs = habitInfo["total_logs"] ?? 0;
@@ -193,16 +197,16 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
           children: [
             Expanded(
               child: _buildSummaryCard(
-                "🔥 Streak hiện tại",
-                "$currentStreak ngày",
+                l10n.currentStreakLabel,
+                "$currentStreak ${l10n.days}",
                 const Color(0xFFFF9800),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildSummaryCard(
-                "🏆 Streak dài nhất",
-                "$longestStreak ngày",
+                l10n.longestStreakDetail,
+                "$longestStreak ${l10n.days}",
                 const Color(0xFF2196F3),
               ),
             ),
@@ -213,8 +217,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
           children: [
             Expanded(
               child: _buildSummaryCard(
-                "✅ Tổng check-in",
-                "$totalLogs lần",
+                l10n.totalCheckinsLabel,
+                "$totalLogs ${l10n.times}",
                 AppColors.primary,
               ),
             ),
@@ -222,7 +226,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
             if (unit.isNotEmpty)
               Expanded(
                 child: _buildSummaryCard(
-                  "📊 Trung bình",
+                  l10n.average,
                   "${avgValue.toStringAsFixed(1)} $unit",
                   const Color(0xFF9C27B0),
                 ),
@@ -232,7 +236,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
         if (unit.isNotEmpty) ...[
           const SizedBox(height: 12),
           _buildSummaryCard(
-            "📈 Tổng cộng",
+            l10n.totalSum,
             "${totalValue.toStringAsFixed(1)} $unit",
             const Color(0xFF00BCD4),
           ),
@@ -274,6 +278,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   }
 
   Widget _buildMetricsChart() {
+    final l10n = AppLocalizations.of(context)!;
     final unit = summary["unit"] ?? habitInfo["unit"] ?? "";
     final category = habitInfo["category"] ?? "other";
     
@@ -317,10 +322,9 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
     // Tính interval cho grid Y
     final interval = (maxY / 5).clamp(0.1, double.infinity);
     
-    // Tính interval cho X axis dựa trên số lượng ngày
-    final xInterval = allDateLabels.length <= 7 ? 1.0 : 
-                      allDateLabels.length <= 30 ? (allDateLabels.length / 7).ceilToDouble() :
-                      (allDateLabels.length / 10).ceilToDouble();
+    // Tính số lượng labels tối đa để hiển thị trên X axis
+    final maxLabels = 7; // Hiển thị tối đa 7 labels
+    final labelStep = (allDateLabels.length / maxLabels).ceil().clamp(1, allDateLabels.length);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -332,7 +336,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Xu hướng theo thời gian",
+            l10n.trendOverTime,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 15,
@@ -342,8 +346,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
           const SizedBox(height: 4),
           Text(
             unit.isNotEmpty 
-                ? "Giá trị ghi nhận mỗi ngày ($unit)"
-                : "Giá trị ghi nhận mỗi ngày",
+                ? l10n.dailyRecordedValuesWithUnit(unit)
+                : l10n.dailyRecordedValues,
             style: TextStyle(fontSize: 12, color: context.textSecondary),
           ),
           const SizedBox(height: 20),
@@ -416,10 +420,19 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: xInterval,
                       getTitlesWidget: (v, _) {
                         final idx = v.toInt();
                         if (idx < 0 || idx >= allDateLabels.length) {
+                          return const SizedBox();
+                        }
+                        
+                        // Chỉ hiển thị label tại các vị trí được chọn
+                        // Luôn hiển thị ngày đầu tiên và ngày cuối cùng
+                        final isFirst = idx == 0;
+                        final isLast = idx == allDateLabels.length - 1;
+                        final isStepPosition = idx % labelStep == 0;
+                        
+                        if (!isFirst && !isLast && !isStepPosition) {
                           return const SizedBox();
                         }
                         
@@ -487,6 +500,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
@@ -498,7 +513,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
           const Text("📊", style: TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
           Text(
-            "Chưa có dữ liệu",
+            l10n.noDataForPeriod,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -507,7 +522,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Hãy check-in thói quen này để xem thống kê",
+            l10n.startTrackingHabit,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,

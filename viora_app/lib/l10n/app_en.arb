@@ -1,0 +1,525 @@
+{
+  "@@locale": "en",
+  
+  "appName": "Viora",
+  "home": "Home",
+  "habits": "Habits",
+  "plant": "Plant",
+  "stats": "Stats",
+  "profile": "Profile",
+  
+  "goodMorning": "Good morning",
+  "goodAfternoon": "Good afternoon",
+  "goodEvening": "Good evening",
+  
+  "daysStreak": "{count} day streak",
+  "@daysStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "keepItUp": "Keep it up! 💪",
+  "best": "Best",
+  
+  "yourPlant": "Your Plant",
+  "plantWilted": "Check-in to revive your plant! 💧",
+  "plantNotWatered": "Plant hasn't been watered for 3 days...",
+  "completeHabitsToGrow": "Complete habits to grow your plant!",
+  
+  "today": "Today",
+  "completed": "{done}/{total}",
+  "@completed": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "noHabitsYet": "No habits yet. Add one now! ✨",
+  "allDoneToday": "Amazing! You've completed everything today 🎉",
+  "habitsRemaining": "{count} habits remaining",
+  "@habitsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "quote1": "Small steps every day lead to big changes. 💪",
+  "quote2": "Good habits are the foundation of a healthy life. 🌿",
+  "quote3": "Persistence is the key to success. 🗝️",
+  "quote4": "Better than yesterday is good enough. ✨",
+  "quote5": "Health is the most valuable asset. 🏃",
+  
+  "myPlant": "My Plant",
+  "level": "Level {level}",
+  "@level": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "levelRange": "Level {current} → {next}",
+  "@levelRange": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "points": "{count} points",
+  "@points": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "totalPoints": "Total Points",
+  "levelProgress": "Level",
+  "maxLevel": "🏆 Plant reached max level!",
+  
+  "developmentProgress": "Development Progress",
+  "developmentRoadmap": "Development Roadmap",
+  "howToEarnPoints": "How to Earn Points",
+  
+  "earnTip1": "✅ Complete ≥ 1 habit per day",
+  "earnReward1": "+1 point",
+  "earnTip2": "✅ Complete ≥ 50% habits per day",
+  "earnReward2": "+2 points",
+  "earnTip3": "🏆 Complete 100% habits per day",
+  "earnReward3": "+3 points",
+  "earnTip4": "⚠️ No check-in for 3 consecutive days",
+  "earnReward4": "Plant wilts",
+  
+  "congratulations": "🎉 CONGRATULATIONS! 🎉",
+  "plantLeveledUp": "Your plant leveled up!",
+  "keepGrowing": "✨ Keep growing! ✨",
+  
+  "treasureUnlocked": "🏆 Magic Water",
+  "treasureLocked": "🔒 Locked",
+  
+  "plantLevel1": "Seed",
+  "plantLevel2": "Sprouting Seed",
+  "plantLevel3": "Sprout",
+  "plantLevel4": "Seedling",
+  "plantLevel5": "Young Plant",
+  "plantLevel6": "Small Plant",
+  "plantLevel7": "Growing Plant",
+  "plantLevel8": "Mature Plant",
+  "plantLevel9": "Thriving Plant",
+  "plantLevel10": "Flowering Plant",
+  "plantLevel11": "Young Fruit",
+  "plantLevel12": "Growing Fruit",
+  "plantLevel13": "Ripe Fruit",
+  "plantLevel14": "Abundant Fruit",
+  "plantLevel15": "Perfect Mature Plant",
+  
+  "plantWiltedWarning": "Plant is wilting! Check-in now 💧",
+  "plantWiltingStatus": "😢 Plant is wilting...",
+  
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+  "sunday": "Sunday",
+  
+  "achievementsTitle": "Achievements",
+  "achievementsCount": "{unlocked} / {total} achievements",
+  "@achievementsCount": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "allAchievementsUnlocked": "You've unlocked them all! 🎉",
+  "achievementsRemaining": "{count} achievements remaining",
+  "@achievementsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "achievementFirstStep": "First Step",
+  "achievementFirstStepDesc": "Complete your first check-in",
+  "achievementStreak3": "3-Day Streak",
+  "achievementStreak3Desc": "Maintain a 3-day streak",
+  "achievementStreak7": "Week Warrior",
+  "achievementStreak7Desc": "Maintain a 7-day streak",
+  "achievementStreak30": "Monthly Master",
+  "achievementStreak30Desc": "Maintain a 30-day streak",
+  "achievementHabits5": "Multitasker",
+  "achievementHabits5Desc": "Create 5 habits",
+  "achievementCheckin50": "Half Century",
+  "achievementCheckin50Desc": "Complete 50 check-ins",
+  "achievementCheckin100": "Centurion",
+  "achievementCheckin100Desc": "Complete 100 check-ins",
+  "achievementPlantLevel3": "Young Plant",
+  "achievementPlantLevel3Desc": "Reach plant level 3",
+  "achievementPlantLevel5": "Garden Paradise",
+  "achievementPlantLevel5Desc": "Reach maximum plant level",
+  
+  "notificationSettingsTitle": "Habit Reminders",
+  "notificationInfo": "Notifications will remind you to check-in daily habits to help your plant grow.",
+  "morningReminder": "Morning Reminder",
+  "morningReminderDesc": "Start your day with healthy habits",
+  "eveningReminder": "Evening Reminder",
+  "eveningReminderDesc": "Complete habits before bed",
+  "reminderTime": "Reminder Time",
+  
+  "settings": "Settings",
+  "language": "Language",
+  "vietnamese": "Tiếng Việt",
+  "english": "English",
+  "darkMode": "Dark Mode",
+  "lightMode": "Light Mode",
+  "usingDarkMode": "Using dark mode",
+  "usingLightMode": "Using light mode",
+  "notifications": "Notifications",
+  "savedSettings": "Settings saved and applied",
+  "logout": "Logout",
+  
+  "profile": "Profile",
+  "personalInfo": "Personal Information",
+  "fullName": "Full Name",
+  "email": "Email",
+  "gender": "Gender",
+  "male": "Male",
+  "female": "Female",
+  "other": "Other",
+  "notUpdated": "Not updated",
+  "birthYear": "Birth Year",
+  
+  "bodyStats": "Body Stats",
+  "height": "Height",
+  "weight": "Weight",
+  "bmi": "BMI",
+  "underweight": "Underweight",
+  "normal": "Normal",
+  "overweight": "Overweight",
+  "obese": "Obese",
+  
+  "personalGoals": "Personal Goals",
+  "goals": "Goals",
+  "noGoalsSelected": "No goals selected",
+  
+  "security": "Security",
+  "changePassword": "Change Password",
+  "updatePassword": "Update password",
+  "currentPassword": "Current password",
+  "newPassword": "New password",
+  "confirmPassword": "Confirm new password",
+  "forgotPassword": "Forgot current password? Reset via email →",
+  "passwordMismatch": "Passwords do not match",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "passwordUpdated": "Password updated successfully",
+  "failed": "Failed",
+  
+  "achievements": "Achievements",
+  "myAchievements": "My Achievements",
+  "viewUnlockedAchievements": "View unlocked achievements",
+  
+  "habitReminders": "Habit Reminders",
+  "setDailyReminders": "Set daily reminder times",
+  
+  "appearance": "Appearance",
+  "selectLanguage": "Select Language",
+  "languageChanged": "Switched to Vietnamese. Restart app to apply.",
+  "languageChangedEn": "Switched to English. Restart app to apply.",
+  
+  "editName": "Edit Name",
+  "save": "Save",
+  "nameUpdated": "Name updated",
+  
+  "bodyStatsTitle": "Body Stats",
+  "heightRange": "Height from 100–250 cm",
+  "weightRange": "Weight from 15–300 kg",
+  "statsUpdated": "Stats updated",
+  
+  "goalsUpdated": "Goals updated",
+  
+  "login": "Login",
+  "register": "Register",
+  "loginTitle": "LOGIN",
+  "registerTitle": "Create Account",
+  "password": "Password",
+  "confirmPasswordLabel": "Confirm Password",
+  "enterEmail": "Enter your email",
+  "enterPassword": "Enter your password",
+  "enterFullName": "Enter full name",
+  "enterPasswordAgain": "Re-enter password",
+  "minEightChars": "Minimum 8 characters",
+  "forgotPasswordQuestion": "Forgot password?",
+  "or": "or",
+  "loginWithGoogle": "Login with Google",
+  "noAccount": "Don't have an account? ",
+  "registerNow": "Register now",
+  "haveAccount": "Already have an account? ",
+  "loginNow": "Login",
+  "quote": "\"Change doesn't come from big things,\\nbut from small habits repeated every day.\"",
+  
+  "pleaseEnterAllInfo": "Please enter all information",
+  "loginFailed": "Login failed",
+  "loginFailedRetry": "Login failed, please try again",
+  "googleLoginFailed": "Google login failed",
+  "googleLoginError": "Google login error: {error}",
+  "@googleLoginError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "registerFailed": "Registration failed",
+  "pleaseEnterName": "Please enter name",
+  "nameTooShort": "Name must be at least 2 characters",
+  "pleaseEnterEmail": "Please enter email",
+  "invalidEmailFormat": "Invalid email format",
+  "pleaseEnterPassword": "Please enter password",
+  "passwordMinEightChars": "Password must be at least 8 characters",
+  "passwordNeedsUppercase": "Must have at least 1 uppercase letter",
+  "passwordNeedsNumber": "Must have at least 1 number",
+  "pleaseConfirmPassword": "Please confirm password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  
+  "forgotPasswordTitle": "Forgot Password",
+  "enterYourEmail": "Enter your email",
+  "weWillSendOtp": "We will send a 6-digit OTP code to your email",
+  "sendOtp": "Send OTP",
+  "resetPassword": "Reset Password",
+  "enterOtpSentTo": "Enter OTP sent to {email}",
+  "@enterOtpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "newPasswordMinEight": "New password (minimum 8 characters)",
+  "confirmNewPassword": "Confirm new password",
+  "resendOtp": "Resend OTP",
+  "otpSent": "OTP has been sent to your email",
+  "otpMustBeSixDigits": "OTP must be 6 digits",
+  "confirmPasswordMismatch": "Confirm password does not match",
+  "resetPasswordSuccess": "Password reset successfully!",
+  "stepEmail": "Email",
+  "stepConfirm": "Confirm",
+  
+  "habitsToday": "Today's Habits",
+  "confirmCompletion": "Confirm Completion",
+  "confirmHabitMessage": "Are you sure you completed this habit today?\\n\\nOnce confirmed, you cannot uncheck it today.",
+  "notSure": "Not sure",
+  "completedExclaim": "Completed!",
+  "deleteHabit": "Delete Habit?",
+  "confirmDeleteHabit": "Are you sure you want to delete \\\"{name}\\\"?",
+  "@confirmDeleteHabit": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "close": "Close",
+  "unlockedOn": "Unlocked on {date}",
+  "@unlockedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "addNewHabit": "Add New Habit",
+  "selectIcon": "Select Icon",
+  "habitName": "Habit Name",
+  "habitNameExample": "E.g.: Drink 2L water daily",
+  "category": "Category",
+  "addHabit": "Add Habit",
+  "noHabits": "No habits yet",
+  "addFirstHabit": "Add your first habit to start\\nyour healthy living journey",
+  "amazingAllDone": "Amazing! All done 🎉",
+  "yourToday": "Your Today",
+  "habitsLabel": "habits",
+  "consecutiveDays": "{count} consecutive days",
+  "@consecutiveDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  
+  "categoryEat": "Eating",
+  "categoryExercise": "Exercise",
+  "categorySleep": "Sleep",
+  "categoryMental": "Mental",
+  "categoryHydration": "Hydration",
+  "categoryOther": "Other",
+  
+  "metricWater": "Water (ml)",
+  "metricDistance": "Distance (m)",
+  "metricSleepHours": "Sleep hours",
+  "metricCalories": "Calories",
+  "enterNumberOptional": "Enter number (optional)",
+  "unitMl": "ml",
+  "unitM": "m",
+  "unitHours": "hours",
+  "unitCal": "cal",
+  
+  "onboardingWhoAreYou": "Who are you?",
+  "onboardingPersonalize": "Help us personalize for you",
+  "onboardingBirthYear": "Birth year?",
+  "onboardingAgeRecommendation": "To provide age-appropriate recommendations",
+  "onboardingBodyStats": "Body Stats",
+  "onboardingOptionalLater": "Optional — can update later",
+  "onboardingYourGoals": "Your goals?",
+  "onboardingSelectGoals": "Select one or more goals",
+  "onboardingChoosePlant": "Choose your plant",
+  "onboardingPlantCompanion": "Your companion on this journey",
+  "skip": "Skip",
+  "next": "Next →",
+  "startJourney": "Start Journey 🌱",
+  
+  "enterBirthYear": "Enter birth year (e.g.: 1995)",
+  "quickSelect": "Quick select:",
+  "invalidBirthYear": "Invalid birth year",
+  "birthYearBefore1930": "Birth year cannot be before 1930",
+  "mustBeAtLeast10": "You must be at least 10 years old",
+  
+  "heightLabel": "Height",
+  "weightLabel": "Weight",
+  "heightExample": "Example: 165",
+  "weightExample": "Example: 55",
+  "unitCm": "cm",
+  "unitKg": "kg",
+  "bmiInfo": "This information helps calculate BMI and provide better habit recommendations.",
+  "invalidHeight": "Invalid height",
+  "heightMin": "Minimum height 100 cm",
+  "heightMax": "Maximum height 250 cm",
+  "invalidWeight": "Invalid weight",
+  "weightMin": "Minimum weight 15 kg",
+  "weightMax": "Maximum weight 300 kg",
+  
+  "goalEatHealthy": "Eat Healthy",
+  "goalExercise": "Exercise",
+  "goalSleep": "Sleep",
+  "goalMental": "Mental Health",
+  "goalWeight": "Weight",
+  "goalHydration": "Hydration",
+  "goalOther": "Other",
+  "whatIsYourGoal": "What is your goal?",
+  
+  "plantSprout": "Green Sprout",
+  "plantCactus": "Cactus",
+  "plantBonsai": "Bonsai",
+  "plantFlower": "Cherry Blossom",
+  "plantBamboo": "Bamboo",
+  "plantSunflower": "Sunflower",
+  "plantDescSprout": "Small but full of potential",
+  "plantDescCactus": "Resilient, never gives up",
+  "plantDescBonsai": "Patient, steady progress",
+  "plantDescFlower": "Bright and full of energy",
+  "plantDescBamboo": "Flexible, persistent every day",
+  "plantDescSunflower": "Always facing the light",
+  
+  "onboardingPlantGrowWithHabits": "Your plant will grow with your habits",
+  "onboardingPlantTip": "Complete habits daily to grow your plant and unlock new achievements!",
+  
+  "notifMorningTitle": "🌱 Good morning!",
+  "notifMorningBody": "Are you ready for your habits today?",
+  "notifEveningTitle": "🌙 Evening Reminder",
+  "notifEveningBody": "Don't forget to complete your habits today! Your plant is waiting 🌿",
+  "notifChannelMorning": "Morning Reminder",
+  "notifChannelEvening": "Evening Reminder",
+  "notifChannelMorningDesc": "Morning habit reminders",
+  "notifChannelEveningDesc": "Evening habit reminders",
+  "notifDailyReminder": "Daily habit reminders",
+  
+  "statsTitle": "Statistics",
+  "thisWeek": "This Week",
+  "thisMonth": "This Month",
+  "details": "Details",
+  "totalCheckins": "Total Check-ins",
+  "activeDaysLabel": "Active Days",
+  "longestStreakLabel": "Longest Streak",
+  "habitsCount": "Habits",
+  "days": "days",
+  "habitsCompletedDaily": "Habits completed daily",
+  "habitsCompleted30Days": "Habits completed in 30 days",
+  "noDataYet": "No data yet",
+  "completeHabitsToSeeStats": "Complete habits to see statistics",
+  "noHabitsYetStats": "No habits yet",
+  "createHabitsToSeeStats": "Create habits to see detailed statistics",
+  "timesCheckin": "check-ins",
+  "totalLabel": "Total",
+  "byCategory": "By Category",
+  "completionPercentageDaily": "Daily habit completion percentage",
+  "good": "Good",
+  "fair": "Fair",
+  "needsImprovement": "Needs Improvement",
+  "goodPercent": "Good (≥80%)",
+  "fairPercent": "Fair (≥50%)",
+  "needsImprovementPercent": "Needs Improvement",
+  "currentStreak": "Current Streak",
+  "consecutiveDaysLabel": "consecutive days",
+  "greatKeepGoing": "Great! Keep it up! 💪",
+  "maintainDaily": "Keep it up every day! 🌟",
+  "activityCalendar30Days": "30-Day Activity Calendar",
+  "darkerMoreHabits": "Darker = more habits completed",
+  "less": "Less",
+  "more": "More",
+  "quantityLabel": "Number of habits completed daily",
+  "trendOver7Days": "Trend Over Time",
+  "trendSubtitle": "Daily recorded values (P*)",
+  
+  "logoutConfirm": "Are you sure you want to logout?",
+  "yes": "Yes",
+  "no": "No",
+  
+  "sevenDays": "7 days",
+  "thirtyDays": "30 days",
+  "ninetyDays": "90 days",
+  "currentStreakLabel": "🔥 Current Streak",
+  "longestStreakDetail": "🏆 Longest Streak",
+  "totalCheckinsLabel": "✅ Total Check-ins",
+  "times": "times",
+  "trendOverTime": "Trend Over Time",
+  "dailyRecordedValues": "Daily recorded values",
+  "dailyRecordedValuesWithUnit": "Daily recorded values ({unit})",
+  "@dailyRecordedValuesWithUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  
+  "average": "📊 Average",
+  "totalSum": "📈 Total",
+  "noDataForPeriod": "No data for this period",
+  "startTrackingHabit": "Start tracking habit to see chart"
+}

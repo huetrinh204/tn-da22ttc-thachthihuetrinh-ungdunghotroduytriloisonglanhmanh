@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class PlantWidget extends StatefulWidget {
   final String plantType;
@@ -147,33 +148,7 @@ class _PlantWidgetState extends State<PlantWidget>
     ],
   };
 
-  static const Map<String, String> _plantNames = {
-    'sprout':    'Mầm xanh',
-    'cactus':    'Xương rồng',
-    'bonsai':    'Bonsai',
-    'flower':    'Hoa anh đào',
-    'bamboo':    'Tre xanh',
-    'sunflower': 'Hướng dương',
-  };
 
-  static const List<String> _levelNames = [
-    '',
-    'Hạt giống',
-    'Hạt nảy mầm',
-    'Mầm non',
-    'Cây non',
-    'Cây con',
-    'Cây nhỏ',
-    'Cây đang lớn',
-    'Cây trưởng thành',
-    'Cây phát triển tốt',
-    'Cây ra hoa',
-    'Cây kết trái non',
-    'Cây trái lớn dần',
-    'Cây kết trái chín',
-    'Cây sai quả',
-    'Cây trưởng thành hoàn hảo',
-  ];
 
   String get _emoji {
     if (widget.isWilted) return '🥀';
@@ -186,8 +161,34 @@ class _PlantWidgetState extends State<PlantWidget>
     return _emoji.endsWith('.png') || _emoji.endsWith('.jpg');
   }
 
-  String get _levelName => _levelNames[widget.level.clamp(1, 15)];
-  String get _plantName => _plantNames[widget.plantType] ?? 'Cây';
+  String _getLevelName(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final levelNames = [
+      '',
+      l10n.plantLevel1, l10n.plantLevel2, l10n.plantLevel3, l10n.plantLevel4, l10n.plantLevel5,
+      l10n.plantLevel6, l10n.plantLevel7, l10n.plantLevel8, l10n.plantLevel9, l10n.plantLevel10,
+      l10n.plantLevel11, l10n.plantLevel12, l10n.plantLevel13, l10n.plantLevel14, l10n.plantLevel15,
+    ];
+    return levelNames[widget.level.clamp(1, 15)];
+  }
+  
+  String _getPlantName(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final plantNames = {
+      'sprout':    l10n.plantSprout,
+      'cactus':    l10n.plantCactus,
+      'bonsai':    l10n.plantBonsai,
+      'flower':    l10n.plantFlower,
+      'bamboo':    l10n.plantBamboo,
+      'sunflower': l10n.plantSunflower,
+    };
+    return plantNames[widget.plantType] ?? l10n.plantSprout;
+  }
+  
+  String _getWiltedStatus(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return '😢 ${l10n.plantWiltingStatus}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +222,7 @@ class _PlantWidgetState extends State<PlantWidget>
         ),
         const SizedBox(height: 6),
         Text(
-          _plantName,
+          _getPlantName(context),
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -229,7 +230,7 @@ class _PlantWidgetState extends State<PlantWidget>
           ),
         ),
         Text(
-          widget.isWilted ? '😢 Cây đang héo...' : _levelName,
+          widget.isWilted ? _getWiltedStatus(context) : _getLevelName(context),
           style: TextStyle(
             fontSize: 12,
             color: widget.isWilted ? Colors.red : context.textSecondary,
@@ -257,9 +258,10 @@ class PlantProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (level >= 15) {
       return Text(
-        '🏆 Cây đã đạt cấp độ tối đa!',
+        l10n.maxLevel,
         style: TextStyle(
           fontSize: 13,
           color: context.textGreen,
@@ -280,11 +282,11 @@ class PlantProgressBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Cấp $level → ${level + 1}',
+              l10n.levelRange(level, level + 1),
               style: TextStyle(fontSize: 12, color: context.textSecondary),
             ),
             Text(
-              '$experience / $nextThreshold điểm',
+              '$experience / $nextThreshold ${l10n.points(nextThreshold)}',
               style: TextStyle(
                   fontSize: 12,
                   color: context.textGreenLight,

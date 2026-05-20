@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 import 'home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -30,28 +31,34 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   final weightController = TextEditingController();
 
   // Step 4 - Goals
-  final List<Map<String, dynamic>> goalOptions = [
-    {"id": "eat_healthy", "label": "Ăn lành mạnh", "icon": "🥗", "color": 0xFFE8F5E9},
-    {"id": "exercise",    "label": "Vận động",       "icon": "🏃", "color": 0xFFE3F2FD},
-    {"id": "sleep",       "label": "Giấc ngủ",       "icon": "😴", "color": 0xFFEDE7F6},
-    {"id": "mental",      "label": "Tinh thần",      "icon": "🧘", "color": 0xFFFFF8E1},
-    {"id": "weight",      "label": "Cân nặng",       "icon": "⚖️", "color": 0xFFFCE4EC},
-    {"id": "hydration",   "label": "Uống nước",      "icon": "💧", "color": 0xFFE0F7FA},
-    {"id": "other",       "label": "Khác",           "icon": "✏️", "color": 0xFFF3E5F5},
-  ];
+  List<Map<String, dynamic>> goalOptions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {"id": "eat_healthy", "label": l10n.goalEatHealthy, "icon": "🥗", "color": 0xFFE8F5E9},
+      {"id": "exercise",    "label": l10n.goalExercise,   "icon": "🏃", "color": 0xFFE3F2FD},
+      {"id": "sleep",       "label": l10n.goalSleep,      "icon": "😴", "color": 0xFFEDE7F6},
+      {"id": "mental",      "label": l10n.goalMental,     "icon": "🧘", "color": 0xFFFFF8E1},
+      {"id": "weight",      "label": l10n.goalWeight,     "icon": "⚖️", "color": 0xFFFCE4EC},
+      {"id": "hydration",   "label": l10n.goalHydration,  "icon": "💧", "color": 0xFFE0F7FA},
+      {"id": "other",       "label": l10n.goalOther,      "icon": "✏️", "color": 0xFFF3E5F5},
+    ];
+  }
   final Set<String> selectedGoals = {};
   final customGoalController = TextEditingController();
 
   // Step 5 - Plant
   String selectedPlant = "sprout";
-  final List<Map<String, dynamic>> plantOptions = [
-    {"id": "sprout",  "emoji": "🌱", "name": "Mầm xanh",   "desc": "Nhỏ bé nhưng đầy tiềm năng"},
-    {"id": "cactus",  "emoji": "🌵", "name": "Xương rồng",  "desc": "Kiên cường, không bỏ cuộc"},
-    {"id": "bonsai",  "emoji": "🌳", "name": "Bonsai",      "desc": "Kiên nhẫn, từng bước vững chắc"},
-    {"id": "flower",  "emoji": "🌸", "name": "Hoa anh đào", "desc": "Tươi sáng và tràn đầy năng lượng"},
-    {"id": "bamboo",  "emoji": "🎋", "name": "Tre xanh",    "desc": "Dẻo dai, bền bỉ mỗi ngày"},
-    {"id": "sunflower","emoji": "🌻","name": "Hướng dương", "desc": "Luôn hướng về phía ánh sáng"},
-  ];
+  List<Map<String, dynamic>> get plantOptions {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      {"id": "sprout",  "emoji": "🌱", "name": l10n.plantSprout,   "desc": l10n.plantDescSprout},
+      {"id": "cactus",  "emoji": "🌵", "name": l10n.plantCactus,  "desc": l10n.plantDescCactus},
+      {"id": "bonsai",  "emoji": "🌳", "name": l10n.plantBonsai,      "desc": l10n.plantDescBonsai},
+      {"id": "flower",  "emoji": "🌸", "name": l10n.plantFlower, "desc": l10n.plantDescFlower},
+      {"id": "bamboo",  "emoji": "🎋", "name": l10n.plantBamboo,    "desc": l10n.plantDescBamboo},
+      {"id": "sunflower","emoji": "🌻","name": l10n.plantSunflower, "desc": l10n.plantDescSunflower},
+    ];
+  }
 
   // Validation errors
   String? birthYearError;
@@ -61,31 +68,34 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   bool isLoading = false;
 
   // Validation helpers
-  String? _validateBirthYear(String v) {
+  String? _validateBirthYear(String v, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final currentYear = DateTime.now().year;
     final year = int.tryParse(v.trim());
     if (v.trim().isEmpty) return null;
-    if (year == null) return "Năm sinh không hợp lệ";
-    if (year < 1930) return "Năm sinh không thể trước 1930";
-    if (year > currentYear - 10) return "Bạn phải ít nhất 10 tuổi";
+    if (year == null) return l10n.invalidBirthYear;
+    if (year < 1930) return l10n.birthYearBefore1930;
+    if (year > currentYear - 10) return l10n.mustBeAtLeast10;
     return null;
   }
 
-  String? _validateHeight(String v) {
+  String? _validateHeight(String v, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (v.trim().isEmpty) return null;
     final h = double.tryParse(v.trim());
-    if (h == null) return "Chiều cao không hợp lệ";
-    if (h < 100) return "Chiều cao tối thiểu 100 cm";
-    if (h > 250) return "Chiều cao tối đa 250 cm";
+    if (h == null) return l10n.invalidHeight;
+    if (h < 100) return l10n.heightMin;
+    if (h > 250) return l10n.heightMax;
     return null;
   }
 
-  String? _validateWeight(String v) {
+  String? _validateWeight(String v, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (v.trim().isEmpty) return null;
     final w = double.tryParse(v.trim());
-    if (w == null) return "Cân nặng không hợp lệ";
-    if (w < 15) return "Cân nặng tối thiểu 15 kg";
-    if (w > 300) return "Cân nặng tối đa 300 kg";
+    if (w == null) return l10n.invalidWeight;
+    if (w < 15) return l10n.weightMin;
+    if (w > 300) return l10n.weightMax;
     return null;
   }
 
@@ -204,6 +214,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final config = _pageConfigs[_currentPage];
     final gradColors = (config["gradient"] as List<int>)
         .map((c) => Color(c))
@@ -264,9 +275,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     // Skip
                     TextButton(
                       onPressed: handleSkip,
-                      child: const Text(
-                        "Bỏ qua",
-                        style: TextStyle(
+                      child: Text(
+                        l10n.skip,
+                        style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 14,
                             fontWeight: FontWeight.w500),
@@ -335,8 +346,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           )
                         : Text(
                             _currentPage == _totalPages - 1
-                                ? "Bắt đầu hành trình 🌱"
-                                : "Tiếp theo →",
+                                ? l10n.startJourney
+                                : l10n.next,
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),
@@ -374,22 +385,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // ===== PAGE 1: GENDER =====
   Widget _buildGenderPage() {
+    final l10n = AppLocalizations.of(context)!;
     final genders = [
-      {"id": "male",   "label": "Nam",  "icon": "👨", "color": 0xFFE3F2FD},
-      {"id": "female", "label": "Nữ",   "icon": "👩", "color": 0xFFFCE4EC},
-      {"id": "other",  "label": "Khác", "icon": "🧑", "color": 0xFFF3E5F5},
+      {"id": "male",   "label": l10n.male,  "icon": "👨", "color": 0xFFE3F2FD},
+      {"id": "female", "label": l10n.female, "icon": "👩", "color": 0xFFFCE4EC},
+      {"id": "other",  "label": l10n.other, "icon": "🧑", "color": 0xFFF3E5F5},
     ];
 
     return SingleChildScrollView(
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text("Bạn là?",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
+          Text(l10n.onboardingWhoAreYou,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
                   color: Colors.white)),
           const SizedBox(height: 6),
-          const Text("Giúp chúng tôi cá nhân hóa cho bạn",
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(l10n.onboardingPersonalize,
+              style: const TextStyle(color: Colors.white70, fontSize: 14)),
           const SizedBox(height: 16),
           _buildCard(
             child: Column(
@@ -447,6 +459,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // ===== PAGE 2: BIRTH YEAR =====
   Widget _buildBirthYearPage() {
+    final l10n = AppLocalizations.of(context)!;
     final currentYear = DateTime.now().year;
     final suggestedYears = List.generate(7, (i) => currentYear - 15 - i * 5);
 
@@ -454,12 +467,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text("Năm sinh?",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
+          Text(l10n.onboardingBirthYear,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
                   color: Colors.white)),
           const SizedBox(height: 6),
-          const Text("Để gợi ý phù hợp với độ tuổi của bạn",
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(l10n.onboardingAgeRecommendation,
+              style: const TextStyle(color: Colors.white70, fontSize: 14)),
           const SizedBox(height: 16),
           _buildCard(
             child: Column(
@@ -470,7 +483,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   keyboardType: TextInputType.number,
                   maxLength: 4,
                   onChanged: (v) {
-                    final error = _validateBirthYear(v);
+                    final error = _validateBirthYear(v, context);
                     final year = int.tryParse(v.trim());
                     setState(() {
                       birthYearError = error;
@@ -478,7 +491,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     });
                   },
                   decoration: InputDecoration(
-                    hintText: "Nhập năm sinh (VD: 1995)",
+                    hintText: l10n.enterBirthYear,
                     hintStyle: const TextStyle(color: Colors.grey),
                     prefixIcon: const Icon(Icons.cake_outlined, color: Color(0xFF2E7D32)),
                     errorText: birthYearError,
@@ -500,8 +513,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text("Chọn nhanh:",
-                    style: TextStyle(fontSize: 13, color: Colors.grey,
+                Text(l10n.quickSelect,
+                    style: const TextStyle(fontSize: 13, color: Colors.grey,
                         fontWeight: FontWeight.w500)),
                 const SizedBox(height: 12),
                 Wrap(
@@ -552,16 +565,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // ===== PAGE 3: HEIGHT & WEIGHT =====
   Widget _buildBodyPage() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text("Thông số cơ thể",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
+          Text(l10n.onboardingBodyStats,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
                   color: Colors.white)),
           const SizedBox(height: 6),
-          const Text("Không bắt buộc — có thể cập nhật sau",
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(l10n.onboardingOptionalLater,
+              style: const TextStyle(color: Colors.white70, fontSize: 14)),
           const SizedBox(height: 16),
           _buildCard(
             child: Column(
@@ -569,26 +583,26 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               children: [
                 _buildBodyField(
                   controller: heightController,
-                  label: "Chiều cao",
-                  hint: "Ví dụ: 165",
-                  suffix: "cm",
+                  label: l10n.heightLabel,
+                  hint: l10n.heightExample,
+                  suffix: l10n.unitCm,
                   icon: Icons.height,
                   color: const Color(0xFF2E7D32),
                   bgColor: const Color(0xFFF1F8E9),
                   errorText: heightError,
-                  onChanged: (v) => setState(() => heightError = _validateHeight(v)),
+                  onChanged: (v) => setState(() => heightError = _validateHeight(v, context)),
                 ),
                 const SizedBox(height: 20),
                 _buildBodyField(
                   controller: weightController,
-                  label: "Cân nặng",
-                  hint: "Ví dụ: 55",
-                  suffix: "kg",
+                  label: l10n.weightLabel,
+                  hint: l10n.weightExample,
+                  suffix: l10n.unitKg,
                   icon: Icons.monitor_weight_outlined,
                   color: const Color(0xFF2E7D32),
                   bgColor: const Color(0xFFF1F8E9),
                   errorText: weightError,
-                  onChanged: (v) => setState(() => weightError = _validateWeight(v)),
+                  onChanged: (v) => setState(() => weightError = _validateWeight(v, context)),
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -597,14 +611,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     color: const Color(0xFFF1F8E9),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Color(0xFF2E7D32), size: 18),
-                      SizedBox(width: 10),
+                      const Icon(Icons.info_outline, color: Color(0xFF2E7D32), size: 18),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          "Thông tin này giúp tính BMI và gợi ý thói quen phù hợp hơn.",
-                          style: TextStyle(fontSize: 12, color: Color(0xFF1B5E20)),
+                          l10n.bmiInfo,
+                          style: const TextStyle(fontSize: 12, color: Color(0xFF1B5E20)),
                         ),
                       ),
                     ],
@@ -673,16 +687,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // ===== PAGE 4: GOALS =====
   Widget _buildGoalsPage() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text("Mục tiêu của bạn?",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
+          Text(l10n.onboardingYourGoals,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
                   color: Colors.white)),
           const SizedBox(height: 6),
-          const Text("Chọn một hoặc nhiều mục tiêu",
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(l10n.onboardingSelectGoals,
+              style: const TextStyle(color: Colors.white70, fontSize: 14)),
           const SizedBox(height: 16),
           _buildCard(
             child: Column(
@@ -694,7 +709,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   childAspectRatio: 1.25,
-                  children: goalOptions.map((g) {
+                  children: goalOptions(context).map((g) {
                     final isSelected = selectedGoals.contains(g["id"]);
                     return GestureDetector(
                       onTap: () => setState(() {
@@ -746,7 +761,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     maxLength: 100,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: "Mục tiêu của bạn là gì?",
+                      hintText: l10n.whatIsYourGoal,
                       hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
                       prefixIcon: const Icon(Icons.edit_outlined,
                           color: Color(0xFFE53935)),
@@ -775,16 +790,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // ===== PAGE 5: PLANT =====
   Widget _buildPlantPage() {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text("Chọn cây của bạn 🌿",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
+          Text(l10n.onboardingChoosePlant + " 🌿",
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
                   color: Colors.white)),
           const SizedBox(height: 6),
-          const Text("Cây sẽ lớn lên cùng thói quen của bạn",
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(l10n.onboardingPlantGrowWithHabits,
+              style: const TextStyle(color: Colors.white70, fontSize: 14)),
           const SizedBox(height: 16),
           _buildCard(
             child: Column(
@@ -849,14 +865,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     color: const Color(0xFFE8F5E9),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Text("💡", style: TextStyle(fontSize: 18)),
-                      SizedBox(width: 10),
+                      const Text("💡", style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          "Hoàn thành thói quen mỗi ngày để cây phát triển và mở khóa thành tích mới!",
-                          style: TextStyle(
+                          l10n.onboardingPlantTip,
+                          style: const TextStyle(
                               fontSize: 12, color: Color(0xFF2E7D32)),
                         ),
                       ),
