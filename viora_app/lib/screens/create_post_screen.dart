@@ -105,10 +105,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
       Navigator.pop(context, true);
     } else {
+      final msg = response["message"] as String? ?? "Failed to create post";
+      final hint = msg == "Network error"
+          ? "Không kết nối được server.\nKiểm tra backend (npm run dev) và IP trong api_service.dart"
+          : msg;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(response["message"] ?? "Failed to create post"),
+          content: Text(hint),
           backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 4),
         ),
       );
     }
@@ -122,6 +127,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
         title: l10n.createPost,
+        showBack: true,
         actions: [
           if (_isPosting)
             const Padding(

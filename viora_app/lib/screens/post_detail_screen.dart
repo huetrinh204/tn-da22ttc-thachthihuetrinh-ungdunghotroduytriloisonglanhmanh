@@ -95,44 +95,73 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     setState(() => _isSendingComment = true);
 
-    // TODO: Call API to send comment
-    await Future.delayed(const Duration(milliseconds: 500));
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    
+    final response = await ApiService.createComment(
+      token: token,
+      postId: _post.id,
+      content: content,
+    );
 
     if (!mounted) return;
 
-    // Add new comment to list
-    final newComment = Comment(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      postId: _post.id,
-      userId: 'current_user',
-      userName: 'Bạn',
-      content: content,
-      likeCount: 0,
-      isLiked: false,
-      createdAt: DateTime.now(),
-    );
+    setState(() => _isSendingComment = false);
 
-    setState(() {
-      _comments.insert(0, newComment);
-      _post = _post.copyWith(commentCount: _post.commentCount + 1);
-      _isSendingComment = false;
-    });
-
-    _commentController.clear();
-    FocusScope.of(context).unfocus();
+    if (response["comment"] != null) {
+      final newComment = Comment.fromJson(response["comment"]);
+      setState(() {
+        _comments.insert(0, newComment);
+        _post = _post.copyWith(commentCount: _post.commentCount + 1);
+      });
+      _commentController.clear();
+      FocusScope.of(context).unfocus();
+    } else {
+      // Fallback: add comment locally if API fails
+      final newComment = Comment(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        postId: _post.id,
+        userId: 'current_user',
+        userName: 'Bạn',
+        content: content,
+        likeCount: 0,
+        isLiked: false,
+        createdAt: DateTime.now(),
+      );
+      setState(() {
+        _comments.insert(0, newComment);
+        _post = _post.copyWith(commentCount: _post.commentCount + 1);
+      });
+      _commentController.clear();
+      FocusScope.of(context).unfocus();
+    }
   }
 
-  void _handleLike() {
+  void _handleLike() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    
+    // Optimistic update
     setState(() {
       _post = _post.copyWith(
         isLiked: !_post.isLiked,
         likeCount: _post.isLiked ? _post.likeCount - 1 : _post.likeCount + 1,
       );
     });
-    // TODO: Call API to like/unlike post
+    
+    // Call API
+    if (_post.isLiked) {
+      await ApiService.likePost(token, _post.id);
+    } else {
+      await ApiService.unlikePost(token, _post.id);
+    }
   }
 
-  void _handleCommentLike(Comment comment) {
+  void _handleCommentLike(Comment comment) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    
+    // Optimistic update
     setState(() {
       final index = _comments.indexWhere((c) => c.id == comment.id);
       if (index != -1) {
@@ -142,7 +171,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         );
       }
     });
-    // TODO: Call API to like/unlike comment
+    
+    // Call API
+    if (comment.isLiked) {
+      await ApiService.likeComment(token, comment.id);
+    } else {
+      await ApiService.unlikeComment(token, comment.id);
+    }
   }
 
   @override

@@ -17,3 +17,6 @@ logs/
 # Runtime
 *.pid
 *.seed
+
+# Community uploads
+uploads/

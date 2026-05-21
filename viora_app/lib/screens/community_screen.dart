@@ -22,13 +22,16 @@ class _CommunityScreenState extends State<CommunityScreen>
   final TextEditingController _searchController = TextEditingController();
   
   List<Post> _posts = [];
+  List<Post> _filteredPosts = [];
   bool _isLoading = false;
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
+    _searchController.addListener(_onSearchChanged);
     _loadPosts();
   }
 
@@ -38,10 +41,30 @@ class _CommunityScreenState extends State<CommunityScreen>
     }
   }
 
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    if (query.isEmpty) {
+      setState(() {
+        _isSearching = false;
+        _filteredPosts = [];
+      });
+    } else {
+      setState(() {
+        _isSearching = true;
+        _filteredPosts = _posts.where((post) {
+          return post.content.toLowerCase().contains(query) ||
+                 post.userName.toLowerCase().contains(query) ||
+                 post.hashtags.any((tag) => tag.toLowerCase().contains(query));
+        }).toList();
+      });
+    }
+  }
+
   @override
   void dispose() {
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }

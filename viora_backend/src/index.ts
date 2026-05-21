@@ -1,18 +1,22 @@
 console.log("------------------------- START SERVER... ------------------------");
 import express from "express";
 import cors from "cors";
+import path from "path";
 import pool from "./config/db";
 import authRoutes from "./routes/auth";
 import habitRoutes from "./routes/habits";
 import statsRoutes from "./routes/stats";
+import communityRoutes from "./routes/community";
 import { startCronJobs, sendMorningEmails, sendEveningEmails } from "./services/cron_service";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/auth", authRoutes);
 app.use("/habits", habitRoutes);
 app.use("/stats", statsRoutes);
+app.use("/community", communityRoutes);
 app.listen(3000, () => {
   console.log("===============🚀 Server running at http://localhost:3000 ===============");
   startCronJobs();
