@@ -1,37 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../services/flow_prefs.dart';
+import '../navigation/app_navigation.dart';
+import '../navigation/app_tabs.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import 'habits_screen.dart';
-import 'plant_screen.dart';
+import 'grow_screen.dart';
 import 'community_screen.dart';
-import 'stats_screen.dart';
 import 'profile_screen.dart';
+import 'onboarding_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final GlobalKey<_DashboardTabState> _dashboardKey = GlobalKey<_DashboardTabState>();
 
+  @override
+  void initState() {
+    super.initState();
+    AppNavigation.onSwitchTab = switchToTab;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeOpenHabitsAfterOnboarding();
+    });
+  }
+
+  Future<void> _maybeOpenHabitsAfterOnboarding() async {
+    if (!await FlowPrefs.consumeOpenHabitsAfterOnboarding()) return;
+    switchToTab(AppTabs.habits);
+  }
+
+  @override
+  void dispose() {
+    if (AppNavigation.onSwitchTab == switchToTab) {
+      AppNavigation.onSwitchTab = null;
+    }
+    super.dispose();
+  }
+
+  void switchToTab(int index) {
+    _onTabTapped(AppTabs.normalize(index));
+  }
+
   Widget _buildScreen(int index) {
     switch (index) {
-      case 0: return _DashboardTab(key: _dashboardKey);
-      case 1: return const HabitsScreen();
-      case 2: return const PlantScreen();
-      case 3: return const CommunityScreen();
-      case 4: return const StatsScreen();
-      case 5: return const ProfileScreen();
-      default: return _DashboardTab(key: _dashboardKey);
+      case AppTabs.today:
+        return _DashboardTab(key: _dashboardKey);
+      case AppTabs.habits:
+        return const HabitsScreen();
+      case AppTabs.community:
+        return const CommunityScreen();
+      case AppTabs.grow:
+        return const GrowScreen();
+      case AppTabs.me:
+        return const ProfileScreen();
+      default:
+        return _DashboardTab(key: _dashboardKey);
     }
   }
 
@@ -39,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _currentIndex = index);
     
     // Reload dashboard when switching back to home tab
-    if (index == 0 && _dashboardKey.currentState != null) {
+    if (index == AppTabs.today && _dashboardKey.currentState != null) {
       _dashboardKey.currentState!._loadData();
     }
   }
@@ -78,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
               BottomNavigationBarItem(
                 icon: const Icon(Icons.home_outlined, size: 24),
                 activeIcon: const Icon(Icons.home_rounded, size: 24),
-                label: AppLocalizations.of(context)!.home,
+                label: AppLocalizations.of(context)!.today,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.check_circle_outline_rounded, size: 24),
@@ -86,24 +120,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: AppLocalizations.of(context)!.habits,
               ),
               BottomNavigationBarItem(
-                icon: const Icon(Icons.eco_outlined, size: 24),
-                activeIcon: const Icon(Icons.eco_rounded, size: 24),
-                label: AppLocalizations.of(context)!.plant,
-              ),
-              BottomNavigationBarItem(
                 icon: const Icon(Icons.people_outline_rounded, size: 24),
                 activeIcon: const Icon(Icons.people_rounded, size: 24),
                 label: AppLocalizations.of(context)!.community,
               ),
               BottomNavigationBarItem(
-                icon: const Icon(Icons.bar_chart_outlined, size: 24),
-                activeIcon: const Icon(Icons.bar_chart_rounded, size: 24),
-                label: AppLocalizations.of(context)!.stats,
+                icon: const Icon(Icons.eco_outlined, size: 24),
+                activeIcon: const Icon(Icons.eco_rounded, size: 24),
+                label: AppLocalizations.of(context)!.grow,
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.person_outline_rounded, size: 24),
                 activeIcon: const Icon(Icons.person_rounded, size: 24),
-                label: AppLocalizations.of(context)!.profile,
+                label: AppLocalizations.of(context)!.navMe,
               ),
             ],
           ),
@@ -123,9 +152,11 @@ class _DashboardTab extends StatefulWidget {
 class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserver {
   String userName = "";
   int currentStreak = 0;
+  int longestStreak = 0;
   int completedToday = 0;
   int totalToday = 0;
   bool isLoading = true;
+  bool profileIncomplete = false;
 
   // Plant data
   String plantType = "sprout";
@@ -161,11 +192,14 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     final streakRes = await ApiService.getStreak(token);
     final habitsRes = await ApiService.getTodayHabits(token);
     final plantRes = await ApiService.getPlant(token);
+    final incomplete = await FlowPrefs.isProfileIncomplete();
 
     if (!mounted) return;
     setState(() {
       userName = profileRes["user"]?["name"] ?? "";
       currentStreak = streakRes["streak"]?["current_streak"] ?? 0;
+      longestStreak = streakRes["streak"]?["longest_streak"] ?? 0;
+      profileIncomplete = incomplete;
 
       final habits = habitsRes["habits"] as List? ?? [];
       totalToday = habits.length;
@@ -181,6 +215,85 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       }
 
       isLoading = false;
+    });
+
+    _maybeShowStreakRecovery();
+    _maybePromptFirstHabit();
+  }
+
+  Future<void> _maybePromptFirstHabit() async {
+    if (!mounted || totalToday > 0) return;
+    if (!await FlowPrefs.consumePendingFirstHabitNudge()) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || totalToday > 0) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(l10n.afterOnboardingNoHabitsTitle),
+          content: Text(l10n.afterOnboardingNoHabitsBody),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                AppNavigation.openHabits();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(l10n.createFirstHabit),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Future<void> _maybeShowStreakRecovery() async {
+    if (!mounted) return;
+    if (currentStreak > 0) return;
+    if (longestStreak < 1) return;
+    if (await FlowPrefs.wasStreakRecoveryDismissedToday()) return;
+
+    final l10n = AppLocalizations.of(context)!;
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(l10n.streakBrokenTitle),
+          content: Text(l10n.streakBrokenBody),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await FlowPrefs.dismissStreakRecoveryForToday();
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await FlowPrefs.dismissStreakRecoveryForToday();
+                if (ctx.mounted) Navigator.pop(ctx);
+                AppNavigation.openHabits();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: Text(l10n.startFreshStreak),
+            ),
+          ],
+        ),
+      );
     });
   }
 
@@ -234,6 +347,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
+                  if (profileIncomplete) ...[
+                    _buildProfileIncompleteBanner(),
+                    const SizedBox(height: 16),
+                  ],
                   // Greeting
                   Text(
                     "${_getGreeting()}${userName.isNotEmpty ? ', $userName' : ''} 👋",
@@ -283,7 +400,13 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
-    return Container(
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => AppNavigation.openGrow(),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: cardColor,
@@ -361,6 +484,57 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
           ),
         ],
       ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileIncompleteBanner() {
+    final l10n = AppLocalizations.of(context)!;
+    return Material(
+      color: const Color(0xFFFFF8E1),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          ).then((_) => _loadData());
+        },
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              const Text('✨', style: TextStyle(fontSize: 22)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.completeProfileBanner,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF5D4037),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.completeProfileBannerAction,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF8D6E63),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFF8D6E63)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -422,7 +596,15 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
               const Text("🏆", style: TextStyle(fontSize: 20)),
               const SizedBox(height: 2),
               Text(
-                l10n.best,
+                "$longestStreak",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                l10n.longestStreakLabel,
                 style: TextStyle(
                     fontSize: 10,
                     color: Colors.white.withValues(alpha: 0.7)),
@@ -439,21 +621,26 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
     final allDone = completedToday == totalToday && totalToday > 0;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cardColor,
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => AppNavigation.openHabits(),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -526,7 +713,23 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
               fontWeight: allDone ? FontWeight.w500 : FontWeight.normal,
             ),
           ),
-        ],
+          if (totalToday == 0) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.tapToAddFirstHabit,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+          ],
+          ),
+        ),
       ),
     );
   }

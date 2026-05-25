@@ -27,6 +27,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profile => 'Hồ sơ';
 
   @override
+  String get grow => 'Phát triển';
+
+  @override
+  String get navMe => 'Tôi';
+
+  @override
+  String get insights => 'Thông tin chi tiết';
+
+  @override
+  String get viewInsights => 'Biểu đồ và tiến độ theo thời gian';
+
+  @override
   String get goodMorning => 'Chào buổi sáng';
 
   @override
@@ -998,7 +1010,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get activeDaysLabel => 'Ngày hoạt động';
 
   @override
-  String get longestStreakLabel => 'Streak dài nhất';
+  String get longestStreakLabel => 'Kỷ lục';
 
   @override
   String get habitsCount => 'Thói quen';
@@ -1160,6 +1172,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get following => 'Đang theo dõi';
 
   @override
+  String get followUser => 'Theo dõi';
+
+  @override
+  String get followingUser => 'Đang theo';
+
+  @override
+  String get retry => 'Thử lại';
+
+  @override
+  String get loadFeedError => 'Không tải được bài viết';
+
+  @override
+  String get followingTabEmpty => 'Theo dõi người khác để xem bài viết của họ';
+
+  @override
+  String get noSearchResults => 'Không tìm thấy bài viết';
+
+  @override
   String get searchCommunity => 'Tìm kiếm bài viết hoặc người dùng...';
 
   @override
@@ -1226,6 +1256,118 @@ class AppLocalizationsVi extends AppLocalizations {
   String hoursAgo(int count) {
     return '$count giờ trước';
   }
+
+  @override
+  String get completeProfileBanner => 'Hoàn thiện hồ sơ để Viora gợi ý tốt hơn';
+
+  @override
+  String get completeProfileBannerAction => 'Chạm để tiếp tục thiết lập';
+
+  @override
+  String get tapToAddFirstHabit => 'Chạm để thêm thói quen đầu tiên →';
+
+  @override
+  String get streakBrokenTitle => 'Streak đã reset';
+
+  @override
+  String get streakBrokenBody =>
+      'Không sao — mỗi ngày mới là cơ hội bắt đầu lại. Hoàn thành một thói quen hôm nay để nuôi cây nhé!';
+
+  @override
+  String get startFreshStreak => 'Bắt đầu lại';
+
+  @override
+  String get firstCheckInTitle => 'Tuyệt vời! 🎉';
+
+  @override
+  String get firstCheckInBody =>
+      'Bạn vừa hoàn thành check-in đầu tiên. Xem cây của bạn lớn lên nhé!';
+
+  @override
+  String get habitCreatedSuccess => 'Đã thêm thói quen!';
+
+  @override
+  String get afterFirstHabitTitle => 'Bước tiếp theo là gì? 🌱';
+
+  @override
+  String get afterFirstHabitBody =>
+      'Chạm vào thói quen vừa tạo bên dưới để đánh dấu hoàn thành hôm nay — cây của bạn sẽ lớn thêm!';
+
+  @override
+  String get completeHabitToday => 'Hoàn thành hôm nay';
+
+  @override
+  String get goToTodayTab => 'Về trang Hôm nay';
+
+  @override
+  String get addAnotherHabit => 'Thêm thói quen khác';
+
+  @override
+  String get afterOnboardingNoHabitsTitle => 'Tạo thói quen đầu tiên';
+
+  @override
+  String get afterOnboardingNoHabitsBody =>
+      'Bạn đã thiết lập hồ sơ xong. Hãy thêm 1–2 thói quen để bắt đầu thói quen hằng ngày.';
+
+  @override
+  String get createFirstHabit => 'Tạo thói quen đầu tiên';
+
+  @override
+  String get tapHabitToCompleteHint => 'Chạm thói quen để hoàn thành hôm nay';
+
+  @override
+  String get onboardingStarterHabitsTitle => 'Chọn thói quen cho hôm nay';
+
+  @override
+  String get onboardingStarterHabitsSubtitle =>
+      'Gợi ý từ mục tiêu của bạn — có thể sửa bất cứ lúc nào';
+
+  @override
+  String get onboardingStarterHabitsHint =>
+      'Chọn ít nhất 1 thói quen để bắt đầu';
+
+  @override
+  String get starterHabitHydration2L => 'Uống đủ 2 lít nước';
+
+  @override
+  String get starterHabitWalk20 => 'Đi bộ 20 phút';
+
+  @override
+  String get starterHabitExercise30 => 'Vận động 30 phút';
+
+  @override
+  String get starterHabitSleep23 => 'Ngủ trước 23h';
+
+  @override
+  String get starterHabitMeditation10 => 'Thiền 10 phút';
+
+  @override
+  String get starterHabitHealthyBreakfast => 'Ăn sáng lành mạnh';
+
+  @override
+  String get starterHabitEatVeggies => 'Ăn đủ rau & trái cây';
+
+  @override
+  String get onboardingReadyCheckHabits =>
+      'Thói quen đã sẵn sàng — chạm một thói quen để hoàn thành hôm nay!';
+
+  @override
+  String get viewYourPlant => 'Xem cây';
+
+  @override
+  String get editHabit => 'Sửa thói quen';
+
+  @override
+  String get habitUpdated => 'Đã cập nhật thói quen';
+
+  @override
+  String get notificationsTitle => 'Thông báo';
+
+  @override
+  String get noNotifications => 'Chưa có thông báo';
+
+  @override
+  String get noNotificationsHint => 'Thành tích và nhắc nhở sẽ hiện ở đây';
 
   @override
   String daysAgo(int count) {

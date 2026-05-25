@@ -134,6 +134,30 @@ abstract class AppLocalizations {
   /// **'Hồ sơ'**
   String get profile;
 
+  /// No description provided for @grow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát triển'**
+  String get grow;
+
+  /// No description provided for @navMe.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tôi'**
+  String get navMe;
+
+  /// No description provided for @insights.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin chi tiết'**
+  String get insights;
+
+  /// No description provided for @viewInsights.
+  ///
+  /// In vi, this message translates to:
+  /// **'Biểu đồ và tiến độ theo thời gian'**
+  String get viewInsights;
+
   /// No description provided for @goodMorning.
   ///
   /// In vi, this message translates to:
@@ -2003,7 +2027,7 @@ abstract class AppLocalizations {
   /// No description provided for @longestStreakLabel.
   ///
   /// In vi, this message translates to:
-  /// **'Streak dài nhất'**
+  /// **'Kỷ lục'**
   String get longestStreakLabel;
 
   /// No description provided for @habitsCount.
@@ -2318,6 +2342,42 @@ abstract class AppLocalizations {
   /// **'Đang theo dõi'**
   String get following;
 
+  /// No description provided for @followUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi'**
+  String get followUser;
+
+  /// No description provided for @followingUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang theo'**
+  String get followingUser;
+
+  /// No description provided for @retry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get retry;
+
+  /// No description provided for @loadFeedError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tải được bài viết'**
+  String get loadFeedError;
+
+  /// No description provided for @followingTabEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi người khác để xem bài viết của họ'**
+  String get followingTabEmpty;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy bài viết'**
+  String get noSearchResults;
+
   /// No description provided for @searchCommunity.
   ///
   /// In vi, this message translates to:
@@ -2437,6 +2497,216 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{count} giờ trước'**
   String hoursAgo(int count);
+
+  /// No description provided for @completeProfileBanner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thiện hồ sơ để Viora gợi ý tốt hơn'**
+  String get completeProfileBanner;
+
+  /// No description provided for @completeProfileBannerAction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm để tiếp tục thiết lập'**
+  String get completeProfileBannerAction;
+
+  /// No description provided for @tapToAddFirstHabit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm để thêm thói quen đầu tiên →'**
+  String get tapToAddFirstHabit;
+
+  /// No description provided for @streakBrokenTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Streak đã reset'**
+  String get streakBrokenTitle;
+
+  /// No description provided for @streakBrokenBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không sao — mỗi ngày mới là cơ hội bắt đầu lại. Hoàn thành một thói quen hôm nay để nuôi cây nhé!'**
+  String get streakBrokenBody;
+
+  /// No description provided for @startFreshStreak.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu lại'**
+  String get startFreshStreak;
+
+  /// No description provided for @firstCheckInTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuyệt vời! 🎉'**
+  String get firstCheckInTitle;
+
+  /// No description provided for @firstCheckInBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn vừa hoàn thành check-in đầu tiên. Xem cây của bạn lớn lên nhé!'**
+  String get firstCheckInBody;
+
+  /// No description provided for @habitCreatedSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm thói quen!'**
+  String get habitCreatedSuccess;
+
+  /// No description provided for @afterFirstHabitTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bước tiếp theo là gì? 🌱'**
+  String get afterFirstHabitTitle;
+
+  /// No description provided for @afterFirstHabitBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm vào thói quen vừa tạo bên dưới để đánh dấu hoàn thành hôm nay — cây của bạn sẽ lớn thêm!'**
+  String get afterFirstHabitBody;
+
+  /// No description provided for @completeHabitToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành hôm nay'**
+  String get completeHabitToday;
+
+  /// No description provided for @goToTodayTab.
+  ///
+  /// In vi, this message translates to:
+  /// **'Về trang Hôm nay'**
+  String get goToTodayTab;
+
+  /// No description provided for @addAnotherHabit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm thói quen khác'**
+  String get addAnotherHabit;
+
+  /// No description provided for @afterOnboardingNoHabitsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo thói quen đầu tiên'**
+  String get afterOnboardingNoHabitsTitle;
+
+  /// No description provided for @afterOnboardingNoHabitsBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đã thiết lập hồ sơ xong. Hãy thêm 1–2 thói quen để bắt đầu thói quen hằng ngày.'**
+  String get afterOnboardingNoHabitsBody;
+
+  /// No description provided for @createFirstHabit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo thói quen đầu tiên'**
+  String get createFirstHabit;
+
+  /// No description provided for @tapHabitToCompleteHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm thói quen để hoàn thành hôm nay'**
+  String get tapHabitToCompleteHint;
+
+  /// No description provided for @onboardingStarterHabitsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn thói quen cho hôm nay'**
+  String get onboardingStarterHabitsTitle;
+
+  /// No description provided for @onboardingStarterHabitsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý từ mục tiêu của bạn — có thể sửa bất cứ lúc nào'**
+  String get onboardingStarterHabitsSubtitle;
+
+  /// No description provided for @onboardingStarterHabitsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ít nhất 1 thói quen để bắt đầu'**
+  String get onboardingStarterHabitsHint;
+
+  /// No description provided for @starterHabitHydration2L.
+  ///
+  /// In vi, this message translates to:
+  /// **'Uống đủ 2 lít nước'**
+  String get starterHabitHydration2L;
+
+  /// No description provided for @starterHabitWalk20.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đi bộ 20 phút'**
+  String get starterHabitWalk20;
+
+  /// No description provided for @starterHabitExercise30.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vận động 30 phút'**
+  String get starterHabitExercise30;
+
+  /// No description provided for @starterHabitSleep23.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngủ trước 23h'**
+  String get starterHabitSleep23;
+
+  /// No description provided for @starterHabitMeditation10.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiền 10 phút'**
+  String get starterHabitMeditation10;
+
+  /// No description provided for @starterHabitHealthyBreakfast.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ăn sáng lành mạnh'**
+  String get starterHabitHealthyBreakfast;
+
+  /// No description provided for @starterHabitEatVeggies.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ăn đủ rau & trái cây'**
+  String get starterHabitEatVeggies;
+
+  /// No description provided for @onboardingReadyCheckHabits.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thói quen đã sẵn sàng — chạm một thói quen để hoàn thành hôm nay!'**
+  String get onboardingReadyCheckHabits;
+
+  /// No description provided for @viewYourPlant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem cây'**
+  String get viewYourPlant;
+
+  /// No description provided for @editHabit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sửa thói quen'**
+  String get editHabit;
+
+  /// No description provided for @habitUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật thói quen'**
+  String get habitUpdated;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo'**
+  String get notificationsTitle;
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thông báo'**
+  String get noNotifications;
+
+  /// No description provided for @noNotificationsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành tích và nhắc nhở sẽ hiện ở đây'**
+  String get noNotificationsHint;
 
   /// No description provided for @daysAgo.
   ///

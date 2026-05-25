@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../services/flow_prefs.dart';
+import '../services/onboarding_gate.dart';
+import '../data/starter_habit_templates.dart';
 import '../l10n/app_localizations.dart';
 import 'home_screen.dart';
 
@@ -15,7 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _totalPages = 5;
+  final int _totalPages = 6;
 
   AnimationController? _bubbleController;
 
@@ -46,7 +49,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   final Set<String> selectedGoals = {};
   final customGoalController = TextEditingController();
 
-  // Step 5 - Plant
+  // Step 5 - Starter habits
+  List<StarterHabitOption> _starterOptions = [];
+  final Set<String> _selectedStarterIds = {};
+
+  // Step 6 - Plant
   String selectedPlant = "sprout";
   List<Map<String, dynamic>> get plantOptions {
     final l10n = AppLocalizations.of(context)!;
@@ -119,7 +126,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     super.dispose();
   }
 
+  void _syncStarterHabitsFromGoals() {
+    final l10n = AppLocalizations.of(context)!;
+    final options = StarterHabitTemplates.forGoals(selectedGoals, l10n);
+    _starterOptions = options;
+    _selectedStarterIds
+      ..clear()
+      ..addAll(options.take(3).map((o) => o.id));
+  }
+
   void nextPage() {
+    if (_currentPage == 3) {
+      _syncStarterHabitsFromGoals();
+    }
     if (_currentPage < _totalPages - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
@@ -141,7 +160,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void handleSkip() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool("onboarding_done", true);
+    final token = prefs.getString("token") ?? "";
+    final profile = await ApiService.getProfile(token);
+    final userId = profile["user"]?["id"]?.toString() ?? "";
+    await OnboardingGate.markComplete(userId);
+    await FlowPrefs.setProfileIncomplete(true);
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
@@ -169,7 +192,29 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       goals: goals,
     );
 
-    await prefs.setBool("onboarding_done", true);
+    final profile = await ApiService.getProfile(token);
+    final userId = profile["user"]?["id"]?.toString() ?? "";
+    await OnboardingGate.markComplete(userId);
+
+    var habitsCreated = 0;
+    for (final opt in _starterOptions) {
+      if (!_selectedStarterIds.contains(opt.id)) continue;
+      final res = await ApiService.createHabit(
+        token: token,
+        name: opt.name,
+        category: opt.category,
+        icon: opt.icon,
+      );
+      if (res['habit'] != null) habitsCreated++;
+    }
+
+    if (habitsCreated == 0) {
+      await FlowPrefs.markPendingFirstHabitNudge();
+    } else {
+      await FlowPrefs.markOpenHabitsAfterOnboarding();
+      await FlowPrefs.markOnboardingHabitsReady();
+    }
+
     await prefs.setString("plant_type", selectedPlant);
 
     // Sync plant type lên backend
@@ -198,8 +243,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         if (selectedGoals.contains("other") &&
             customGoalController.text.trim().isEmpty) return false;
         return true;
-      case 4: return true;
-      default: return true;
+      case 4:
+        return _selectedStarterIds.isNotEmpty;
+      case 5:
+        return true;
+      default:
+        return true;
     }
   }
 
@@ -210,6 +259,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     {"gradient": [0xFF33691E, 0xFF558B2F, 0xFFAED581]}, // olive green
     {"gradient": [0xFF00695C, 0xFF00897B, 0xFF80CBC4]}, // teal xanh lá
     {"gradient": [0xFF1B5E20, 0xFF43A047, 0xFFC8E6C9]}, // mint xanh nhạt
+    {"gradient": [0xFF2E7D32, 0xFF66BB6A, 0xFFB9F6CA]}, // starter habits
   ];
 
   @override
@@ -312,6 +362,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     _buildBirthYearPage(),
                     _buildBodyPage(),
                     _buildGoalsPage(),
+                    _buildStarterHabitsPage(),
                     _buildPlantPage(),
                   ],
                 ),
@@ -788,7 +839,114 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // ===== PAGE 5: PLANT =====
+  // ===== PAGE 5: STARTER HABITS =====
+  Widget _buildStarterHabitsPage() {
+    final l10n = AppLocalizations.of(context)!;
+    if (_starterOptions.isEmpty) {
+      _syncStarterHabitsFromGoals();
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 8),
+          Text(
+            l10n.onboardingStarterHabitsTitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.onboardingStarterHabitsSubtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          _buildCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.onboardingStarterHabitsHint,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black54,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ..._starterOptions.map((opt) {
+                  final isSelected = _selectedStarterIds.contains(opt.id);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Material(
+                      color: isSelected
+                          ? const Color(0xFFE8F5E9)
+                          : const Color(0xFFF8F8F8),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        onTap: () => setState(() {
+                          if (isSelected) {
+                            if (_selectedStarterIds.length > 1) {
+                              _selectedStarterIds.remove(opt.id);
+                            }
+                          } else {
+                            _selectedStarterIds.add(opt.id);
+                          }
+                        }),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(opt.icon,
+                                  style: const TextStyle(fontSize: 26)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  opt.name,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? const Color(0xFF2E7D32)
+                                        : Colors.black87,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                isSelected
+                                    ? Icons.check_circle_rounded
+                                    : Icons.circle_outlined,
+                                color: isSelected
+                                    ? const Color(0xFF4CAF50)
+                                    : Colors.grey.shade400,
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  // ===== PAGE 6: PLANT =====
   Widget _buildPlantPage() {
     final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
@@ -902,6 +1060,7 @@ class _BubblePainter extends CustomPainter {
     [Color(0x22AED581), Color(0x33C5E1A5), Color(0x1AFFFFFF)],
     [Color(0x2280CBC4), Color(0x33B2DFDB), Color(0x1AFFFFFF)],
     [Color(0x22C8E6C9), Color(0x33DCEDC8), Color(0x1AFFFFFF)],
+    [Color(0x22A5D6A7), Color(0x3381C784), Color(0x1AFFFFFF)],
   ];
 
   @override

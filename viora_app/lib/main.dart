@@ -7,6 +7,7 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/notification_service.dart';
+import 'services/onboarding_gate.dart';
 import 'services/fcm_service.dart';
 import 'theme/app_theme.dart';
 import 'providers/locale_provider.dart';
@@ -54,12 +55,11 @@ class MyAppState extends State<MyApp> {
   void checkLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
-    final onboardingDone = prefs.getBool("onboarding_done") ?? false;
 
-    if (token != null && onboardingDone) {
-      setState(() => startScreen = const HomeScreen());
-    } else if (token != null && !onboardingDone) {
-      setState(() => startScreen = const OnboardingScreen());
+    if (token != null) {
+      final needsOnboarding = await OnboardingGate.needsOnboarding(token);
+      setState(() => startScreen =
+          needsOnboarding ? const OnboardingScreen() : const HomeScreen());
     } else {
       setState(() => startScreen = const LoginScreen());
     }

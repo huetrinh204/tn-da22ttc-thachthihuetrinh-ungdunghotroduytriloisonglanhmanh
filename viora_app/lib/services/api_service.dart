@@ -449,6 +449,37 @@ class ApiService {
     }
   }
 
+  // ================= UPDATE HABIT =================
+  static Future<Map<String, dynamic>> updateHabit({
+    required String token,
+    required int habitId,
+    required String name,
+    String category = "other",
+    String icon = "⭐",
+    String color = "#4CAF50",
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/habits/$habitId"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "name": name,
+          "category": category,
+          "icon": icon,
+          "color": color,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
   // ================= DELETE HABIT =================
   static Future<Map<String, dynamic>> deleteHabit(
       String token, int habitId) async {
@@ -628,6 +659,37 @@ class ApiService {
     try {
       final response = await http.delete(
         Uri.parse("$baseUrl/community/posts/$postId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - FOLLOW USER =================
+  static Future<Map<String, dynamic>> followUser(
+      String token, String userId) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/users/$userId/follow"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  static Future<Map<String, dynamic>> unfollowUser(
+      String token, String userId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/community/users/$userId/follow"),
         headers: {"Authorization": "Bearer $token"},
       );
       final data = jsonDecode(response.body);

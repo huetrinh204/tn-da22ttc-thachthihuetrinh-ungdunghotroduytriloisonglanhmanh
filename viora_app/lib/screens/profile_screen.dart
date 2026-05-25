@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../main.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
+import 'stats_screen.dart';
 import 'notification_settings_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -520,6 +521,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildTile(l10n.changePassword, l10n.updatePassword,
                       Icons.lock_outline,
                       onTap: _showChangePasswordSheet),
+                ]),
+                const SizedBox(height: 16),
+
+                // Insights / Statistics (moved from bottom tab)
+                _buildSection(l10n.insights, [
+                  _buildTile(
+                    l10n.statsTitle,
+                    l10n.viewInsights,
+                    Icons.bar_chart_rounded,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const StatsScreen(),
+                      ),
+                    ),
+                  ),
                 ]),
                 const SizedBox(height: 16),
 

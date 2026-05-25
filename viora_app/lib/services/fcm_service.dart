@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../navigation/app_navigation.dart';
 
 class FcmService {
   static final _messaging = FirebaseMessaging.instance;
@@ -31,7 +32,15 @@ class FcmService {
       });
 
       // Xử lý khi user tap notification (app background)
-      FirebaseMessaging.onMessageOpenedApp.listen((message) {});
+      FirebaseMessaging.onMessageOpenedApp.listen((message) {
+        final tab = message.data['tab'];
+        if (tab != null) {
+          final index = int.tryParse(tab.toString());
+          if (index != null) AppNavigation.switchToTab(index);
+        } else {
+          AppNavigation.openHabits();
+        }
+      });
     } catch (e) {
       print('[FCM] Init error: $e');
     }

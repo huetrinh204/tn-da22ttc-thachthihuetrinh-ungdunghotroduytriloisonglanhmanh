@@ -207,8 +207,9 @@ router.post("/google", async (req, res) => {
     );
 
     let userId;
+    const isNewUser = rows.length === 0;
 
-    if (rows.length === 0) {
+    if (isNewUser) {
       // 👉 tạo user mới (Google)
       const [result]: any = await pool.query(
         "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
@@ -230,6 +231,7 @@ router.post("/google", async (req, res) => {
     res.json({
       message: "Login success",
       token: jwtToken,
+      isNewUser,
     });
 
   } catch (error) {

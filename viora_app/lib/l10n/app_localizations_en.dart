@@ -27,6 +27,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile => 'Profile';
 
   @override
+  String get grow => 'Grow';
+
+  @override
+  String get navMe => 'Me';
+
+  @override
+  String get insights => 'Insights';
+
+  @override
+  String get viewInsights => 'Charts and progress over time';
+
+  @override
   String get goodMorning => 'Good morning';
 
   @override
@@ -995,7 +1007,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activeDaysLabel => 'Active Days';
 
   @override
-  String get longestStreakLabel => 'Longest Streak';
+  String get longestStreakLabel => 'Best';
 
   @override
   String get habitsCount => 'Habits';
@@ -1157,6 +1169,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get following => 'Following';
 
   @override
+  String get followUser => 'Follow';
+
+  @override
+  String get followingUser => 'Following';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get loadFeedError => 'Could not load posts';
+
+  @override
+  String get followingTabEmpty => 'Follow others to see their posts here';
+
+  @override
+  String get noSearchResults => 'No posts found';
+
+  @override
   String get searchCommunity => 'Search posts or users...';
 
   @override
@@ -1223,6 +1253,120 @@ class AppLocalizationsEn extends AppLocalizations {
   String hoursAgo(int count) {
     return '$count hours ago';
   }
+
+  @override
+  String get completeProfileBanner =>
+      'Complete your profile for better recommendations';
+
+  @override
+  String get completeProfileBannerAction => 'Tap to continue setup';
+
+  @override
+  String get tapToAddFirstHabit => 'Tap to add your first habit →';
+
+  @override
+  String get streakBrokenTitle => 'Streak reset';
+
+  @override
+  String get streakBrokenBody =>
+      'That\'s okay — every day is a fresh start. Complete a habit today to grow your plant!';
+
+  @override
+  String get startFreshStreak => 'Start again';
+
+  @override
+  String get firstCheckInTitle => 'Awesome! 🎉';
+
+  @override
+  String get firstCheckInBody =>
+      'You completed your first check-in. See your plant grow!';
+
+  @override
+  String get habitCreatedSuccess => 'Habit added!';
+
+  @override
+  String get afterFirstHabitTitle => 'What\'s next? 🌱';
+
+  @override
+  String get afterFirstHabitBody =>
+      'Tap your new habit below to mark it done for today — your plant will grow!';
+
+  @override
+  String get completeHabitToday => 'Mark done for today';
+
+  @override
+  String get goToTodayTab => 'Go to Today';
+
+  @override
+  String get addAnotherHabit => 'Add another habit';
+
+  @override
+  String get afterOnboardingNoHabitsTitle => 'Create your first habit';
+
+  @override
+  String get afterOnboardingNoHabitsBody =>
+      'Your profile is ready. Add 1–2 habits to start your daily routine.';
+
+  @override
+  String get createFirstHabit => 'Create my first habit';
+
+  @override
+  String get tapHabitToCompleteHint => 'Tap a habit to complete it for today';
+
+  @override
+  String get onboardingStarterHabitsTitle => 'Pick habits for today';
+
+  @override
+  String get onboardingStarterHabitsSubtitle =>
+      'Based on your goals — you can change them anytime';
+
+  @override
+  String get onboardingStarterHabitsHint =>
+      'Select at least 1 habit to get started';
+
+  @override
+  String get starterHabitHydration2L => 'Drink 2L of water';
+
+  @override
+  String get starterHabitWalk20 => 'Walk 20 minutes';
+
+  @override
+  String get starterHabitExercise30 => 'Exercise 30 minutes';
+
+  @override
+  String get starterHabitSleep23 => 'Sleep before 11 PM';
+
+  @override
+  String get starterHabitMeditation10 => 'Meditate 10 minutes';
+
+  @override
+  String get starterHabitHealthyBreakfast => 'Healthy breakfast';
+
+  @override
+  String get starterHabitEatVeggies => 'Eat vegetables & fruit';
+
+  @override
+  String get onboardingReadyCheckHabits =>
+      'Your habits are ready — tap one to complete today!';
+
+  @override
+  String get viewYourPlant => 'View plant';
+
+  @override
+  String get editHabit => 'Edit habit';
+
+  @override
+  String get habitUpdated => 'Habit updated';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get noNotifications => 'No notifications yet';
+
+  @override
+  String get noNotificationsHint =>
+      'Achievements and reminders will appear here';
 
   @override
   String daysAgo(int count) {

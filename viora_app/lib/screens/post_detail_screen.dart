@@ -26,12 +26,69 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   List<Comment> _comments = [];
   bool _isLoading = false;
   bool _isSendingComment = false;
+  String? _commentsError;
+  String? _token;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
     _post = widget.post;
-    _loadComments();
+    _initTokenAndLoad();
+  }
+
+  Future<void> _initTokenAndLoad() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString("token") ?? "";
+    final profile = await ApiService.getProfile(_token!);
+    if (profile["user"] != null) {
+      _currentUserId = profile["user"]["id"]?.toString();
+    }
+    await _loadComments();
+  }
+
+  bool get _isOwnPost =>
+      _currentUserId != null && _post.userId == _currentUserId;
+
+  Future<void> _deletePost() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deletePost),
+        content: Text(l10n.confirmDeletePost),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    final res = await ApiService.deletePost(_token ?? "", _post.id);
+    if (!mounted) return;
+    if (res["message"] == null || res["message"] == "Deleted") {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.postDeleted),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      Navigator.pop(context, true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res["message"] ?? "Failed"),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -41,52 +98,30 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _loadComments() async {
-    setState(() => _isLoading = true);
-    
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
-    
+    setState(() {
+      _isLoading = true;
+      _commentsError = null;
+    });
+
+    final token = _token ?? "";
     final response = await ApiService.getComments(token, _post.id);
-    
+
     if (!mounted) return;
-    
-    if (response["comments"] != null) {
-      final commentsData = response["comments"] as List;
+
+    if (response["message"] != null) {
       setState(() {
-        _comments = commentsData.map((json) => Comment.fromJson(json)).toList();
+        _comments = [];
+        _commentsError = response["message"] as String;
         _isLoading = false;
       });
-    } else {
-      // Fallback to mock data if API fails
-      _loadMockComments();
-      setState(() => _isLoading = false);
+      return;
     }
-  }
 
-  void _loadMockComments() {
-    // Mock comments for demo
-    _comments = [
-      Comment(
-        id: '1',
-        postId: _post.id,
-        userId: 'user3',
-        userName: 'Thu Hà',
-        content: 'Tuyệt vời quá! Mình cũng đang cố gắng duy trì thói quen này 💪',
-        likeCount: 5,
-        isLiked: false,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-      ),
-      Comment(
-        id: '2',
-        postId: _post.id,
-        userId: 'user4',
-        userName: 'Đức Anh',
-        content: 'Cảm ơn bạn đã chia sẻ! Rất truyền cảm hứng 🌟',
-        likeCount: 3,
-        isLiked: true,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
-      ),
-    ];
+    final commentsData = response["comments"] as List? ?? [];
+    setState(() {
+      _comments = commentsData.map((json) => Comment.fromJson(json)).toList();
+      _isLoading = false;
+    });
   }
 
   Future<void> _sendComment() async {
@@ -95,9 +130,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     setState(() => _isSendingComment = true);
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
-    
+    final token = _token ?? "";
+
     final response = await ApiService.createComment(
       token: token,
       postId: _post.id,
@@ -117,66 +151,59 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _commentController.clear();
       FocusScope.of(context).unfocus();
     } else {
-      // Fallback: add comment locally if API fails
-      final newComment = Comment(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        postId: _post.id,
-        userId: 'current_user',
-        userName: 'Bạn',
-        content: content,
-        likeCount: 0,
-        isLiked: false,
-        createdAt: DateTime.now(),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response["message"] ?? "Failed to comment"),
+          backgroundColor: AppColors.error,
+        ),
       );
-      setState(() {
-        _comments.insert(0, newComment);
-        _post = _post.copyWith(commentCount: _post.commentCount + 1);
-      });
-      _commentController.clear();
-      FocusScope.of(context).unfocus();
     }
   }
 
   void _handleLike() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
-    
-    // Optimistic update
+    final token = _token ?? "";
+    final wasLiked = _post.isLiked;
+    final snapshot = _post;
+
     setState(() {
       _post = _post.copyWith(
-        isLiked: !_post.isLiked,
-        likeCount: _post.isLiked ? _post.likeCount - 1 : _post.likeCount + 1,
+        isLiked: !wasLiked,
+        likeCount: wasLiked ? _post.likeCount - 1 : _post.likeCount + 1,
       );
     });
-    
-    // Call API
-    if (_post.isLiked) {
-      await ApiService.likePost(token, _post.id);
-    } else {
-      await ApiService.unlikePost(token, _post.id);
+
+    final response = wasLiked
+        ? await ApiService.unlikePost(token, _post.id)
+        : await ApiService.likePost(token, _post.id);
+
+    if (response["message"] != null && mounted) {
+      setState(() => _post = snapshot);
     }
   }
 
   void _handleCommentLike(Comment comment) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
-    
-    // Optimistic update
+    final token = _token ?? "";
+    final wasLiked = comment.isLiked;
+
     setState(() {
       final index = _comments.indexWhere((c) => c.id == comment.id);
       if (index != -1) {
         _comments[index] = comment.copyWith(
-          isLiked: !comment.isLiked,
-          likeCount: comment.isLiked ? comment.likeCount - 1 : comment.likeCount + 1,
+          isLiked: !wasLiked,
+          likeCount: wasLiked ? comment.likeCount - 1 : comment.likeCount + 1,
         );
       }
     });
-    
-    // Call API
-    if (comment.isLiked) {
-      await ApiService.likeComment(token, comment.id);
-    } else {
-      await ApiService.unlikeComment(token, comment.id);
+
+    final response = wasLiked
+        ? await ApiService.unlikeComment(token, comment.id)
+        : await ApiService.likeComment(token, comment.id);
+
+    if (response["message"] != null && mounted) {
+      setState(() {
+        final index = _comments.indexWhere((c) => c.id == comment.id);
+        if (index != -1) _comments[index] = comment;
+      });
     }
   }
 
@@ -188,6 +215,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
         title: l10n.postContent,
+        showBack: true,
+        actions: [
+          if (_isOwnPost)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              onPressed: _deletePost,
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -425,6 +460,28 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         padding: EdgeInsets.all(32),
         child: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (_commentsError != null) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Column(
+            children: [
+              Text(
+                _commentsError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _loadComments,
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
         ),
       );
     }

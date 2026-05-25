@@ -8,6 +8,7 @@ import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
+import 'notifications_inbox_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -25,6 +26,13 @@ class _CommunityScreenState extends State<CommunityScreen>
   List<Post> _filteredPosts = [];
   bool _isLoading = false;
   bool _isSearching = false;
+  String? _loadError;
+  String? _currentUserId;
+  final Set<String> _followingIds = {};
+  String? _token;
+
+  List<Post> get _visiblePosts =>
+      _isSearching ? _filteredPosts : _posts;
 
   @override
   void initState() {
@@ -32,7 +40,21 @@ class _CommunityScreenState extends State<CommunityScreen>
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
     _searchController.addListener(_onSearchChanged);
-    _loadPosts();
+    _initSession();
+  }
+
+  Future<void> _initSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString("token") ?? "";
+    final saved = prefs.getStringList("following_user_ids") ?? [];
+    _followingIds.addAll(saved);
+
+    final profile = await ApiService.getProfile(_token!);
+    if (profile["user"] != null) {
+      _currentUserId = profile["user"]["id"]?.toString();
+    }
+
+    if (mounted) await _loadPosts();
   }
 
   void _onTabChanged() {
@@ -70,66 +92,52 @@ class _CommunityScreenState extends State<CommunityScreen>
   }
 
   Future<void> _loadPosts() async {
-    setState(() => _isLoading = true);
-    
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
-    
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    final token = _token ?? "";
+    if (token.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = "Unauthorized";
+        _posts = [];
+      });
+      return;
+    }
+
     String type = "trending";
     if (_tabController.index == 1) {
       type = "following";
     } else if (_tabController.index == 2) {
       type = "achievements";
     }
-    
+
     final response = await ApiService.getPosts(token, type: type);
-    
+
     if (!mounted) return;
-    
-    if (response["posts"] != null) {
-      final postsData = response["posts"] as List;
+
+    if (response["message"] != null) {
       setState(() {
-        _posts = postsData.map((json) => Post.fromJson(json)).toList();
+        _posts = [];
+        _loadError = response["message"] as String;
         _isLoading = false;
       });
-    } else {
-      // Fallback to mock data if API fails
-      _loadMockData();
-      setState(() => _isLoading = false);
+      return;
     }
-  }
 
-  void _loadMockData() {
-    // Mock data cho demo khi API chưa có
-    _posts = [
-      Post(
-        id: '1',
-        userId: 'user1',
-        userName: 'Minh Anh',
-        userAvatar: null,
-        content: 'Tìm thấy sự bình yên giữa cuộc sống hối hả. 30 ngày liên tục rồi! 🌿',
-        imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
-        hashtags: ['#SứcKhỏe', '#ThóiQuen'],
-        likeCount: 128,
-        commentCount: 15,
-        isLiked: false,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        daysStreak: 30,
-      ),
-      Post(
-        id: '2',
-        userId: 'user2',
-        userName: 'Hoàng Nam',
-        userAvatar: null,
-        content: 'Làm sao để uống đủ nước mỗi ngày? Mình thường xuyên quên uống nước khi làm việc. Mọi người có mẹo gì không?',
-        imageUrl: null,
-        hashtags: ['#UốngNước', '#ThóiQuen'],
-        likeCount: 42,
-        commentCount: 28,
-        isLiked: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      ),
-    ];
+    final postsData = response["posts"] as List? ?? [];
+    setState(() {
+      _posts = postsData.map((json) => Post.fromJson(json)).toList();
+      _isLoading = false;
+      _loadError = null;
+    });
+
+    if (_isSearching) {
+      _onSearchChanged();
+    }
   }
 
   Future<void> _refreshPosts() async {
@@ -146,13 +154,16 @@ class _CommunityScreenState extends State<CommunityScreen>
     }
   }
 
-  void _navigateToPostDetail(Post post) {
-    Navigator.push(
+  void _navigateToPostDetail(Post post) async {
+    final deleted = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => PostDetailScreen(post: post),
       ),
     );
+    if (deleted == true && mounted) {
+      _refreshPosts();
+    }
   }
 
   @override
@@ -167,7 +178,12 @@ class _CommunityScreenState extends State<CommunityScreen>
           IconButton(
             icon: const Icon(Icons.notifications_outlined, size: 24),
             onPressed: () {
-              // TODO: Navigate to notifications
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsInboxScreen(),
+                ),
+              );
             },
           ),
           const SizedBox(width: 4),
@@ -363,8 +379,57 @@ class _CommunityScreenState extends State<CommunityScreen>
 
   Widget _buildPostsList() {
     final l10n = AppLocalizations.of(context)!;
-    
-    if (_posts.isEmpty) {
+
+    if (_loadError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.cloud_off_outlined, size: 56, color: context.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                l10n.loadFeedError,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: context.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _loadError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: context.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _loadPosts,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(l10n.retry),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_isSearching && _filteredPosts.isEmpty) {
+      return Center(
+        child: Text(
+          l10n.noSearchResults,
+          style: TextStyle(fontSize: 15, color: context.textSecondary),
+        ),
+      );
+    }
+
+    if (_visiblePosts.isEmpty) {
+      final isFollowingTab = _tabController.index == 1;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -381,26 +446,29 @@ class _CommunityScreenState extends State<CommunityScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.createFirstPost,
+              isFollowingTab ? l10n.followingTabEmpty : l10n.createFirstPost,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: context.textSecondary,
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _navigateToCreatePost,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.createPost),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            if (!isFollowingTab) ...[
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _navigateToCreatePost,
+                icon: const Icon(Icons.add),
+                label: Text(l10n.createPost),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
       );
@@ -408,9 +476,9 @@ class _CommunityScreenState extends State<CommunityScreen>
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-      itemCount: _posts.length,
+      itemCount: _visiblePosts.length,
       itemBuilder: (context, index) {
-        return _buildPostCard(_posts[index]);
+        return _buildPostCard(_visiblePosts[index]);
       },
     );
   }
@@ -483,8 +551,10 @@ class _CommunityScreenState extends State<CommunityScreen>
                     ],
                   ),
                 ),
-                // Streak badge
-                if (post.daysStreak != null && post.daysStreak! > 0)
+                if (_canFollow(post.userId))
+                  _buildFollowButton(post.userId),
+                if (post.daysStreak != null && post.daysStreak! > 0) ...[
+                  if (_canFollow(post.userId)) const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -507,6 +577,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                       ],
                     ),
                   ),
+                ],
               ],
             ),
           ),
@@ -644,26 +715,101 @@ class _CommunityScreenState extends State<CommunityScreen>
     return l10n.daysAgo(diff.inDays);
   }
 
-  void _handleLike(Post post) async {
+  bool _canFollow(String userId) =>
+      _currentUserId != null && userId != _currentUserId;
+
+  bool _isFollowing(String userId) => _followingIds.contains(userId);
+
+  Widget _buildFollowButton(String userId) {
+    final l10n = AppLocalizations.of(context)!;
+    final following = _isFollowing(userId);
+
+    return TextButton(
+      onPressed: () => _toggleFollow(userId),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        backgroundColor: following
+            ? context.inputFill
+            : AppColors.primary.withValues(alpha: 0.1),
+      ),
+      child: Text(
+        following ? l10n.followingUser : l10n.followUser,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: following ? context.textSecondary : AppColors.primary,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleFollow(String userId) async {
+    final token = _token ?? "";
+    if (token.isEmpty) return;
+
+    final wasFollowing = _isFollowing(userId);
+    setState(() {
+      if (wasFollowing) {
+        _followingIds.remove(userId);
+      } else {
+        _followingIds.add(userId);
+      }
+    });
+
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
-    
-    // Optimistic update
+    await prefs.setStringList("following_user_ids", _followingIds.toList());
+
+    final response = wasFollowing
+        ? await ApiService.unfollowUser(token, userId)
+        : await ApiService.followUser(token, userId);
+
+    if (response["message"] != null && mounted) {
+      setState(() {
+        if (wasFollowing) {
+          _followingIds.add(userId);
+        } else {
+          _followingIds.remove(userId);
+        }
+      });
+      await prefs.setStringList("following_user_ids", _followingIds.toList());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response["message"] as String),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } else if (_tabController.index == 1 && mounted) {
+      _loadPosts();
+    }
+  }
+
+  void _handleLike(Post post) async {
+    final token = _token ?? "";
+    final wasLiked = post.isLiked;
+
     setState(() {
       final index = _posts.indexWhere((p) => p.id == post.id);
       if (index != -1) {
         _posts[index] = post.copyWith(
-          isLiked: !post.isLiked,
-          likeCount: post.isLiked ? post.likeCount - 1 : post.likeCount + 1,
+          isLiked: !wasLiked,
+          likeCount: wasLiked ? post.likeCount - 1 : post.likeCount + 1,
         );
       }
     });
-    
-    // Call API
-    if (post.isLiked) {
-      await ApiService.unlikePost(token, post.id);
-    } else {
-      await ApiService.likePost(token, post.id);
+
+    final response = wasLiked
+        ? await ApiService.unlikePost(token, post.id)
+        : await ApiService.likePost(token, post.id);
+
+    if (response["message"] != null && mounted) {
+      setState(() {
+        final index = _posts.indexWhere((p) => p.id == post.id);
+        if (index != -1) {
+          _posts[index] = post;
+        }
+      });
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
+import '../navigation/app_navigation.dart';
 
 class NotificationService {
   static final _plugin = FlutterLocalNotificationsPlugin();
@@ -29,6 +30,13 @@ class NotificationService {
 
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload != null && payload.startsWith('tab:')) {
+          final tab = int.tryParse(payload.split(':').last);
+          if (tab != null) AppNavigation.switchToTab(tab);
+        }
+      },
     );
 
     // Get locale for channel names
@@ -177,6 +185,7 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
+        payload: 'tab:1',
       );
       print('[Notification] Scheduled id=$id at $hour:$minute');
     } catch (e) {

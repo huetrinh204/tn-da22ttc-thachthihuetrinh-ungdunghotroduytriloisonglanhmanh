@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../services/flow_prefs.dart';
+import '../services/notification_inbox_store.dart';
+import '../navigation/app_navigation.dart';
 import '../widgets/achievement_popup.dart';
+import '../widgets/app_snackbar.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
@@ -18,6 +22,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   List<dynamic> habits = [];
   bool isLoading = true;
   String token = "";
+  int? _highlightHabitId;
 
   List<Map<String, dynamic>> get categories {
     final l10n = AppLocalizations.of(context)!;
@@ -42,11 +47,20 @@ class _HabitsScreenState extends State<HabitsScreen> {
     token = prefs.getString("token") ?? "";
 
     final res = await ApiService.getTodayHabits(token);
+    final list = res["habits"] ?? [];
+    final showOnboardingReady = await FlowPrefs.consumeOnboardingHabitsReady();
     if (mounted) {
       setState(() {
-        habits = res["habits"] ?? [];
+        habits = list;
         isLoading = false;
+        if (showOnboardingReady && list.isNotEmpty) {
+          _highlightHabitId = list.first["id"] as int?;
+        }
       });
+      if (showOnboardingReady && list.isNotEmpty) {
+        final l10n = AppLocalizations.of(context)!;
+        AppSnackbar.showSuccess(context, l10n.onboardingReadyCheckHabits);
+      }
     }
   }
 
@@ -79,12 +93,117 @@ class _HabitsScreenState extends State<HabitsScreen> {
       metricUnit: result["metric_unit"],
     );
 
-    // Hiện popup nếu có achievement mới unlock
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+
     final newAchievements = res["new_achievements"] as List?;
     if (newAchievements != null && newAchievements.isNotEmpty) {
+      for (final a in newAchievements) {
+        await NotificationInboxStore.add(
+          title: a["title"]?.toString() ?? l10n.achievements,
+          body: a["description"]?.toString() ?? '',
+          emoji: a["icon"]?.toString() ?? '🏆',
+          targetTab: 1,
+        );
+      }
       AchievementPopup.show(context, newAchievements);
     }
+
+    final firstDone = await FlowPrefs.hasCompletedFirstCheckIn();
+    if (!firstDone && mounted) {
+      await FlowPrefs.markFirstCheckInDone();
+      await _showFirstCheckInDialog();
+    }
+  }
+
+  Future<void> _onHabitCreated(Map<String, dynamic> habit) async {
+    final wasFirst = habits.isEmpty;
+    final habitId = habit['id'] as int;
+
+    setState(() {
+      habits.insert(0, {...habit, 'is_completed': 0});
+      if (wasFirst) _highlightHabitId = habitId;
+    });
+
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    AppSnackbar.showSuccess(context, l10n.habitCreatedSuccess);
+
+    if (wasFirst) {
+      await _showAfterFirstHabitDialog(habitId);
+    }
+  }
+
+  Future<void> _showAfterFirstHabitDialog(int habitId) async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(l10n.afterFirstHabitTitle),
+        content: Text(l10n.afterFirstHabitBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.addAnotherHabit),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              AppNavigation.openToday();
+            },
+            child: Text(l10n.goToTodayTab),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              final h = habits.cast<Map<String, dynamic>?>().firstWhere(
+                    (x) => x?['id'] == habitId,
+                    orElse: () => null,
+                  );
+              if (h != null) {
+                handleCheckIn(habitId, h['is_completed'] == 1);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.completeHabitToday),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showFirstCheckInDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(l10n.firstCheckInTitle),
+        content: Text(l10n.firstCheckInBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              AppNavigation.openPlant();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.viewYourPlant),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCheckInDialog(BuildContext ctx, String category) {
@@ -231,6 +350,120 @@ class _HabitsScreenState extends State<HabitsScreen> {
   void handleDelete(int habitId) async {
     await ApiService.deleteHabit(token, habitId);
     setState(() => habits.removeWhere((h) => h["id"] == habitId));
+  }
+
+  void showEditHabitSheet(Map habit) {
+    final l10n = AppLocalizations.of(context)!;
+    final nameController = TextEditingController(text: habit["name"]?.toString() ?? '');
+    String selectedCategory = habit["category"]?.toString() ?? "other";
+    String selectedIcon = habit["icon"]?.toString() ?? "⭐";
+    final habitId = habit["id"] as int;
+    final icons = ["⭐", "🏃", "🥗", "💧", "😴", "🧘", "📚", "🎯", "💪", "🌿"];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.editHabit,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: ctx.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: nameController,
+                style: TextStyle(color: ctx.textPrimary),
+                decoration: InputDecoration(
+                  labelText: l10n.habitName,
+                  filled: true,
+                  fillColor: ctx.inputFill,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                children: categories.map((c) {
+                  final id = c["id"] as String;
+                  final selected = selectedCategory == id;
+                  return ChoiceChip(
+                    label: Text("${c["icon"]} ${c["label"]}"),
+                    selected: selected,
+                    onSelected: (_) =>
+                        setSheetState(() => selectedCategory = id),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                children: icons.map((icon) {
+                  return ChoiceChip(
+                    label: Text(icon),
+                    selected: selectedIcon == icon,
+                    onSelected: (_) => setSheetState(() => selectedIcon = icon),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (nameController.text.trim().isEmpty) return;
+                    Navigator.pop(ctx);
+                    final res = await ApiService.updateHabit(
+                      token: token,
+                      habitId: habitId,
+                      name: nameController.text.trim(),
+                      category: selectedCategory,
+                      icon: selectedIcon,
+                    );
+                    if (!mounted) return;
+                    if (res["message"] == null ||
+                        res["message"] == "Habit updated") {
+                      loadHabits();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.habitUpdated),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(l10n.save),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void showAddHabitSheet() {
@@ -387,20 +620,24 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (nameController.text.trim().isEmpty) return;
+                    final name = nameController.text.trim();
                     Navigator.pop(ctx);
                     final res = await ApiService.createHabit(
                       token: token,
-                      name: nameController.text.trim(),
+                      name: name,
                       category: selectedCategory,
                       icon: selectedIcon,
                     );
-                    if (res["habit"] != null) {
-                      setState(() {
-                        habits.insert(0, {
-                          ...res["habit"],
-                          "is_completed": 0,
-                        });
-                      });
+                    if (!mounted) return;
+                    if (res['habit'] != null) {
+                      await _onHabitCreated(
+                        Map<String, dynamic>.from(res['habit'] as Map),
+                      );
+                    } else {
+                      AppSnackbar.showError(
+                        context,
+                        res['message']?.toString() ?? l10n.failed,
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -448,6 +685,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
               ? _buildEmptyState()
               : CustomScrollView(
                   slivers: [
+                    if (_highlightHabitId != null)
+                      SliverToBoxAdapter(child: _buildTapToCompleteHint()),
                     SliverToBoxAdapter(
                       child: _buildProgressCard(completed, total, progress),
                     ),
@@ -469,6 +708,41 @@ class _HabitsScreenState extends State<HabitsScreen> {
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
+    );
+  }
+
+  Widget _buildTapToCompleteHint() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF4CAF50), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.touch_app_rounded, color: Color(0xFF2E7D32), size: 22),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l10n.tapHabitToCompleteHint,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2E7D32),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18, color: Color(0xFF2E7D32)),
+            onPressed: () => setState(() => _highlightHabitId = null),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+        ],
+      ),
     );
   }
 
@@ -540,6 +814,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
       orElse: () => {"icon": "⭐"},
     )["icon"];
 
+    final habitId = habit['id'] as int;
+    final isHighlighted = _highlightHabitId == habitId;
+
     return Dismissible(
       key: Key("habit_${habit["id"]}"),
       direction: DismissDirection.endToStart,
@@ -575,7 +852,15 @@ class _HabitsScreenState extends State<HabitsScreen> {
       },
       onDismissed: (_) => handleDelete(habit["id"]),
       child: GestureDetector(
-        onTap: isCompleted ? null : () => handleCheckIn(habit["id"], isCompleted),
+        onLongPress: () => showEditHabitSheet(habit),
+        onTap: isCompleted
+            ? null
+            : () {
+                if (_highlightHabitId == habitId) {
+                  setState(() => _highlightHabitId = null);
+                }
+                handleCheckIn(habitId, isCompleted);
+              },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           margin: const EdgeInsets.only(bottom: 12),
@@ -586,8 +871,12 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 : Theme.of(context).cardTheme.color ?? Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isCompleted ? const Color(0xFF4CAF50) : Colors.transparent,
-              width: 1.5,
+              color: isCompleted
+                  ? const Color(0xFF4CAF50)
+                  : isHighlighted
+                      ? const Color(0xFF66BB6A)
+                      : Colors.transparent,
+              width: isHighlighted ? 2.5 : 1.5,
             ),
             boxShadow: [
               BoxShadow(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../services/onboarding_gate.dart';
 import 'onboarding_screen.dart';
 import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
@@ -46,6 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (res["message"] == "Register success") {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", res["token"]);
+      await OnboardingGate.prepareNewAccount();
       if (!mounted) return;
       Navigator.pushReplacement(
         context,

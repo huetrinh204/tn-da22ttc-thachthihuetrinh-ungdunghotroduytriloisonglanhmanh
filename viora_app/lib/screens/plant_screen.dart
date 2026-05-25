@@ -10,7 +10,10 @@ import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 
 class PlantScreen extends StatefulWidget {
-  const PlantScreen({super.key});
+  const PlantScreen({super.key, this.embedded = false});
+
+  /// Nhúng trong [GrowScreen] — không dùng Scaffold/AppBar riêng.
+  final bool embedded;
 
   @override
   State<PlantScreen> createState() => _PlantScreenState();
@@ -158,19 +161,16 @@ class _PlantScreenState extends State<PlantScreen>
     };
     final cardColor = Theme.of(context).cardTheme.color ?? Colors.white;
 
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: VioraAppBar(title: AppLocalizations.of(context)!.myPlant),
-          body: isLoading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
-              : RefreshIndicator(
-                  onRefresh: _loadPlant,
-                  color: const Color(0xFF4CAF50),
-                  child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
+    final plantBody = isLoading
+        ? const Center(
+            child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+          )
+        : RefreshIndicator(
+            onRefresh: _loadPlant,
+            color: const Color(0xFF4CAF50),
+            child: ListView(
+              padding: EdgeInsets.all(widget.embedded ? 16 : 20),
+              children: [
                   // Plant display card
                   Container(
                     padding: const EdgeInsets.all(28),
@@ -330,14 +330,12 @@ class _PlantScreenState extends State<PlantScreen>
                       ],
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-        ),
-        
-        // Level-up animation overlay
-        if (showLevelUpAnimation && previousLevel != null)
-          LevelUpAnimation(
+          );
+
+    final levelUpOverlay = showLevelUpAnimation && previousLevel != null
+        ? LevelUpAnimation(
             plantType: plantType,
             oldLevel: (previousLevel! - 1).clamp(1, 15),
             newLevel: plantLevel,
@@ -346,7 +344,26 @@ class _PlantScreenState extends State<PlantScreen>
                 showLevelUpAnimation = false;
               });
             },
-          ),
+          )
+        : null;
+
+    if (widget.embedded) {
+      return Stack(
+        children: [
+          plantBody,
+          if (levelUpOverlay != null) levelUpOverlay,
+        ],
+      );
+    }
+
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: VioraAppBar(title: AppLocalizations.of(context)!.myPlant),
+          body: plantBody,
+        ),
+        if (levelUpOverlay != null) levelUpOverlay,
       ],
     );
   }
