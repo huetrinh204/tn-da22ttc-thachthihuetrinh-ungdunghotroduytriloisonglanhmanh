@@ -10,6 +10,7 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import 'stats_screen.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -181,14 +182,63 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final l10n = AppLocalizations.of(context)!;
     await showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(l10n.firstCheckInTitle),
-        content: Text(l10n.firstCheckInBody),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.firstCheckInBody),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF81C784)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.bar_chart_rounded,
+                    color: Color(0xFF2E7D32),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      l10n.firstCheckInStatsHint,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.45,
+                        color: Color(0xFF1B5E20),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.cancel),
+            child: Text(l10n.gotIt),
+          ),
+          OutlinedButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const StatsScreen()),
+              );
+            },
+            icon: const Icon(Icons.bar_chart_rounded, size: 18),
+            label: Text(l10n.viewHabitStats),
           ),
           ElevatedButton(
             onPressed: () {
@@ -671,6 +721,15 @@ class _HabitsScreenState extends State<HabitsScreen> {
       appBar: VioraAppBar(
         title: l10n.habitsToday,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded,
+                color: AppColors.primary, size: 24),
+            tooltip: l10n.statsTitle,
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const StatsScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline_rounded,
                 color: AppColors.primary, size: 26),

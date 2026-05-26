@@ -128,7 +128,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   void _syncStarterHabitsFromGoals() {
     final l10n = AppLocalizations.of(context)!;
-    final options = StarterHabitTemplates.forGoals(selectedGoals, l10n);
+    final customText = selectedGoals.contains('other')
+        ? customGoalController.text.trim()
+        : null;
+    final options = StarterHabitTemplates.forGoals(
+      selectedGoals,
+      l10n,
+      customGoalText: customText,
+    );
     _starterOptions = options;
     _selectedStarterIds
       ..clear()

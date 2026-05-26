@@ -1403,7 +1403,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmHabitMessage.
   ///
   /// In vi, this message translates to:
-  /// **'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\\n\\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.'**
+  /// **'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.'**
   String get confirmHabitMessage;
 
   /// No description provided for @notSure.
@@ -2546,6 +2546,24 @@ abstract class AppLocalizations {
   /// **'Bạn vừa hoàn thành check-in đầu tiên. Xem cây của bạn lớn lên nhé!'**
   String get firstCheckInBody;
 
+  /// No description provided for @firstCheckInStatsHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mẹo: chạm biểu tượng thống kê trên tab Thói quen để xem tiến độ và chuỗi ngày của bạn.'**
+  String get firstCheckInStatsHint;
+
+  /// No description provided for @viewHabitStats.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thống kê'**
+  String get viewHabitStats;
+
+  /// No description provided for @gotIt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hiểu'**
+  String get gotIt;
+
   /// No description provided for @habitCreatedSuccess.
   ///
   /// In vi, this message translates to:
@@ -2665,6 +2683,24 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Ăn đủ rau & trái cây'**
   String get starterHabitEatVeggies;
+
+  /// No description provided for @starterHabitRead30.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đọc sách 30 phút'**
+  String get starterHabitRead30;
+
+  /// No description provided for @starterHabitStudy60.
+  ///
+  /// In vi, this message translates to:
+  /// **'Học tập 1 giờ'**
+  String get starterHabitStudy60;
+
+  /// No description provided for @starterHabitReviewNotes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ôn bài / ghi chép 15 phút'**
+  String get starterHabitReviewNotes;
 
   /// No description provided for @onboardingReadyCheckHabits.
   ///

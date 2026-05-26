@@ -683,7 +683,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmHabitMessage =>
-      'Are you sure you completed this habit today?\\n\\nOnce confirmed, you cannot uncheck it today.';
+      'Are you sure you completed this habit today?\n\nOnce confirmed, you cannot uncheck it today.';
 
   @override
   String get notSure => 'Not sure';
@@ -1282,6 +1282,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'You completed your first check-in. See your plant grow!';
 
   @override
+  String get firstCheckInStatsHint =>
+      'Tip: tap the stats icon on the Habits tab to see your progress and streaks.';
+
+  @override
+  String get viewHabitStats => 'View stats';
+
+  @override
+  String get gotIt => 'Got it';
+
+  @override
   String get habitCreatedSuccess => 'Habit added!';
 
   @override
@@ -1344,6 +1354,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get starterHabitEatVeggies => 'Eat vegetables & fruit';
+
+  @override
+  String get starterHabitRead30 => 'Read for 30 minutes';
+
+  @override
+  String get starterHabitStudy60 => 'Study for 1 hour';
+
+  @override
+  String get starterHabitReviewNotes => 'Review notes for 15 minutes';
 
   @override
   String get onboardingReadyCheckHabits =>

@@ -82,9 +82,150 @@ abstract final class StarterHabitTemplates {
           category: 'eat',
           icon: '🥦',
         );
+      case 'starter_read_30':
+        return StarterHabitOption(
+          id: id,
+          name: l10n.starterHabitRead30,
+          category: 'mental',
+          icon: '📚',
+        );
+      case 'starter_study_60':
+        return StarterHabitOption(
+          id: id,
+          name: l10n.starterHabitStudy60,
+          category: 'other',
+          icon: '✏️',
+        );
+      case 'starter_review_notes':
+        return StarterHabitOption(
+          id: id,
+          name: l10n.starterHabitReviewNotes,
+          category: 'other',
+          icon: '📝',
+        );
       default:
         return null;
     }
+  }
+
+  /// Suy luận gợi ý từ mục tiêu tự nhập (mục "Khác").
+  static List<String> _habitIdsForCustomGoal(String raw) {
+    final t = raw.toLowerCase().trim();
+    if (t.isEmpty) return const [];
+
+    if (_containsAny(t, [
+      'học',
+      'hoc',
+      'học tập',
+      'hoc tap',
+      'study',
+      'learn',
+      'learning',
+      'education',
+      'giáo dục',
+      'giao duc',
+      'đọc',
+      'doc',
+      'sách',
+      'sach',
+      'book',
+      'read',
+      'reading',
+      'ôn',
+      'on thi',
+      'thi',
+      'exam',
+      'bài',
+      'bai',
+    ])) {
+      return ['starter_study_60', 'starter_read_30', 'starter_review_notes'];
+    }
+
+    if (_containsAny(t, [
+      'ăn',
+      'an ',
+      'eat',
+      'food',
+      'diet',
+      'healthy',
+      'lành mạnh',
+      'lanh manh',
+      'rau',
+      'vegetable',
+    ])) {
+      return ['starter_healthy_breakfast', 'starter_eat_veggies'];
+    }
+
+    if (_containsAny(t, [
+      'tập',
+      'tap',
+      'gym',
+      'sport',
+      'exercise',
+      'workout',
+      'chạy',
+      'chay',
+      'run',
+      'vận động',
+      'van dong',
+    ])) {
+      return ['starter_exercise_30', 'starter_walk_20'];
+    }
+
+    if (_containsAny(t, [
+      'ngủ',
+      'ngu',
+      'sleep',
+      'rest',
+    ])) {
+      return ['starter_sleep_23'];
+    }
+
+    if (_containsAny(t, [
+      'nước',
+      'nuoc',
+      'water',
+      'hydrat',
+      'uống',
+      'uong',
+    ])) {
+      return ['starter_hydration_2l'];
+    }
+
+    if (_containsAny(t, [
+      'thiền',
+      'thien',
+      'meditat',
+      'mindful',
+      'tâm',
+      'tam linh',
+      'mental',
+      'stress',
+      'relax',
+    ])) {
+      return ['starter_meditation_10'];
+    }
+
+    if (_containsAny(t, [
+      'cân',
+      'can nang',
+      'weight',
+      'giảm cân',
+      'giam can',
+      'lose weight',
+      'fat',
+    ])) {
+      return ['starter_walk_20', 'starter_healthy_breakfast'];
+    }
+
+    return const [];
+  }
+
+  static bool _containsAny(String haystack, List<String> needles) {
+    for (final n in needles) {
+      if (haystack.contains(n)) return true;
+    }
+    return false;
   }
 
   /// Tối đa [maxCount] gợi ý, không trùng id.
@@ -92,12 +233,20 @@ abstract final class StarterHabitTemplates {
     Set<String> selectedGoals,
     AppLocalizations l10n, {
     int maxCount = 4,
+    String? customGoalText,
   }) {
     final orderedIds = <String>[];
     final goals = selectedGoals.where((g) => g != 'other').toList();
 
     for (final goal in goals) {
       for (final id in _goalHabitIds[goal] ?? const []) {
+        if (!orderedIds.contains(id)) orderedIds.add(id);
+      }
+    }
+
+    if (selectedGoals.contains('other')) {
+      final customIds = _habitIdsForCustomGoal(customGoalText ?? '');
+      for (final id in customIds) {
         if (!orderedIds.contains(id)) orderedIds.add(id);
       }
     }

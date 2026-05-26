@@ -685,7 +685,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get confirmHabitMessage =>
-      'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\\n\\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.';
+      'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.';
 
   @override
   String get notSure => 'Chưa chắc';
@@ -1284,6 +1284,16 @@ class AppLocalizationsVi extends AppLocalizations {
       'Bạn vừa hoàn thành check-in đầu tiên. Xem cây của bạn lớn lên nhé!';
 
   @override
+  String get firstCheckInStatsHint =>
+      'Mẹo: chạm biểu tượng thống kê trên tab Thói quen để xem tiến độ và chuỗi ngày của bạn.';
+
+  @override
+  String get viewHabitStats => 'Xem thống kê';
+
+  @override
+  String get gotIt => 'Đã hiểu';
+
+  @override
   String get habitCreatedSuccess => 'Đã thêm thói quen!';
 
   @override
@@ -1346,6 +1356,15 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get starterHabitEatVeggies => 'Ăn đủ rau & trái cây';
+
+  @override
+  String get starterHabitRead30 => 'Đọc sách 30 phút';
+
+  @override
+  String get starterHabitStudy60 => 'Học tập 1 giờ';
+
+  @override
+  String get starterHabitReviewNotes => 'Ôn bài / ghi chép 15 phút';
 
   @override
   String get onboardingReadyCheckHabits =>

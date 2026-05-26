@@ -10,6 +10,7 @@ import '../widgets/app_snackbar.dart';
 import '../services/onboarding_gate.dart';
 import 'forgot_password_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/language_flag_toggle.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -136,6 +137,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // Lá bay
           const FloatingLeaves(),
+
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, right: 16),
+                child: const LanguageFlagToggle(),
+              ),
+            ),
+          ),
 
           // Content
           SafeArea(
