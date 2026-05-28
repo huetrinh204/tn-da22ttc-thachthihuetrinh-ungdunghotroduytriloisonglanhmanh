@@ -13,7 +13,18 @@ import '../l10n/app_localizations.dart';
 import 'stats_screen.dart';
 
 class HabitsScreen extends StatefulWidget {
-  const HabitsScreen({super.key});
+  final GlobalKey? statsCoachKey;
+  final GlobalKey? addCoachKey;
+  final GlobalKey? listCoachKey;
+  final Future<void> Function()? onHabitCheckInCompleted;
+
+  const HabitsScreen({
+    super.key,
+    this.statsCoachKey,
+    this.addCoachKey,
+    this.listCoachKey,
+    this.onHabitCheckInCompleted,
+  });
 
   @override
   State<HabitsScreen> createState() => _HabitsScreenState();
@@ -110,11 +121,22 @@ class _HabitsScreenState extends State<HabitsScreen> {
       AchievementPopup.show(context, newAchievements);
     }
 
+    final postCheckinStep = await FlowPrefs.getPostCheckinCoachStep();
+    if (postCheckinStep > 0 && mounted) {
+      await _showFirstCheckInDialog();
+      await FlowPrefs.completePostCheckinCoachFlow();
+      await FlowPrefs.markFirstCheckInDone();
+      return;
+    }
+
     final firstDone = await FlowPrefs.hasCompletedFirstCheckIn();
     if (!firstDone && mounted) {
       await FlowPrefs.markFirstCheckInDone();
       await _showFirstCheckInDialog();
     }
+
+    await widget.onHabitCheckInCompleted?.call();
+
   }
 
   Future<void> _onHabitCreated(Map<String, dynamic> habit) async {
@@ -716,12 +738,44 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final total = habits.length;
     final progress = total > 0 ? completed / total : 0.0;
 
+    Widget body;
+    if (isLoading) {
+      body = const Center(
+        child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+      );
+    } else if (habits.isEmpty) {
+      body = _buildEmptyState();
+    } else {
+      body = CustomScrollView(
+        slivers: [
+          if (_highlightHabitId != null)
+            SliverToBoxAdapter(child: _buildTapToCompleteHint()),
+          SliverToBoxAdapter(
+            child: _buildProgressCard(completed, total, progress),
+          ),
+          SliverToBoxAdapter(
+            child: SizedBox(key: widget.listCoachKey, height: 1),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => _buildHabitCard(habits[i]),
+                childCount: habits.length,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
         title: l10n.habitsToday,
         actions: [
           IconButton(
+            key: widget.statsCoachKey,
             icon: const Icon(Icons.bar_chart_rounded,
                 color: AppColors.primary, size: 24),
             tooltip: l10n.statsTitle,
@@ -731,6 +785,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
             ),
           ),
           IconButton(
+            key: widget.addCoachKey,
             icon: const Icon(Icons.add_circle_outline_rounded,
                 color: AppColors.primary, size: 26),
             onPressed: showAddHabitSheet,
@@ -738,28 +793,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
-          : habits.isEmpty
-              ? _buildEmptyState()
-              : CustomScrollView(
-                  slivers: [
-                    if (_highlightHabitId != null)
-                      SliverToBoxAdapter(child: _buildTapToCompleteHint()),
-                    SliverToBoxAdapter(
-                      child: _buildProgressCard(completed, total, progress),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (_, i) => _buildHabitCard(habits[i]),
-                          childCount: habits.length,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+      body: body,
       floatingActionButton: habits.isNotEmpty
           ? FloatingActionButton(
               onPressed: showAddHabitSheet,

@@ -100,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      AppLocalizations.of(context)!.quote,
+                      AppLocalizations.of(context)!.quote.replaceAll(r'\n', '\n'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 13,

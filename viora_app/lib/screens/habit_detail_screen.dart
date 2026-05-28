@@ -32,6 +32,26 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   List<dynamic> metrics = [];
   Map<String, dynamic> summary = {};
 
+  String? _formatChartDateLabel(String rawDate) {
+    try {
+      final dateTime = DateTime.parse(rawDate);
+      final localDate = rawDate.contains('T') ? dateTime.toLocal() : dateTime;
+      return "${localDate.day}/${localDate.month}";
+    } catch (_) {
+      try {
+        final parts = rawDate.split("-");
+        if (parts.length == 3) {
+          final day = int.parse(parts[2]);
+          final month = int.parse(parts[1]);
+          return "$day/$month";
+        }
+      } catch (_) {
+        return null;
+      }
+      return null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -436,50 +456,21 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                           return const SizedBox();
                         }
                         
-                        // Format: "YYYY-MM-DD" -> "D/M" (không có số 0 đứng đầu)
+                        // Format date label as D/M in local timezone
                         final dateStr = allDateLabels[idx];
-                        
-                        try {
-                          // Nếu là ISO format (2026-05-07T00:00:00.000Z)
-                          if (dateStr.contains('T')) {
-                            final datePart = dateStr.split('T')[0]; // Lấy phần trước T
-                            final parts = datePart.split("-"); // [YYYY, MM, DD]
-                            if (parts.length == 3) {
-                              final day = int.parse(parts[2]); // Bỏ số 0 đứng đầu
-                              final month = int.parse(parts[1]); // Bỏ số 0 đứng đầu
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  "$day/$month", // D/M
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: context.textSecondary,
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                          
-                          // Nếu là format YYYY-MM-DD
-                          final parts = dateStr.split("-"); // [YYYY, MM, DD]
-                          if (parts.length == 3) {
-                            final day = int.parse(parts[2]); // Bỏ số 0 đứng đầu
-                            final month = int.parse(parts[1]); // Bỏ số 0 đứng đầu
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                "$day/$month", // D/M
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: context.textSecondary,
-                                ),
+                        final formattedDate = _formatChartDateLabel(dateStr);
+                        if (formattedDate != null) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              formattedDate,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: context.textSecondary,
                               ),
-                            );
-                          }
-                        } catch (e) {
-                          // Nếu có lỗi, không hiển thị gì
+                            ),
+                          );
                         }
-                        
                         return const SizedBox();
                       },
                     ),

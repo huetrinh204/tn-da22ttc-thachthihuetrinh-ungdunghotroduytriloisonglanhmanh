@@ -21,6 +21,7 @@ class PlantScreen extends StatefulWidget {
 
 class _PlantScreenState extends State<PlantScreen>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
+  static const String _lastSeenPlantLevelKey = "last_seen_plant_level";
   String plantType = "sprout";
   int plantLevel = 1;
   int plantExp = 0;
@@ -28,6 +29,7 @@ class _PlantScreenState extends State<PlantScreen>
   bool isLoading = true;
   bool showLevelUpAnimation = false;
   int? previousLevel;
+  int? levelUpFromLevel;
 
   @override
   bool get wantKeepAlive => false; // Không cache → reload mỗi lần vào tab
@@ -90,7 +92,8 @@ class _PlantScreenState extends State<PlantScreen>
     if (plant != null) {
       final exp = plant["experience"] ?? 0;
       final newLevel = _calculateLevel(exp);
-      final oldLevel = previousLevel ?? plantLevel;
+      final lastSeenLevel = prefs.getInt(_lastSeenPlantLevelKey);
+      final oldLevel = previousLevel ?? lastSeenLevel ?? newLevel;
       
       // Update state first
       setState(() {
@@ -104,6 +107,7 @@ class _PlantScreenState extends State<PlantScreen>
       if (previousLevel != null && oldLevel < newLevel) {
         setState(() {
           plantLevel = newLevel;
+          levelUpFromLevel = oldLevel.clamp(1, 15);
           showLevelUpAnimation = true;
         });
         
@@ -118,13 +122,26 @@ class _PlantScreenState extends State<PlantScreen>
         }
       } else {
         // First load or no level change
+        final hasLeveledUpSinceLastSeen = oldLevel < newLevel;
         setState(() {
           plantLevel = newLevel;
+          showLevelUpAnimation = hasLeveledUpSinceLastSeen;
+          levelUpFromLevel =
+              hasLeveledUpSinceLastSeen ? oldLevel.clamp(1, 15) : null;
         });
+
+        if (hasLeveledUpSinceLastSeen && newLevel % 3 == 0) {
+          Future.delayed(const Duration(milliseconds: 2500), () {
+            if (mounted) {
+              _showTreasureReward();
+            }
+          });
+        }
       }
       
       // Update previous level for next comparison
       previousLevel = newLevel;
+      await prefs.setInt(_lastSeenPlantLevelKey, newLevel);
     } else {
       setState(() {
         isLoading = false;
@@ -334,14 +351,15 @@ class _PlantScreenState extends State<PlantScreen>
             ),
           );
 
-    final levelUpOverlay = showLevelUpAnimation && previousLevel != null
+    final levelUpOverlay = showLevelUpAnimation && levelUpFromLevel != null
         ? LevelUpAnimation(
             plantType: plantType,
-            oldLevel: (previousLevel! - 1).clamp(1, 15),
+            oldLevel: levelUpFromLevel!,
             newLevel: plantLevel,
             onComplete: () {
               setState(() {
                 showLevelUpAnimation = false;
+                levelUpFromLevel = null;
               });
             },
           )

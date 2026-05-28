@@ -220,6 +220,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     } else {
       await FlowPrefs.markOpenHabitsAfterOnboarding();
       await FlowPrefs.markOnboardingHabitsReady();
+      await FlowPrefs.startPostCheckinCoachFlow();
     }
 
     await prefs.setString("plant_type", selectedPlant);

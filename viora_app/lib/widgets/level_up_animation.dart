@@ -159,19 +159,10 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                 },
                 child: Column(
                   children: [
-                    Text(
+                    _buildOutlinedGoldenText(
                       AppLocalizations.of(context)!.congratulations,
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Color(0xFF4CAF50),
-                            blurRadius: 20,
-                          ),
-                        ],
-                      ),
+                      fontSize: 36,
+                      strokeWidth: 2.5,
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -183,19 +174,10 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    _buildOutlinedGoldenText(
                       AppLocalizations.of(context)!.levelRange(widget.oldLevel, widget.newLevel),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        color: Color(0xFF4CAF50),
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            color: Colors.white,
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
+                      fontSize: 24,
+                      strokeWidth: 2,
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -213,6 +195,41 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildOutlinedGoldenText(
+    String text, {
+    required double fontSize,
+    required double strokeWidth,
+  }) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = strokeWidth
+              ..color = const Color(0xFF7A4D00),
+          ),
+        ),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFFFD54F),
+            shadows: const [
+              Shadow(color: Color(0xFFB26A00), blurRadius: 10),
+              Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 3),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

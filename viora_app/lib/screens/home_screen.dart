@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../services/flow_prefs.dart';
 import '../navigation/app_navigation.dart';
 import '../navigation/app_tabs.dart';
+import '../widgets/level_up_animation.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
@@ -22,17 +23,32 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  static const String _lastSeenPlantLevelKey = "last_seen_plant_level";
   int _currentIndex = 0;
   final GlobalKey<_DashboardTabState> _dashboardKey = GlobalKey<_DashboardTabState>();
+  bool _isCheckingPlantLevel = false;
+  bool _showGlobalLevelUpAnimation = false;
+  int? _levelUpFromLevel;
+  int? _levelUpToLevel;
+  String _globalPlantType = "sprout";
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     AppNavigation.onSwitchTab = switchToTab;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeOpenHabitsAfterOnboarding();
+      _checkAndShowGlobalPlantLevelUp();
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAndShowGlobalPlantLevelUp();
+    }
   }
 
   Future<void> _maybeOpenHabitsAfterOnboarding() async {
@@ -42,10 +58,56 @@ class HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (AppNavigation.onSwitchTab == switchToTab) {
       AppNavigation.onSwitchTab = null;
     }
     super.dispose();
+  }
+
+  int _calculatePlantLevel(int exp) {
+    const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+    for (int i = thresholds.length - 1; i >= 0; i--) {
+      if (exp >= thresholds[i]) return i + 1;
+    }
+    return 1;
+  }
+
+  Future<void> _checkAndShowGlobalPlantLevelUp() async {
+    if (_isCheckingPlantLevel || _showGlobalLevelUpAnimation) return;
+    _isCheckingPlantLevel = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token") ?? "";
+      if (token.isEmpty) return;
+
+      final res = await ApiService.getPlant(token);
+      if (!mounted) return;
+      final plant = res["plant"];
+      if (plant == null) return;
+
+      final exp = plant["experience"] ?? 0;
+      final newLevel = _calculatePlantLevel(exp);
+      final lastSeenLevel = prefs.getInt(_lastSeenPlantLevelKey);
+      if (lastSeenLevel == null) {
+        await prefs.setInt(_lastSeenPlantLevelKey, newLevel);
+        return;
+      }
+      if (newLevel <= lastSeenLevel) return;
+
+      setState(() {
+        _globalPlantType = (plant["plant_type"] ?? "sprout").toString();
+        _levelUpFromLevel = lastSeenLevel.clamp(1, 15);
+        _levelUpToLevel = newLevel.clamp(1, 15);
+        _showGlobalLevelUpAnimation = true;
+      });
+    } finally {
+      _isCheckingPlantLevel = false;
+    }
+  }
+
+  Future<void> _onHabitCheckInCompleted() async {
+    await _checkAndShowGlobalPlantLevelUp();
   }
 
   void switchToTab(int index) {
@@ -57,7 +119,7 @@ class HomeScreenState extends State<HomeScreen> {
       case AppTabs.today:
         return _DashboardTab(key: _dashboardKey);
       case AppTabs.habits:
-        return const HabitsScreen();
+        return HabitsScreen(onHabitCheckInCompleted: _onHabitCheckInCompleted);
       case AppTabs.community:
         return const CommunityScreen();
       case AppTabs.grow:
@@ -80,64 +142,87 @@ class HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _buildScreen(_currentIndex),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.darkSurface
-              : Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
+    final globalLevelUpOverlay =
+        _showGlobalLevelUpAnimation && _levelUpFromLevel != null && _levelUpToLevel != null
+            ? LevelUpAnimation(
+                plantType: _globalPlantType,
+                oldLevel: _levelUpFromLevel!,
+                newLevel: _levelUpToLevel!,
+                onComplete: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setInt(_lastSeenPlantLevelKey, _levelUpToLevel!);
+                  if (!mounted) return;
+                  setState(() {
+                    _showGlobalLevelUpAnimation = false;
+                    _levelUpFromLevel = null;
+                    _levelUpToLevel = null;
+                  });
+                },
+              )
+            : null;
+    return Stack(
+      children: [
+        Scaffold(
+          body: _buildScreen(_currentIndex),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.darkSurface
+                  : Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: _onTabTapped,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: const Color(0xFFBDBDBD),
-            backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.darkSurface
-                : Colors.white,
-            elevation: 0,
-            type: BottomNavigationBarType.fixed,
-            selectedFontSize: 11,
-            unselectedFontSize: 11,
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.home_outlined, size: 24),
-                activeIcon: const Icon(Icons.home_rounded, size: 24),
-                label: AppLocalizations.of(context)!.today,
+            child: SafeArea(
+              child: BottomNavigationBar(
+                currentIndex: _currentIndex,
+                onTap: _onTabTapped,
+                selectedItemColor: AppColors.primary,
+                unselectedItemColor: const Color(0xFFBDBDBD),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.darkSurface
+                    : Colors.white,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                selectedFontSize: 11,
+                unselectedFontSize: 11,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.home_outlined, size: 24),
+                    activeIcon: const Icon(Icons.home_rounded, size: 24),
+                    label: AppLocalizations.of(context)!.today,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.check_circle_outline_rounded, size: 24),
+                    activeIcon: const Icon(Icons.check_circle_rounded, size: 24),
+                    label: AppLocalizations.of(context)!.habits,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.people_outline_rounded, size: 24),
+                    activeIcon: const Icon(Icons.people_rounded, size: 24),
+                    label: AppLocalizations.of(context)!.community,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.eco_outlined, size: 24),
+                    activeIcon: const Icon(Icons.eco_rounded, size: 24),
+                    label: AppLocalizations.of(context)!.grow,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.person_outline_rounded, size: 24),
+                    activeIcon: const Icon(Icons.person_rounded, size: 24),
+                    label: AppLocalizations.of(context)!.navMe,
+                  ),
+                ],
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.check_circle_outline_rounded, size: 24),
-                activeIcon: const Icon(Icons.check_circle_rounded, size: 24),
-                label: AppLocalizations.of(context)!.habits,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.people_outline_rounded, size: 24),
-                activeIcon: const Icon(Icons.people_rounded, size: 24),
-                label: AppLocalizations.of(context)!.community,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.eco_outlined, size: 24),
-                activeIcon: const Icon(Icons.eco_rounded, size: 24),
-                label: AppLocalizations.of(context)!.grow,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.person_outline_rounded, size: 24),
-                activeIcon: const Icon(Icons.person_rounded, size: 24),
-                label: AppLocalizations.of(context)!.navMe,
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+        if (globalLevelUpOverlay != null) globalLevelUpOverlay,
+      ],
     );
   }
 }

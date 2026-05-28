@@ -8,6 +8,7 @@ class FlowPrefs {
   static const _openHabitsAfterOnboarding = 'open_habits_after_onboarding';
   static const _onboardingHabitsReady = 'onboarding_habits_ready';
   static const _streakRecoveryDismissed = 'streak_recovery_dismissed_date';
+  static const _postCheckinCoachStep = 'post_checkin_coach_step';
 
   static Future<bool> isProfileIncomplete() async {
     final prefs = await SharedPreferences.getInstance();
@@ -80,5 +81,42 @@ class FlowPrefs {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now().toIso8601String().split('T').first;
     await prefs.setString(_streakRecoveryDismissed, today);
+  }
+
+  /// Flow hướng dẫn sau khi check-in:
+  /// 0 = chưa bật / đã hoàn tất
+  /// 1 = bước xem thống kê
+  /// 2 = bước xem cây
+  static Future<void> startPostCheckinCoachFlow() async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = prefs.getInt(_postCheckinCoachStep) ?? 0;
+    if (current == 0) {
+      await prefs.setInt(_postCheckinCoachStep, 1);
+    }
+  }
+
+  static Future<int> getPostCheckinCoachStep() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_postCheckinCoachStep) ?? 0;
+  }
+
+  static Future<void> setPostCheckinCoachStep(int step) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (step <= 0) {
+      await prefs.remove(_postCheckinCoachStep);
+      return;
+    }
+    await prefs.setInt(_postCheckinCoachStep, step);
+  }
+
+  static Future<void> completePostCheckinCoachFlow() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_postCheckinCoachStep);
+  }
+
+  /// Đóng coach tạm thời ở phiên hiện tại, không khóa vĩnh viễn.
+  static Future<void> dismissPostCheckinCoachFlow() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_postCheckinCoachStep);
   }
 }
