@@ -41,8 +41,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void handleLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      AppSnackbar.showError(context, "Vui lòng nhập đầy đủ thông tin");
+      AppSnackbar.showError(context, l10n.pleaseEnterAllInfo);
       return;
     }
     setState(() => isLoading = true);
@@ -55,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final token = res["token"];
       if (token == null) {
         if (!mounted) return;
-        AppSnackbar.showError(context, "Đăng nhập thất bại, thử lại");
+        AppSnackbar.showError(context, l10n.loginFailedRetry);
         return;
       }
       final prefs = await SharedPreferences.getInstance();
@@ -71,11 +72,12 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       if (!mounted) return;
-      AppSnackbar.showError(context, res["message"] ?? "Đăng nhập thất bại");
+      AppSnackbar.showError(context, res["message"] ?? l10n.loginFailed);
     }
   }
 
   Future<void> handleGoogleLogin() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await _googleSignIn.signOut();
       final user = await _googleSignIn.signIn();
@@ -84,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final idToken = auth.idToken;
       if (idToken == null) {
         if (!mounted) return;
-        AppSnackbar.showError(context, "Google login thất bại");
+        AppSnackbar.showError(context, l10n.googleLoginFailed);
         return;
       }
       setState(() => isLoading = true);
@@ -95,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final token = res["token"] as String?;
         if (token == null) {
           if (!mounted) return;
-          AppSnackbar.showError(context, "Google login thất bại");
+          AppSnackbar.showError(context, l10n.googleLoginFailed);
           return;
         }
         await prefs.setString("token", token);
@@ -114,11 +116,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         if (!mounted) return;
-        AppSnackbar.showError(context, res["message"] ?? "Google login thất bại");
+        AppSnackbar.showError(context, res["message"] ?? l10n.googleLoginFailed);
       }
     } catch (e) {
       if (!mounted) return;
-      AppSnackbar.showError(context, "Lỗi Google login: $e");
+      AppSnackbar.showError(context, l10n.googleLoginError(e.toString()));
     }
   }
 
@@ -196,10 +198,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Center(
+                        Center(
                           child: Text(
-                            "ĐĂNG NHẬP",
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.loginTitle,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1B5E20),
@@ -210,8 +212,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 24),
 
                         // EMAIL
-                        const Text("Email",
-                            style: TextStyle(
+                        Text(AppLocalizations.of(context)!.email,
+                            style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87)),
@@ -220,14 +222,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: _inputDecoration(
-                              "Nhập email của bạn", Icons.email_outlined),
+                              AppLocalizations.of(context)!.enterEmail, Icons.email_outlined),
                         ),
 
                         const SizedBox(height: 16),
 
                         // PASSWORD
-                        const Text("Mật khẩu",
-                            style: TextStyle(
+                        Text(AppLocalizations.of(context)!.password,
+                            style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.black87)),
@@ -236,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: passwordController,
                           obscureText: obscurePassword,
                           decoration: _inputDecoration(
-                            "Nhập mật khẩu của bạn",
+                            AppLocalizations.of(context)!.enterPassword,
                             Icons.lock_outline,
                             suffix: IconButton(
                               icon: Icon(
@@ -267,9 +269,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            child: const Text(
-                              "Quên mật khẩu?",
-                              style: TextStyle(
+                            child: Text(
+                              AppLocalizations.of(context)!.forgotPasswordQuestion,
+                              style: const TextStyle(
                                   color: Color(0xFF4CAF50), fontSize: 13),
                             ),
                           ),
@@ -298,9 +300,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: CircularProgressIndicator(
                                         color: Colors.white, strokeWidth: 2.5),
                                   )
-                                : const Text(
-                                    "Đăng nhập",
-                                    style: TextStyle(
+                                : Text(
+                                    AppLocalizations.of(context)!.login,
+                                    style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w600),
                                   ),
@@ -316,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text("hoặc",
+                              child: Text(AppLocalizations.of(context)!.or,
                                   style: TextStyle(
                                       color: Colors.grey.shade500,
                                       fontSize: 13)),
@@ -340,17 +342,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                   size: 18,
                                   color: Colors.black54),
                             ),
-                            label: const Text(
-                              "Đăng nhập bằng Google",
-                              style: TextStyle(
+                            label: Text(
+                              AppLocalizations.of(context)!.loginWithGoogle,
+                              style: const TextStyle(
                                   fontSize: 13, color: Colors.black87),
                             ),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               side: const BorderSide(color: Color(0xFFDDDDDD)),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                                  borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ),
@@ -366,14 +367,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   builder: (_) => const RegisterScreen()),
                             ),
                             child: RichText(
-                              text: const TextSpan(
-                                text: "Chưa có tài khoản? ",
-                                style: TextStyle(
+                              text: TextSpan(
+                                text: AppLocalizations.of(context)!.noAccount,
+                                style: const TextStyle(
                                     color: Colors.grey, fontSize: 13),
                                 children: [
                                   TextSpan(
-                                    text: "Đăng ký ngay",
-                                    style: TextStyle(
+                                    text: AppLocalizations.of(context)!.registerNow,
+                                    style: const TextStyle(
                                       color: Color(0xFF4CAF50),
                                       fontWeight: FontWeight.w600,
                                     ),

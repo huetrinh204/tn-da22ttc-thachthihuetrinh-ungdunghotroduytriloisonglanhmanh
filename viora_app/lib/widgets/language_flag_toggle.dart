@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
 import '../l10n/app_localizations.dart';
+import '../providers/locale_provider.dart';
 
 /// Nút chọn ngôn ngữ (🇻🇳 / 🇬🇧) dùng trên màn hình đăng nhập.
 class LanguageFlagToggle extends StatelessWidget {
@@ -8,8 +8,7 @@ class LanguageFlagToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localeProvider = myAppKey.currentState?.localeProvider;
-    if (localeProvider == null) return const SizedBox.shrink();
+    final localeProvider = LocaleProvider.global;
 
     return ListenableBuilder(
       listenable: localeProvider,

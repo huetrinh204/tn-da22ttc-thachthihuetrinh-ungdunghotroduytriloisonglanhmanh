@@ -12,6 +12,7 @@ import 'achievements_screen.dart';
 import 'stats_screen.dart';
 import 'notification_settings_screen.dart';
 import 'forgot_password_screen.dart';
+import '../providers/locale_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -658,10 +659,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildLanguageTile() {
-    final localeProvider = myAppKey.currentState?.localeProvider;
-    if (localeProvider == null) {
-      return const SizedBox.shrink();
-    }
+    final localeProvider = LocaleProvider.global;
     
     return ListenableBuilder(
       listenable: localeProvider,
@@ -722,8 +720,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showLanguageSheet(String currentLanguageCode) {
     final l10n = AppLocalizations.of(context)!;
-    final localeProvider = myAppKey.currentState?.localeProvider;
-    if (localeProvider == null) return;
+    final localeProvider = LocaleProvider.global;
     
     showModalBottomSheet(
       context: context,

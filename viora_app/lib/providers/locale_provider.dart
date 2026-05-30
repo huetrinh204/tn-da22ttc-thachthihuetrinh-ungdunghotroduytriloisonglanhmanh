@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocaleProvider extends ChangeNotifier {
+  static LocaleProvider? _globalInstance;
+  static LocaleProvider get global => _globalInstance ??= LocaleProvider();
+
   Locale _locale = const Locale('vi');
 
   Locale get locale => _locale;
 
   LocaleProvider() {
+    _globalInstance = this;
     _loadLocale();
   }
 

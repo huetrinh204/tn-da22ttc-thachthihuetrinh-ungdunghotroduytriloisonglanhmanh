@@ -15,6 +15,8 @@ import 'grow_screen.dart';
 import 'community_screen.dart';
 import 'profile_screen.dart';
 import 'onboarding_screen.dart';
+import '../services/notification_inbox_store.dart';
+import 'notifications_inbox_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -101,6 +103,24 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         _levelUpToLevel = newLevel.clamp(1, 15);
         _showGlobalLevelUpAnimation = true;
       });
+
+      // Add level up notification
+      final lang = prefs.getString('language_code') ?? 'vi';
+      if (lang == 'en') {
+        await NotificationInboxStore.add(
+          title: 'Congratulations on Level Up! 🎉',
+          body: 'Your virtual plant has successfully leveled up to Level $newLevel! Keep up the good work!',
+          emoji: '🌳',
+          targetTab: 3,
+        );
+      } else {
+        await NotificationInboxStore.add(
+          title: 'Chúc mừng lên cấp! 🎉',
+          body: 'Cây ảo của bạn đã nâng cấp thành công lên Cấp $newLevel! Hãy tiếp tục duy trì thói quen tốt nhé!',
+          emoji: '🌳',
+          targetTab: 3,
+        );
+      }
     } finally {
       _isCheckingPlantLevel = false;
     }
@@ -242,6 +262,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   int totalToday = 0;
   bool isLoading = true;
   bool profileIncomplete = false;
+  int unreadNotificationsCount = 0;
 
   // Plant data
   String plantType = "sprout";
@@ -278,6 +299,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     final habitsRes = await ApiService.getTodayHabits(token);
     final plantRes = await ApiService.getPlant(token);
     final incomplete = await FlowPrefs.isProfileIncomplete();
+    
+    // Load notifications unread count
+    final inboxItems = await NotificationInboxStore.load();
+    final unread = inboxItems.where((item) => !item.isRead).length;
 
     if (!mounted) return;
     setState(() {
@@ -285,6 +310,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       currentStreak = streakRes["streak"]?["current_streak"] ?? 0;
       longestStreak = streakRes["streak"]?["longest_streak"] ?? 0;
       profileIncomplete = incomplete;
+      unreadNotificationsCount = unread;
 
       final habits = habitsRes["habits"] as List? ?? [];
       totalToday = habits.length;
@@ -402,6 +428,52 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     return l10n.goodEvening;
   }
 
+  Widget _buildNotificationButton() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications_none_rounded,
+              color: AppColors.primary, size: 26),
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationsInboxScreen()),
+            );
+            _loadData(); // refresh count when returning
+          },
+        ),
+        if (unreadNotificationsCount > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16,
+                minHeight: 16,
+              ),
+              child: Center(
+                child: Text(
+                  '$unreadNotificationsCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final progress = totalToday == 0 ? 0.0 : completedToday / totalToday;
@@ -414,7 +486,12 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: const VioraAppBar(showLogo: true),
+      appBar: VioraAppBar(
+        showLogo: true,
+        actions: [
+          _buildNotificationButton(),
+        ],
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -701,6 +778,33 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     );
   }
 
+  Color _getProgressColor(double progress) {
+    if (progress == 0.0) {
+      return const Color(0xFFD32F2F); // Red
+    }
+    if (progress < 0.35) {
+      return Color.lerp(
+        const Color(0xFFD32F2F), // Red
+        const Color(0xFFF57C00), // Orange
+        progress / 0.35,
+      )!;
+    } else if (progress < 0.7) {
+      return Color.lerp(
+        const Color(0xFFF57C00), // Orange
+        const Color(0xFFFBC02D), // Amber/Yellow
+        (progress - 0.35) / 0.35,
+      )!;
+    } else if (progress < 1.0) {
+      return Color.lerp(
+        const Color(0xFFFBC02D), // Amber/Yellow
+        const Color(0xFF4CAF50), // Green
+        (progress - 0.7) / 0.3,
+      )!;
+    } else {
+      return const Color(0xFF2E7D32); // Deep Green
+    }
+  }
+
   Widget _buildTodayCard(double progress) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -726,93 +830,99 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8F5E9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.today_rounded,
-                        color: Color(0xFF2E7D32), size: 18),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.today_rounded,
+                            color: Color(0xFF2E7D32), size: 18),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        l10n.today,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: context.textPrimary,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    l10n.today,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: context.textPrimary,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: allDone
+                          ? const Color(0xFFE8F5E9)
+                          : const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      l10n.completed(completedToday, totalToday),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: allDone
+                            ? const Color(0xFF2E7D32)
+                            : const Color(0xFF666666),
+                      ),
                     ),
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: allDone
-                      ? const Color(0xFFE8F5E9)
-                      : const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  l10n.completed(completedToday, totalToday),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: allDone
-                        ? const Color(0xFF2E7D32)
-                        : const Color(0xFF666666),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: totalToday == 0
+                      ? 0.0
+                      : (completedToday == 0 ? 0.06 : progress),
+                  minHeight: 10,
+                  backgroundColor: (totalToday > 0 && completedToday == 0)
+                      ? const Color(0xFFFFEBEE)
+                      : const Color(0xFFE8F5E9),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    totalToday == 0
+                        ? const Color(0xFFBDBDBD)
+                        : _getProgressColor(progress),
                   ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-              backgroundColor: const Color(0xFFE8F5E9),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                allDone ? const Color(0xFF2E7D32) : const Color(0xFF4CAF50),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            totalToday == 0
-                ? l10n.noHabitsYet
-                : allDone
-                    ? l10n.allDoneToday
-                    : l10n.habitsRemaining(totalToday - completedToday),
-            style: TextStyle(
-              fontSize: 13,
-              color: allDone ? const Color(0xFF2E7D32) : Colors.grey,
-              fontWeight: allDone ? FontWeight.w500 : FontWeight.normal,
-            ),
-          ),
-          if (totalToday == 0) ...[
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l10n.tapToAddFirstHabit,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(height: 12),
+              Text(
+                totalToday == 0
+                    ? l10n.noHabitsYet
+                    : allDone
+                        ? l10n.allDoneToday
+                        : l10n.habitsRemaining(totalToday - completedToday),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: allDone ? const Color(0xFF2E7D32) : Colors.grey,
+                  fontWeight: allDone ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),
-            ),
-          ],
-          ],
+              if (totalToday == 0) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    l10n.tapToAddFirstHabit,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),
