@@ -1392,4 +1392,52 @@ class AppLocalizationsVi extends AppLocalizations {
   String daysAgo(int count) {
     return '$count ngày trước';
   }
+
+  @override
+  String get followers => 'Người theo dõi';
+
+  @override
+  String get posts => 'Bài viết';
+
+  @override
+  String get viewProfile => 'Xem hồ sơ';
+
+  @override
+  String notifLike(String name) {
+    return '$name đã thích bài viết của bạn';
+  }
+
+  @override
+  String notifComment(String name) {
+    return '$name đã bình luận về bài viết của bạn';
+  }
+
+  @override
+  String notifFollow(String name) {
+    return '$name đã bắt đầu theo dõi bạn';
+  }
+
+  @override
+  String get tapToChangeAvatar => 'Chạm để thay ảnh đại diện';
+
+  @override
+  String get avatarUpdated => 'Đã cập nhật ảnh đại diện';
+
+  @override
+  String get avatarUpdateFailed => 'Không thể cập nhật ảnh đại diện';
+
+  @override
+  String get searchResultsUsers => 'Người dùng';
+
+  @override
+  String get searchResultsPosts => 'Bài viết';
+
+  @override
+  String get shareAchievement => 'Chia sẻ thành tích';
+
+  @override
+  String get achievementShared => 'Đã chia sẻ thành tích lên cộng đồng!';
+
+  @override
+  String get noSearchResultsUsers => 'Không tìm thấy người dùng';
 }

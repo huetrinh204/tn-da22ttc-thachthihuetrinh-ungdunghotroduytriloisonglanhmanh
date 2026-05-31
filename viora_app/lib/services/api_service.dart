@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   // true = điện thoại thật, false = máy ảo (emulator)
@@ -709,7 +710,13 @@ class ApiService {
         Uri.parse("$baseUrl/community/upload"),
       );
       request.headers["Authorization"] = "Bearer $token";
-      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      final ext = imagePath.split('.').last.toLowerCase();
+      final mimeSubType = ext == 'png' ? 'png' : 'jpeg';
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        imagePath,
+        contentType: MediaType('image', mimeSubType),
+      ));
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -718,7 +725,102 @@ class ApiService {
       if (response.statusCode == 200) return data;
       return {"message": data["message"] ?? "Upload failed"};
     } catch (e) {
+      print("uploadImage error: $e");
       return {"message": "Network error"};
+    }
+  }
+
+  // ================= AUTH - UPLOAD AVATAR =================
+  static Future<Map<String, dynamic>> uploadAvatar(
+      String token, String imagePath) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/auth/avatar"),
+      );
+      request.headers["Authorization"] = "Bearer $token";
+      final ext = imagePath.split('.').last.toLowerCase();
+      final mimeSubType = ext == 'png' ? 'png' : 'jpeg';
+      request.files.add(await http.MultipartFile.fromPath(
+        'avatar',
+        imagePath,
+        contentType: MediaType('image', mimeSubType),
+      ));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Upload failed"};
+    } catch (e) {
+      print("uploadAvatar error: $e");
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - GET USER PROFILE =================
+  static Future<Map<String, dynamic>> getUserProfile(
+      String token, String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/users/$userId/profile"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - GET USER POSTS =================
+  static Future<Map<String, dynamic>> getUserPosts(
+      String token, String userId, {int page = 1}) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/users/$userId/posts?page=$page"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "posts": []};
+    } catch (e) {
+      return {"message": "Network error", "posts": []};
+    }
+  }
+
+  // ================= COMMUNITY - SEARCH =================
+  static Future<Map<String, dynamic>> searchCommunity(
+      String token, String query) async {
+    try {
+      final encoded = Uri.encodeQueryComponent(query);
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/search?q=$encoded"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "users": [], "posts": []};
+    } catch (e) {
+      return {"message": "Network error", "users": [], "posts": []};
+    }
+  }
+
+  // ================= COMMUNITY - GET NOTIFICATIONS =================
+  static Future<Map<String, dynamic>> getCommunityNotifications(
+      String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/notifications"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "notifications": []};
+    } catch (e) {
+      return {"message": "Network error", "notifications": []};
     }
   }
 }

@@ -5,11 +5,23 @@ import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import { sendOtpEmail } from "../services/email_service";
 import dotenv from "dotenv";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 dotenv.config();
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || "http://localhost:3000";
+
+function getBaseUrl(req?: any): string {
+  if (req && req.headers.host) {
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    return `${protocol}://${req.headers.host}`;
+  }
+  return PUBLIC_BASE_URL.replace(/\/$/, "");
+}
 
 // 👉 Google client
 const GOOGLE_CLIENT_ID =
@@ -17,6 +29,36 @@ const GOOGLE_CLIENT_ID =
 
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
+// Avatar upload setup
+const uploadsDir = path.join(__dirname, "../../uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const avatarStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadsDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || ".jpg";
+    cb(null, `avatar-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowed = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"];
+    if (file.mimetype.startsWith("image/") || allowed.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files allowed"));
+    }
+  },
+});
+
+// Ensure avatar_url column exists
+pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)").catch(() => {});
 
 // ================= REGISTER =================
 router.post("/register", async (req, res) => {
@@ -70,19 +112,60 @@ router.get("/profile", async (req, res) => {
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET);
     const [rows]: any = await pool.query(
-      "SELECT id, name, email, gender, birth_year, height, weight, goals, created_at FROM users WHERE id = ?",
+      "SELECT id, name, email, gender, birth_year, height, weight, goals, avatar_url, created_at FROM users WHERE id = ?",
       [decoded.id]
     );
 
     if (rows.length === 0) return res.status(404).json({ message: "User not found" });
 
-    res.json({ user: rows[0] });
+    const user = rows[0];
+    // Resolve avatar URL
+    if (user.avatar_url && !user.avatar_url.startsWith("http")) {
+      const base = getBaseUrl(req);
+      user.avatar_url = user.avatar_url.startsWith("/") ? `${base}${user.avatar_url}` : `${base}/${user.avatar_url}`;
+    }
+
+    res.json({ user });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
   }
 });
 
+// ================= UPLOAD AVATAR =================
+router.post("/avatar", (req: any, res: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+  const token = authHeader.split(" ")[1];
+
+  avatarUpload.single("avatar")(req, res, async (err: any) => {
+    if (err) return res.status(400).json({ message: err.message || "Upload failed" });
+    if (!req.file) return res.status(400).json({ message: "No image file" });
+
+    try {
+      const decoded: any = jwt.verify(token, JWT_SECRET);
+      const relativePath = `/uploads/${req.file.filename}`;
+      const base = getBaseUrl(req);
+      const avatarUrl = `${base}${relativePath}`;
+
+      // Delete old avatar if it's a local file
+      const [oldRows]: any = await pool.query("SELECT avatar_url FROM users WHERE id = ?", [decoded.id]);
+      if (oldRows.length && oldRows[0].avatar_url) {
+        const old = oldRows[0].avatar_url as string;
+        if (old.includes("/uploads/avatar-")) {
+          const oldFile = path.join(uploadsDir, path.basename(old));
+          if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
+        }
+      }
+
+      await pool.query("UPDATE users SET avatar_url = ? WHERE id = ?", [relativePath, decoded.id]);
+      res.json({ avatar_url: avatarUrl });
+    } catch (e) {
+      console.error("Avatar upload error:", e);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+});
 
 // ================= UPDATE PROFILE =================
 router.put("/profile", async (req, res) => {

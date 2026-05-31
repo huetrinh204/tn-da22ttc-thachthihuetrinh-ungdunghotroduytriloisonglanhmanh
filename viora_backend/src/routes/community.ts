@@ -12,6 +12,14 @@ const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || "http://localhost:3000";
 
+function getBaseUrl(req?: any): string {
+  if (req && req.headers.host) {
+    const protocol = req.secure || req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+    return `${protocol}://${req.headers.host}`;
+  }
+  return PUBLIC_BASE_URL.replace(/\/$/, "");
+}
+
 const uploadsDir = path.join(__dirname, "../../uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -29,11 +37,13 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowed = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"];
+    if (file.mimetype.startsWith("image/") || allowed.includes(ext)) {
+      cb(null, true);
+    } else {
       cb(new Error("Only image files allowed"));
-      return;
     }
-    cb(null, true);
   },
 });
 
@@ -51,12 +61,12 @@ function authMiddleware(req: any, res: Response, next: () => void) {
   }
 }
 
-function resolveImageUrl(imageUrl: string | null | undefined): string | null {
+function resolveImageUrl(imageUrl: string | null | undefined, req?: any): string | null {
   if (!imageUrl) return null;
   if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
     return imageUrl;
   }
-  const base = PUBLIC_BASE_URL.replace(/\/$/, "");
+  const base = getBaseUrl(req);
   return imageUrl.startsWith("/") ? `${base}${imageUrl}` : `${base}/${imageUrl}`;
 }
 
@@ -74,14 +84,14 @@ function parseHashtags(raw: unknown): string[] {
   return [];
 }
 
-function mapPostRow(row: any, currentUserId: number) {
+function mapPostRow(row: any, currentUserId: number, req?: any) {
   return {
     id: String(row.id),
     user_id: String(row.user_id),
     user_name: row.user_name,
-    user_avatar: row.user_avatar ?? null,
+    user_avatar: resolveImageUrl(row.user_avatar, req),
     content: row.content,
-    image_url: resolveImageUrl(row.image_url),
+    image_url: resolveImageUrl(row.image_url, req),
     hashtags: parseHashtags(row.hashtags),
     like_count: Number(row.like_count) || 0,
     comment_count: Number(row.comment_count) || 0,
@@ -111,6 +121,7 @@ const POST_SELECT = `
     p.id,
     p.user_id,
     u.name AS user_name,
+    u.avatar_url AS user_avatar,
     p.content,
     p.image_url,
     p.hashtags,
@@ -127,10 +138,10 @@ const POST_SELECT = `
   JOIN users u ON u.id = p.user_id
 `;
 
-async function fetchPostById(postId: number, userId: number) {
+async function fetchPostById(postId: number, userId: number, req?: any) {
   const [rows]: any = await pool.query(`${POST_SELECT} WHERE p.id = ?`, [userId, postId]);
   if (!rows.length) return null;
-  return mapPostRow(rows[0], userId);
+  return mapPostRow(rows[0], userId, req);
 }
 
 // ================= GET POSTS =================
@@ -166,7 +177,7 @@ router.get("/posts", authMiddleware, async (req: any, res: Response) => {
     params.push(limit, offset);
 
     const [rows]: any = await pool.query(sql, params);
-    const posts = rows.map((row: any) => mapPostRow(row, userId));
+    const posts = rows.map((row: any) => mapPostRow(row, userId, req));
 
     res.json({ posts, page, limit, type });
   } catch (error) {
@@ -212,7 +223,7 @@ router.post("/posts", authMiddleware, async (req: any, res: Response) => {
       ]
     );
 
-    const post = await fetchPostById(result.insertId, userId);
+    const post = await fetchPostById(result.insertId, userId, req);
     res.json({ post });
   } catch (error) {
     console.log(error);
@@ -447,9 +458,11 @@ router.delete("/comments/:commentId/like", authMiddleware, async (req: any, res:
 router.post("/upload", authMiddleware, (req: any, res: Response) => {
   upload.single("image")(req, res, (err: any) => {
     if (err) {
+      console.error("Community image upload error:", err);
       return res.status(400).json({ message: err.message || "Upload failed" });
     }
     if (!req.file) {
+      console.error("Community image upload: No image file provided");
       return res.status(400).json({ message: "No image file" });
     }
 
@@ -496,6 +509,218 @@ router.delete("/users/:userId/follow", authMiddleware, async (req: any, res: Res
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= GET USER PROFILE =================
+router.get("/users/:userId/profile", authMiddleware, async (req: any, res: Response) => {
+  const targetUserId = parseInt(req.params.userId, 10);
+  const currentUserId = req.user.id;
+  const PUBLIC_BASE_URL_LOCAL = process.env.PUBLIC_BASE_URL || "http://localhost:3000";
+
+  if (isNaN(targetUserId)) return res.status(400).json({ message: "Invalid user id" });
+
+  try {
+    const [userRows]: any = await pool.query(
+      "SELECT id, name, avatar_url FROM users WHERE id = ?",
+      [targetUserId]
+    );
+    if (!userRows.length) return res.status(404).json({ message: "User not found" });
+
+    const user = userRows[0];
+    if (user.avatar_url && !user.avatar_url.startsWith("http")) {
+      const base = getBaseUrl(req);
+      user.avatar_url = user.avatar_url.startsWith("/") ? `${base}${user.avatar_url}` : `${base}/${user.avatar_url}`;
+    }
+
+    const [postCountRows]: any = await pool.query(
+      "SELECT COUNT(*) AS cnt FROM community_posts WHERE user_id = ?",
+      [targetUserId]
+    );
+    const [followerCountRows]: any = await pool.query(
+      "SELECT COUNT(*) AS cnt FROM user_follows WHERE following_id = ?",
+      [targetUserId]
+    );
+    const [followingCountRows]: any = await pool.query(
+      "SELECT COUNT(*) AS cnt FROM user_follows WHERE follower_id = ?",
+      [targetUserId]
+    );
+    const [isFollowingRows]: any = await pool.query(
+      "SELECT 1 FROM user_follows WHERE follower_id = ? AND following_id = ?",
+      [currentUserId, targetUserId]
+    );
+
+    res.json({
+      user: {
+        ...user,
+        post_count: Number(postCountRows[0].cnt),
+        follower_count: Number(followerCountRows[0].cnt),
+        following_count: Number(followingCountRows[0].cnt),
+        is_following: isFollowingRows.length > 0,
+        is_own_profile: targetUserId === currentUserId,
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= GET USER POSTS =================
+router.get("/users/:userId/posts", authMiddleware, async (req: any, res: Response) => {
+  const targetUserId = parseInt(req.params.userId, 10);
+  const currentUserId = req.user.id;
+  const page = Math.max(1, parseInt(String(req.query.page || "1"), 10) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit || "20"), 10) || 20));
+  const offset = (page - 1) * limit;
+
+  if (isNaN(targetUserId)) return res.status(400).json({ message: "Invalid user id", posts: [] });
+
+  try {
+    const [rows]: any = await pool.query(
+      `${POST_SELECT} WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+      [currentUserId, targetUserId, limit, offset]
+    );
+    const posts = rows.map((row: any) => mapPostRow(row, currentUserId, req));
+    res.json({ posts, page, limit });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", posts: [] });
+  }
+});
+
+// ================= SEARCH =================
+router.get("/search", authMiddleware, async (req: any, res: Response) => {
+  const q = String(req.query.q || "").trim();
+  const currentUserId = req.user.id;
+  const PUBLIC_BASE_URL_LOCAL = process.env.PUBLIC_BASE_URL || "http://localhost:3000";
+
+  if (!q || q.length < 2) return res.json({ users: [], posts: [] });
+
+  try {
+    // Search users
+    const [userRows]: any = await pool.query(
+      "SELECT id, name, avatar_url FROM users WHERE name LIKE ? LIMIT 10",
+      [`%${q}%`]
+    );
+    const users = userRows.map((u: any) => {
+      if (u.avatar_url && !u.avatar_url.startsWith("http")) {
+        const base = getBaseUrl(req);
+        u.avatar_url = u.avatar_url.startsWith("/") ? `${base}${u.avatar_url}` : `${base}/${u.avatar_url}`;
+      }
+      return { ...u, id: String(u.id) };
+    });
+
+    // Search posts by content or hashtag
+    const [postRows]: any = await pool.query(
+      `${POST_SELECT} WHERE (p.content LIKE ? OR JSON_SEARCH(p.hashtags, 'one', ?) IS NOT NULL)
+       ORDER BY p.created_at DESC LIMIT 20`,
+      [currentUserId, `%${q}%`, `%${q}%`]
+    );
+    const posts = postRows.map((row: any) => mapPostRow(row, currentUserId, req));
+
+    res.json({ users, posts });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", users: [], posts: [] });
+  }
+});
+
+// ================= NOTIFICATIONS =================
+router.get("/notifications", authMiddleware, async (req: any, res: Response) => {
+  const userId = req.user.id;
+
+  function resolveAvatar(avatarUrl: string | null): string | null {
+    if (!avatarUrl) return null;
+    if (avatarUrl.startsWith("http")) return avatarUrl;
+    const base = getBaseUrl(req);
+    return avatarUrl.startsWith("/") ? `${base}${avatarUrl}` : `${base}/${avatarUrl}`;
+  }
+
+  try {
+    // Recent likes on my posts
+    const [likeRows]: any = await pool.query(
+      `SELECT pl.created_at, u.id AS actor_id, u.name AS actor_name, u.avatar_url AS actor_avatar,
+              p.id AS post_id, p.content AS post_content
+       FROM community_post_likes pl
+       JOIN users u ON u.id = pl.user_id
+       JOIN community_posts p ON p.id = pl.post_id
+       WHERE p.user_id = ? AND pl.user_id != ?
+       ORDER BY pl.created_at DESC LIMIT 20`,
+      [userId, userId]
+    );
+
+    // Recent comments on my posts
+    const [commentRows]: any = await pool.query(
+      `SELECT c.created_at, u.id AS actor_id, u.name AS actor_name, u.avatar_url AS actor_avatar,
+              p.id AS post_id, p.content AS post_content, c.content AS comment_content
+       FROM community_comments c
+       JOIN users u ON u.id = c.user_id
+       JOIN community_posts p ON p.id = c.post_id
+       WHERE p.user_id = ? AND c.user_id != ?
+       ORDER BY c.created_at DESC LIMIT 20`,
+      [userId, userId]
+    );
+
+    // Recent followers
+    const [followRows]: any = await pool.query(
+      `SELECT uf.created_at, u.id AS actor_id, u.name AS actor_name, u.avatar_url AS actor_avatar
+       FROM user_follows uf
+       JOIN users u ON u.id = uf.follower_id
+       WHERE uf.following_id = ?
+       ORDER BY uf.created_at DESC LIMIT 20`,
+      [userId]
+    );
+
+    const notifications: any[] = [];
+
+    for (const row of likeRows) {
+      notifications.push({
+        id: `like_${row.actor_id}_${row.post_id}`,
+        type: "like",
+        actor_id: String(row.actor_id),
+        actor_name: row.actor_name,
+        actor_avatar: resolveAvatar(row.actor_avatar),
+        post_id: String(row.post_id),
+        post_content: row.post_content,
+        created_at: row.created_at,
+      });
+    }
+
+    for (const row of commentRows) {
+      notifications.push({
+        id: `comment_${row.actor_id}_${row.post_id}`,
+        type: "comment",
+        actor_id: String(row.actor_id),
+        actor_name: row.actor_name,
+        actor_avatar: resolveAvatar(row.actor_avatar),
+        post_id: String(row.post_id),
+        post_content: row.post_content,
+        comment_content: row.comment_content,
+        created_at: row.created_at,
+      });
+    }
+
+    for (const row of followRows) {
+      notifications.push({
+        id: `follow_${row.actor_id}`,
+        type: "follow",
+        actor_id: String(row.actor_id),
+        actor_name: row.actor_name,
+        actor_avatar: resolveAvatar(row.actor_avatar),
+        created_at: row.created_at,
+      });
+    }
+
+    // Sort by created_at desc
+    notifications.sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    res.json({ notifications: notifications.slice(0, 50) });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", notifications: [] });
   }
 });
 

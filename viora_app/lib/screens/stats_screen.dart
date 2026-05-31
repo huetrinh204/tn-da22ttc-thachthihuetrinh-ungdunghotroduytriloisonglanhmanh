@@ -96,6 +96,7 @@ class _StatsScreenState extends State<StatsScreen>
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
         title: l10n.statsTitle,
+        showBack: true,
         bottom: TabBar(
           controller: _tabController,
           labelColor: const Color(0xFF4CAF50),

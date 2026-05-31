@@ -2749,6 +2749,90 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{count} ngày trước'**
   String daysAgo(int count);
+
+  /// No description provided for @followers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người theo dõi'**
+  String get followers;
+
+  /// No description provided for @posts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết'**
+  String get posts;
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem hồ sơ'**
+  String get viewProfile;
+
+  /// No description provided for @notifLike.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} đã thích bài viết của bạn'**
+  String notifLike(String name);
+
+  /// No description provided for @notifComment.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} đã bình luận về bài viết của bạn'**
+  String notifComment(String name);
+
+  /// No description provided for @notifFollow.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} đã bắt đầu theo dõi bạn'**
+  String notifFollow(String name);
+
+  /// No description provided for @tapToChangeAvatar.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm để thay ảnh đại diện'**
+  String get tapToChangeAvatar;
+
+  /// No description provided for @avatarUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật ảnh đại diện'**
+  String get avatarUpdated;
+
+  /// No description provided for @avatarUpdateFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật ảnh đại diện'**
+  String get avatarUpdateFailed;
+
+  /// No description provided for @searchResultsUsers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get searchResultsUsers;
+
+  /// No description provided for @searchResultsPosts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết'**
+  String get searchResultsPosts;
+
+  /// No description provided for @shareAchievement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chia sẻ thành tích'**
+  String get shareAchievement;
+
+  /// No description provided for @achievementShared.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chia sẻ thành tích lên cộng đồng!'**
+  String get achievementShared;
+
+  /// No description provided for @noSearchResultsUsers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy người dùng'**
+  String get noSearchResultsUsers;
 }
 
 class _AppLocalizationsDelegate

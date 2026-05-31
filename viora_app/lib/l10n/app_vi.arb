@@ -637,5 +637,41 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "followers": "Người theo dõi",
+  "posts": "Bài viết",
+  "viewProfile": "Xem hồ sơ",
+  "notifLike": "{name} đã thích bài viết của bạn",
+  "@notifLike": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifComment": "{name} đã bình luận về bài viết của bạn",
+  "@notifComment": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifFollow": "{name} đã bắt đầu theo dõi bạn",
+  "@notifFollow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tapToChangeAvatar": "Chạm để thay ảnh đại diện",
+  "avatarUpdated": "Đã cập nhật ảnh đại diện",
+  "avatarUpdateFailed": "Không thể cập nhật ảnh đại diện",
+  "searchResultsUsers": "Người dùng",
+  "searchResultsPosts": "Bài viết",
+  "shareAchievement": "Chia sẻ thành tích",
+  "achievementShared": "Đã chia sẻ thành tích lên cộng đồng!",
+  "noSearchResultsUsers": "Không tìm thấy người dùng"
 }

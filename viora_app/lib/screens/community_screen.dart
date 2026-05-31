@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 import 'notifications_inbox_screen.dart';
+import 'user_profile_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -24,6 +25,7 @@ class _CommunityScreenState extends State<CommunityScreen>
   
   List<Post> _posts = [];
   List<Post> _filteredPosts = [];
+  List<Map<String, dynamic>> _searchUsers = [];
   bool _isLoading = false;
   bool _isSearching = false;
   String? _loadError;
@@ -63,21 +65,40 @@ class _CommunityScreenState extends State<CommunityScreen>
     }
   }
 
-  void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
+  void _onSearchChanged() async {
+    final query = _searchController.text.trim();
     if (query.isEmpty) {
       setState(() {
         _isSearching = false;
         _filteredPosts = [];
+        _searchUsers = [];
       });
-    } else {
+      return;
+    }
+
+    // Local filter first
+    setState(() {
+      _isSearching = true;
+      _filteredPosts = _posts.where((post) {
+        return post.content.toLowerCase().contains(query.toLowerCase()) ||
+               post.userName.toLowerCase().contains(query.toLowerCase()) ||
+               post.hashtags.any((tag) => tag.toLowerCase().contains(query.toLowerCase()));
+      }).toList();
+    });
+
+    // Backend search (debounce by using token check)
+    if (query.length >= 2 && (_token ?? '').isNotEmpty) {
+      final res = await ApiService.searchCommunity(_token!, query);
+      if (!mounted) return;
+      final searchPosts = (res['posts'] as List? ?? [])
+          .map((j) => Post.fromJson(j as Map<String, dynamic>))
+          .toList();
+      final searchUsers = (res['users'] as List? ?? [])
+          .cast<Map<String, dynamic>>()
+          .toList();
       setState(() {
-        _isSearching = true;
-        _filteredPosts = _posts.where((post) {
-          return post.content.toLowerCase().contains(query) ||
-                 post.userName.toLowerCase().contains(query) ||
-                 post.hashtags.any((tag) => tag.toLowerCase().contains(query));
-        }).toList();
+        _filteredPosts = searchPosts;
+        _searchUsers = searchUsers;
       });
     }
   }
@@ -164,6 +185,15 @@ class _CommunityScreenState extends State<CommunityScreen>
     if (deleted == true && mounted) {
       _refreshPosts();
     }
+  }
+
+  void _navigateToUserProfile(String userId, String userName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserProfileScreen(userId: userId, userName: userName),
+      ),
+    );
   }
 
   @override
@@ -419,12 +449,103 @@ class _CommunityScreenState extends State<CommunityScreen>
       );
     }
 
-    if (_isSearching && _filteredPosts.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.noSearchResults,
-          style: TextStyle(fontSize: 15, color: context.textSecondary),
-        ),
+    if (_isSearching) {
+      final hasUsers = _searchUsers.isNotEmpty;
+      final hasPosts = _filteredPosts.isNotEmpty;
+
+      if (!hasUsers && !hasPosts) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.search_off, size: 56, color: context.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                l10n.noSearchResults,
+                style: TextStyle(fontSize: 15, color: context.textSecondary),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        children: [
+          // User results
+          if (hasUsers) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                l10n.searchResultsUsers,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            ...(_searchUsers.map((u) {
+              final uid = u['id']?.toString() ?? '';
+              final uname = u['name'] as String? ?? '';
+              final uavatar = u['avatar_url'] as String?;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: context.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  onTap: () => _navigateToUserProfile(uid, uname),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                    ),
+                    child: uavatar != null
+                        ? ClipOval(
+                            child: Image.network(
+                              uavatar,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?',
+                                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18)),
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?',
+                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18)),
+                          ),
+                  ),
+                  title: Text(uname,
+                    style: TextStyle(fontWeight: FontWeight.w600, color: context.textPrimary)),
+                  trailing: const Icon(Icons.chevron_right, color: AppColors.primary),
+                ),
+              );
+            })),
+            const SizedBox(height: 8),
+          ],
+          // Post results
+          if (hasPosts) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                l10n.searchResultsPosts,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            ...(_filteredPosts.map((post) => _buildPostCard(post))),
+          ],
+        ],
       );
     }
 
@@ -507,48 +628,71 @@ class _CommunityScreenState extends State<CommunityScreen>
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Avatar
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      post.userName[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                // Avatar - tappable to view profile
+                GestureDetector(
+                  onTap: () => _navigateToUserProfile(post.userId, post.userName),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
+                    child: post.userAvatar != null
+                        ? ClipOval(
+                            child: Image.network(
+                              post.userAvatar!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Text(
+                                  post.userName[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              post.userName[0].toUpperCase(),
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Name & time
+                // Name & time - tappable to view profile
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.userName,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
+                  child: GestureDetector(
+                    onTap: () => _navigateToUserProfile(post.userId, post.userName),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          post.userName,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _formatTime(post.createdAt, l10n),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textSecondary,
+                        const SizedBox(height: 2),
+                        Text(
+                          _formatTime(post.createdAt, l10n),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 if (_canFollow(post.userId))

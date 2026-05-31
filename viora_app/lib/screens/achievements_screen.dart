@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/app_snackbar.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -259,69 +260,111 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   void _showDetail(Map<String, dynamic> ach, String? date) {
     final l10n = AppLocalizations.of(context)!;
+    bool isSharing = false;
+
     showDialog(
       context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: ctx.cardColor,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(ach["icon"] as String,
-                  style: const TextStyle(fontSize: 56)),
-              const SizedBox(height: 12),
-              Text(
-                ach["title"] as String,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: ctx.textGreen,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                ach["desc"] as String,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: ctx.textSecondary),
-              ),
-              if (date != null) ...[
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialog) => Dialog(
+          backgroundColor: ctx.cardColor,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(ach["icon"] as String,
+                    style: const TextStyle(fontSize: 56)),
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: ctx.infoBoxColor,
-                    borderRadius: BorderRadius.circular(12),
+                Text(
+                  ach["title"] as String,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: ctx.textGreen,
                   ),
-                  child: Text(
-                    l10n.unlockedOn(date),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: ctx.textGreenLight,
-                      fontWeight: FontWeight.w500,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  ach["desc"] as String,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: ctx.textSecondary),
+                ),
+                if (date != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: ctx.infoBoxColor,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      l10n.unlockedOn(date),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: ctx.textGreenLight,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                // Share button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: isSharing
+                        ? null
+                        : () async {
+                            setDialog(() => isSharing = true);
+                            final prefs = await SharedPreferences.getInstance();
+                            final token = prefs.getString('token') ?? '';
+                            final icon = ach['icon'] as String;
+                            final title = ach['title'] as String;
+                            final desc = ach['desc'] as String;
+                            final content = '$icon $title\n$desc';
+                            await ApiService.createPost(
+                              token: token,
+                              content: content,
+                              hashtags: ['#thanhTich', '#achievement'],
+                            );
+                            setDialog(() => isSharing = false);
+                            if (!mounted) return;
+                            Navigator.pop(ctx);
+                            AppSnackbar.showSuccess(
+                                context, l10n.achievementShared);
+                          },
+                    icon: isSharing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.share_outlined, size: 18),
+                    label: Text(l10n.shareAchievement),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),
-              ],
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(l10n.close,
+                        style: TextStyle(color: ctx.textSecondary)),
                   ),
-                  child: Text(l10n.close),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

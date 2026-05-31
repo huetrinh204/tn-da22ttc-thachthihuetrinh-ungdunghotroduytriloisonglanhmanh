@@ -1,5 +1,9 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'api_service.dart';
+
+/// Notification type enum
+enum NotifType { like, comment, follow, achievement, plantLevel, other }
 
 class InboxItem {
   final String id;
@@ -9,6 +13,12 @@ class InboxItem {
   final int? targetTab;
   final bool isRead;
   final DateTime createdAt;
+  // Extended fields for social notifications
+  final NotifType type;
+  final String? actorName;
+  final String? actorAvatar;
+  final String? postId;
+  final String? actorId;
 
   InboxItem({
     required this.id,
@@ -18,6 +28,11 @@ class InboxItem {
     this.targetTab,
     this.isRead = false,
     required this.createdAt,
+    this.type = NotifType.other,
+    this.actorName,
+    this.actorAvatar,
+    this.postId,
+    this.actorId,
   });
 
   Map<String, dynamic> toJson() => {
@@ -28,143 +43,167 @@ class InboxItem {
         'target_tab': targetTab,
         'is_read': isRead,
         'created_at': createdAt.toIso8601String(),
+        'type': type.name,
+        'actor_name': actorName,
+        'actor_avatar': actorAvatar,
+        'post_id': postId,
+        'actor_id': actorId,
       };
 
-  factory InboxItem.fromJson(Map<String, dynamic> json) => InboxItem(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        body: json['body'] as String,
-        emoji: json['emoji'] as String? ?? '🔔',
-        targetTab: json['target_tab'] as int?,
-        isRead: json['is_read'] == true,
-        createdAt: DateTime.parse(json['created_at'] as String),
-      );
+  factory InboxItem.fromJson(Map<String, dynamic> json) {
+    NotifType parsedType = NotifType.other;
+    final typeStr = json['type'] as String? ?? '';
+    switch (typeStr) {
+      case 'like': parsedType = NotifType.like; break;
+      case 'comment': parsedType = NotifType.comment; break;
+      case 'follow': parsedType = NotifType.follow; break;
+      case 'achievement': parsedType = NotifType.achievement; break;
+      case 'plantLevel': parsedType = NotifType.plantLevel; break;
+    }
+
+    return InboxItem(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      body: json['body'] as String,
+      emoji: json['emoji'] as String? ?? '🔔',
+      targetTab: json['target_tab'] as int?,
+      isRead: json['is_read'] == true,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      type: parsedType,
+      actorName: json['actor_name'] as String?,
+      actorAvatar: json['actor_avatar'] as String?,
+      postId: json['post_id'] as String?,
+      actorId: json['actor_id'] as String?,
+    );
+  }
+
+  /// Build InboxItem from backend notification payload
+  static InboxItem fromBackendNotif(Map<String, dynamic> n, {bool isRead = false}) {
+    final type = n['type'] as String? ?? 'other';
+    final actorName = n['actor_name'] as String? ?? 'Someone';
+    final postId = n['post_id'] as String?;
+    final actorId = n['actor_id'] as String?;
+    final actorAvatar = n['actor_avatar'] as String?;
+    DateTime createdAt;
+    try {
+      createdAt = DateTime.parse(n['created_at'].toString()).toLocal();
+    } catch (_) {
+      createdAt = DateTime.now();
+    }
+
+    String title, body, emoji;
+    NotifType notifType;
+
+    switch (type) {
+      case 'like':
+        title = '$actorName liked your post';
+        final postContent = (n['post_content'] as String? ?? '').trim();
+        body = postContent.isNotEmpty
+            ? '"${postContent.length > 60 ? postContent.substring(0, 60) + "..." : postContent}"'
+            : 'liked your post.';
+        emoji = '❤️';
+        notifType = NotifType.like;
+        break;
+      case 'comment':
+        title = '$actorName commented on your post';
+        final commentContent = (n['comment_content'] as String? ?? '').trim();
+        body = commentContent.isNotEmpty ? '"$commentContent"' : 'commented on your post.';
+        emoji = '💬';
+        notifType = NotifType.comment;
+        break;
+      case 'follow':
+        title = '$actorName started following you';
+        body = 'Tap to view their profile.';
+        emoji = '👤';
+        notifType = NotifType.follow;
+        break;
+      default:
+        title = 'New notification';
+        body = '';
+        emoji = '🔔';
+        notifType = NotifType.other;
+    }
+
+    return InboxItem(
+      id: n['id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      body: body,
+      emoji: emoji,
+      targetTab: 2,
+      isRead: isRead,
+      createdAt: createdAt,
+      type: notifType,
+      actorName: actorName,
+      actorAvatar: actorAvatar,
+      postId: postId,
+      actorId: actorId,
+    );
+  }
 }
 
 class NotificationInboxStore {
-  static const _key = 'notification_inbox_v1';
+  static const _key = 'notification_inbox_v2'; // bumped version
+  static const _readKey = 'notification_read_ids_v2';
   static const _maxItems = 50;
 
-  static Future<List<InboxItem>> load() async {
+  /// Load notifications: merges backend social notifs + local achievement/plant notifs
+  static Future<List<InboxItem>> load({String? token}) async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_key);
-    if (raw == null || raw.isEmpty) {
-      final lang = prefs.getString('language_code') ?? 'vi';
-      final now = DateTime.now();
-      final List<InboxItem> defaultItems;
-      
-      if (lang == 'en') {
-        defaultItems = [
-          InboxItem(
-            id: 'mock_1',
-            title: 'Someone liked your post',
-            body: 'Nguyễn Văn A and 3 others liked your post "Growing virtual plant with healthy habits...".',
-            emoji: '❤️',
-            targetTab: 2,
-            createdAt: now.subtract(const Duration(minutes: 5)),
-          ),
-          InboxItem(
-            id: 'mock_2',
-            title: 'New comment on your post',
-            body: 'Lê Thị B commented: "Your plant is growing so fast! I am also trying to complete my habits every day."',
-            emoji: '💬',
-            targetTab: 2,
-            createdAt: now.subtract(const Duration(hours: 1)),
-          ),
-          InboxItem(
-            id: 'mock_3',
-            title: 'New post from followed user',
-            body: 'Trần Minh C posted a new article: "Today completed 100% of my 2L water drinking goal!"',
-            emoji: '👤',
-            targetTab: 2,
-            createdAt: now.subtract(const Duration(hours: 3)),
-          ),
-          InboxItem(
-            id: 'mock_4',
-            title: 'Congratulations on Level Up! 🎉',
-            body: 'Your virtual plant has grown to Level 5 (Sapling). Keep up the habits to grow it bigger!',
-            emoji: '🌳',
-            targetTab: 3,
-            createdAt: now.subtract(const Duration(days: 1)),
-          ),
-          InboxItem(
-            id: 'mock_5',
-            title: 'Achievement Unlocked 🏆',
-            body: 'You unlocked the "First Step" achievement by completing your first habit check-in.',
-            emoji: '🏆',
-            targetTab: 1,
-            createdAt: now.subtract(const Duration(days: 2)),
-          ),
-        ];
-      } else {
-        defaultItems = [
-          InboxItem(
-            id: 'mock_1',
-            title: 'Có người thích bài đăng của bạn',
-            body: 'Nguyễn Văn A và 3 người khác đã thích bài viết "Nuôi cây ảo cùng thói quen lành mạnh..." của bạn.',
-            emoji: '❤️',
-            targetTab: 2,
-            createdAt: now.subtract(const Duration(minutes: 5)),
-          ),
-          InboxItem(
-            id: 'mock_2',
-            title: 'Bình luận mới trên bài viết',
-            body: 'Lê Thị B đã bình luận: "Cây của bạn lớn nhanh quá! Mình cũng đang cố gắng hoàn thành thói quen mỗi ngày."',
-            emoji: '💬',
-            targetTab: 2,
-            createdAt: now.subtract(const Duration(hours: 1)),
-          ),
-          InboxItem(
-            id: 'mock_3',
-            title: 'Bài viết mới từ người theo dõi',
-            body: 'Trần Minh C đã đăng bài viết mới: "Hôm nay hoàn thành 100% mục tiêu uống 2L nước!"',
-            emoji: '👤',
-            targetTab: 2,
-            createdAt: now.subtract(const Duration(hours: 3)),
-          ),
-          InboxItem(
-            id: 'mock_4',
-            title: 'Chúc mừng lên cấp! 🎉',
-            body: 'Cây ảo của bạn đã phát triển lên Cấp 5 (Cây con). Hãy tiếp tục hoàn thành thói quen để cây lớn hơn nhé!',
-            emoji: '🌳',
-            targetTab: 3,
-            createdAt: now.subtract(const Duration(days: 1)),
-          ),
-          InboxItem(
-            id: 'mock_5',
-            title: 'Thành tích đã mở khóa 🏆',
-            body: 'Bạn đã mở khóa thành tích "Bước đầu tiên" nhờ hoàn thành check-in thói quen đầu tiên.',
-            emoji: '🏆',
-            targetTab: 1,
-            createdAt: now.subtract(const Duration(days: 2)),
-          ),
-        ];
-      }
+    final readIds = Set<String>.from(prefs.getStringList(_readKey) ?? []);
 
-      await prefs.setString(
-        _key,
-        jsonEncode(defaultItems.map((e) => e.toJson()).toList()),
-      );
-      return defaultItems;
+    // --- Local items (achievements, plant level-ups) ---
+    final localRaw = prefs.getString(_key);
+    List<InboxItem> localItems = [];
+    if (localRaw != null && localRaw.isNotEmpty) {
+      try {
+        final list = jsonDecode(localRaw) as List;
+        localItems = list
+            .map((e) => InboxItem.fromJson(e as Map<String, dynamic>))
+            .where((e) => e.type == NotifType.achievement || e.type == NotifType.plantLevel)
+            .toList();
+      } catch (_) {}
     }
-    try {
-      final list = jsonDecode(raw) as List;
-      return list
-          .map((e) => InboxItem.fromJson(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    } catch (_) {
-      return [];
+
+    // --- Backend social notifications ---
+    List<InboxItem> backendItems = [];
+    final tkn = token ?? prefs.getString('token') ?? '';
+    if (tkn.isNotEmpty) {
+      try {
+        final res = await ApiService.getCommunityNotifications(tkn);
+        final notifs = res['notifications'] as List? ?? [];
+        backendItems = notifs
+            .map((n) => InboxItem.fromBackendNotif(
+                  n as Map<String, dynamic>,
+                  isRead: readIds.contains(n['id'] as String? ?? ''),
+                ))
+            .toList();
+      } catch (_) {}
     }
+
+    // --- Merge: backend first, then local achievements ---
+    final all = [...backendItems, ...localItems];
+    all.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return all.take(_maxItems).toList();
   }
 
+  /// Add a local notification (achievement/plant level)
   static Future<void> add({
     required String title,
     required String body,
     String emoji = '🔔',
     int? targetTab,
+    NotifType type = NotifType.other,
   }) async {
-    final items = await load();
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    List<InboxItem> items = [];
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final list = jsonDecode(raw) as List;
+        items = list.map((e) => InboxItem.fromJson(e as Map<String, dynamic>)).toList();
+      } catch (_) {}
+    }
+
     final item = InboxItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
@@ -172,12 +211,12 @@ class NotificationInboxStore {
       emoji: emoji,
       targetTab: targetTab,
       createdAt: DateTime.now(),
+      type: type,
     );
     items.insert(0, item);
     if (items.length > _maxItems) {
       items.removeRange(_maxItems, items.length);
     }
-    final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       _key,
       jsonEncode(items.map((e) => e.toJson()).toList()),
@@ -185,25 +224,9 @@ class NotificationInboxStore {
   }
 
   static Future<void> markRead(String id) async {
-    final items = await load();
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].id == id) {
-        items[i] = InboxItem(
-          id: items[i].id,
-          title: items[i].title,
-          body: items[i].body,
-          emoji: items[i].emoji,
-          targetTab: items[i].targetTab,
-          isRead: true,
-          createdAt: items[i].createdAt,
-        );
-        break;
-      }
-    }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _key,
-      jsonEncode(items.map((e) => e.toJson()).toList()),
-    );
+    final readIds = Set<String>.from(prefs.getStringList(_readKey) ?? []);
+    readIds.add(id);
+    await prefs.setStringList(_readKey, readIds.toList());
   }
 }

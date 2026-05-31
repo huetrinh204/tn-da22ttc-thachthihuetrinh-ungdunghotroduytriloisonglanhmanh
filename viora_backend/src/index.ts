@@ -12,6 +12,16 @@ import { startCronJobs, sendMorningEmails, sendEveningEmails } from "./services/
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Request logger middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    console.log(`[HTTP] ${req.method} ${req.originalUrl || req.url} - ${res.statusCode} (${Date.now() - start}ms)`);
+  });
+  next();
+});
+
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/auth", authRoutes);
 app.use("/habits", habitRoutes);

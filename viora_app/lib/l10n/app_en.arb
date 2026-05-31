@@ -637,5 +637,41 @@
         "type": "int"
       }
     }
-  }
+  },
+
+  "followers": "Followers",
+  "posts": "Posts",
+  "viewProfile": "View Profile",
+  "notifLike": "{name} liked your post",
+  "@notifLike": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifComment": "{name} commented on your post",
+  "@notifComment": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifFollow": "{name} started following you",
+  "@notifFollow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "tapToChangeAvatar": "Tap to change avatar",
+  "avatarUpdated": "Avatar updated successfully",
+  "avatarUpdateFailed": "Failed to update avatar",
+  "searchResultsUsers": "Users",
+  "searchResultsPosts": "Posts",
+  "shareAchievement": "Share Achievement",
+  "achievementShared": "Achievement shared to community!",
+  "noSearchResultsUsers": "No users found"
 }

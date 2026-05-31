@@ -7,6 +7,7 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import 'user_profile_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final Post post;
@@ -314,53 +315,88 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   Widget _buildPostHeader() {
     final l10n = AppLocalizations.of(context)!;
+
+    void goToProfile() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserProfileScreen(
+            userId: _post.userId,
+            userName: _post.userName,
+          ),
+        ),
+      );
+    }
     
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Avatar
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                _post.userName[0].toUpperCase(),
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+          // Avatar — tappable
+          GestureDetector(
+            onTap: goToProfile,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
+              child: _post.userAvatar != null
+                  ? ClipOval(
+                      child: Image.network(
+                        _post.userAvatar!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Text(
+                            _post.userName[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Text(
+                        _post.userName[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 12),
-          // Name & time
+          // Name & time — tappable
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _post.userName,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
+            child: GestureDetector(
+              onTap: goToProfile,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _post.userName,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: context.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _formatTime(_post.createdAt, l10n),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: context.textSecondary,
+                  const SizedBox(height: 2),
+                  Text(
+                    _formatTime(_post.createdAt, l10n),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: context.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // Streak badge

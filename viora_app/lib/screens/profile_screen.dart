@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/viora_app_bar.dart';
@@ -33,6 +34,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double? height;
   double? weight;
   List<String> goals = [];
+  String? avatarUrl;
+  bool _isUploadingAvatar = false;
 
   final List<Map<String, dynamic>> goalOptions = [
     {"id": "eat_healthy", "label": "Ăn lành mạnh", "icon": "🥗"},
@@ -60,6 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       email = user["email"] ?? "";
       gender = user["gender"];
       birthYear = user["birth_year"];
+      avatarUrl = user["avatar_url"] as String?;
       height = user["height"] != null
           ? double.tryParse(user["height"].toString())
           : null;
@@ -72,6 +76,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       isLoading = false;
     });
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final l10n = AppLocalizations.of(context)!;
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+    if (!mounted) return;
+    setState(() => _isUploadingAvatar = true);
+    final res = await ApiService.uploadAvatar(token, picked.path);
+    if (!mounted) return;
+    setState(() => _isUploadingAvatar = false);
+    if (res['avatar_url'] != null) {
+      setState(() => avatarUrl = res['avatar_url'] as String);
+      AppSnackbar.showSuccess(context, l10n.avatarUpdated);
+    } else {
+      AppSnackbar.showError(context, l10n.avatarUpdateFailed);
+    }
   }
 
   void _handleLogout() async {
@@ -856,6 +883,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildAvatarCard() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -868,15 +896,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 36,
-            backgroundColor: Colors.white.withValues(alpha: 0.3),
-            child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : "?",
-              style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
+          // Avatar — tappable to upload
+          GestureDetector(
+            onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
+            child: Stack(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
+                  ),
+                  child: _isUploadingAvatar
+                      ? const Center(
+                          child: SizedBox(
+                            width: 28, height: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: Colors.white,
+                            ),
+                          ),
+                        )
+                      : avatarUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                avatarUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Text(
+                                    name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                    style: const TextStyle(
+                                      fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: const TextStyle(
+                                  fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white,
+                                ),
+                              ),
+                            ),
+                ),
+                // Camera badge
+                if (!_isUploadingAvatar)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF4CAF50), width: 1.5),
+                      ),
+                      child: const Icon(Icons.camera_alt, size: 14, color: Color(0xFF4CAF50)),
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 16),
@@ -892,6 +973,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(email,
                     style: const TextStyle(
                         fontSize: 13, color: Colors.white70)),
+                const SizedBox(height: 6),
+                Text(
+                  l10n.tapToChangeAvatar,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.white60,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ],
             ),
           ),

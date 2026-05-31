@@ -1391,4 +1391,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String daysAgo(int count) {
     return '$count days ago';
   }
+
+  @override
+  String get followers => 'Followers';
+
+  @override
+  String get posts => 'Posts';
+
+  @override
+  String get viewProfile => 'View Profile';
+
+  @override
+  String notifLike(String name) {
+    return '$name liked your post';
+  }
+
+  @override
+  String notifComment(String name) {
+    return '$name commented on your post';
+  }
+
+  @override
+  String notifFollow(String name) {
+    return '$name started following you';
+  }
+
+  @override
+  String get tapToChangeAvatar => 'Tap to change avatar';
+
+  @override
+  String get avatarUpdated => 'Avatar updated successfully';
+
+  @override
+  String get avatarUpdateFailed => 'Failed to update avatar';
+
+  @override
+  String get searchResultsUsers => 'Users';
+
+  @override
+  String get searchResultsPosts => 'Posts';
+
+  @override
+  String get shareAchievement => 'Share Achievement';
+
+  @override
+  String get achievementShared => 'Achievement shared to community!';
+
+  @override
+  String get noSearchResultsUsers => 'No users found';
 }
