@@ -6,16 +6,17 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import 'followers_list_screen.dart';
 import 'post_detail_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
-  final String? userName;
+  final String userName;
 
   const UserProfileScreen({
     super.key,
     required this.userId,
-    this.userName,
+    required this.userName,
   });
 
   @override
@@ -23,190 +24,258 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
-  String? _token;
-  Map<String, dynamic>? _userInfo;
-  List<Post> _posts = [];
+  Map<String, dynamic>? _userProfile;
+  List<Post> _userPosts = [];
   bool _isLoading = true;
-  bool _isFollowLoading = false;
+  bool _isLoadingPosts = false;
+  String? _error;
   bool _isFollowing = false;
+  bool _isFollowedBack = false;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _loadUserProfile();
+    _loadUserPosts();
   }
 
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString("token") ?? "";
+  Future<void> _loadUserProfile() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
-    final profileRes = await ApiService.getUserProfile(_token!, widget.userId);
-    final postsRes = await ApiService.getUserPosts(_token!, widget.userId);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+
+    // Get current user ID
+    final profile = await ApiService.getProfile(token);
+    if (profile["user"] != null) {
+      _currentUserId = profile["user"]["id"]?.toString();
+    }
+
+    // Get user profile
+    final response = await ApiService.getUserProfile(token, widget.userId);
 
     if (!mounted) return;
 
+    if (response["user"] != null) {
+      setState(() {
+        _userProfile = response["user"];
+        _isFollowing = response["user"]["is_following"] ?? false;
+        _isFollowedBack = response["user"]["is_followed_back"] ?? false;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _error = response["message"] ?? "Failed to load profile";
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadUserPosts() async {
     setState(() {
-      _isLoading = false;
-      if (profileRes["user"] != null) {
-        _userInfo = profileRes["user"];
-        _isFollowing = _userInfo!["is_following"] == true;
-      }
-      if (postsRes["posts"] != null) {
-        final postsData = postsRes["posts"] as List;
-        _posts = postsData.map((json) => Post.fromJson(json)).toList();
-      }
+      _isLoadingPosts = true;
     });
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+
+    final response = await ApiService.getUserPosts(token, widget.userId);
+
+    if (!mounted) return;
+
+    if (response["posts"] != null) {
+      final posts = (response["posts"] as List)
+          .map((j) => Post.fromJson(j as Map<String, dynamic>))
+          .toList();
+      setState(() {
+        _userPosts = posts;
+        _isLoadingPosts = false;
+      });
+    } else {
+      setState(() {
+        _isLoadingPosts = false;
+      });
+    }
   }
 
   Future<void> _toggleFollow() async {
-    if (_token == null || _userInfo == null) return;
-    setState(() => _isFollowLoading = true);
+    if (_currentUserId == null || _currentUserId == widget.userId) return;
 
-    final response = _isFollowing
-        ? await ApiService.unfollowUser(_token!, widget.userId)
-        : await ApiService.followUser(_token!, widget.userId);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
 
-    if (!mounted) return;
-    setState(() => _isFollowLoading = false);
+    final wasFollowing = _isFollowing;
+    setState(() {
+      _isFollowing = !wasFollowing;
+      if (_userProfile != null) {
+        final currentFollowers = _userProfile!['follower_count'] as int? ?? 0;
+        _userProfile!['follower_count'] = wasFollowing 
+            ? currentFollowers - 1 
+            : currentFollowers + 1;
+      }
+    });
 
-    if (response["message"] == null ||
-        response["message"] == "Followed" ||
-        response["message"] == "Unfollowed") {
+    final response = wasFollowing
+        ? await ApiService.unfollowUser(token, widget.userId)
+        : await ApiService.followUser(token, widget.userId);
+
+    if (response["message"] != null && mounted) {
       setState(() {
-        _isFollowing = !_isFollowing;
-        if (_userInfo != null) {
-          final currentCount = (_userInfo!["follower_count"] as int? ?? 0);
-          _userInfo!["follower_count"] =
-              _isFollowing ? currentCount + 1 : (currentCount - 1).clamp(0, 999999);
+        _isFollowing = wasFollowing;
+        if (_userProfile != null) {
+          final currentFollowers = _userProfile!['follower_count'] as int? ?? 0;
+          _userProfile!['follower_count'] = wasFollowing 
+              ? currentFollowers + 1 
+              : currentFollowers - 1;
         }
       });
-      // Persist in prefs
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getStringList("following_user_ids") ?? [];
-      if (_isFollowing) {
-        saved.add(widget.userId);
-      } else {
-        saved.remove(widget.userId);
-      }
-      await prefs.setStringList("following_user_ids", saved);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(response["message"] as String),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
+  }
+
+  void _navigateToFollowers() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FollowersListScreen(
+          userId: widget.userId,
+          userName: widget.userName,
+          type: 'followers',
+        ),
+      ),
+    );
+  }
+
+  void _navigateToFollowing() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FollowersListScreen(
+          userId: widget.userId,
+          userName: widget.userName,
+          type: 'following',
+        ),
+      ),
+    );
+  }
+
+  void _navigateToPostDetail(Post post) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PostDetailScreen(post: post),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final isOwnProfile = _userInfo?["is_own_profile"] == true;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
-        title: _userInfo?["name"] ?? widget.userName ?? l10n.profile,
+        title: widget.userName,
         showBack: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : RefreshIndicator(
-              onRefresh: _load,
-              color: AppColors.primary,
-              child: CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: _buildProfileHeader(l10n, isOwnProfile)),
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                      child: Text(
-                        l10n.posts,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: context.textPrimary,
-                        ),
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline,
+                          size: 48, color: context.textSecondary),
+                      const SizedBox(height: 16),
+                      Text(_error!,
+                          style: TextStyle(color: context.textSecondary)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadUserProfile,
+                        child: Text(l10n.retry),
                       ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: () async {
+                    await _loadUserProfile();
+                    await _loadUserPosts();
+                  },
+                  color: AppColors.primary,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
+                        _buildProfileHeader(l10n),
+                        _buildPostsList(l10n),
+                      ],
                     ),
                   ),
-                  if (_posts.isEmpty)
-                    SliverFillRemaining(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text("📝", style: TextStyle(fontSize: 56)),
-                            const SizedBox(height: 16),
-                            Text(
-                              l10n.noPosts,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: context.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (ctx, i) => _buildPostCard(_posts[i], l10n),
-                        childCount: _posts.length,
-                      ),
-                    ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
-                ],
-              ),
-            ),
+                ),
     );
   }
 
-  Widget _buildProfileHeader(AppLocalizations l10n, bool isOwnProfile) {
-    final name = _userInfo?["name"] ?? widget.userName ?? "—";
-    final avatarUrl = _userInfo?["avatar_url"] as String?;
-    final postCount = _userInfo?["post_count"] as int? ?? 0;
-    final followerCount = _userInfo?["follower_count"] as int? ?? 0;
-    final followingCount = _userInfo?["following_count"] as int? ?? 0;
+  Widget _buildProfileHeader(AppLocalizations l10n) {
+    final user = _userProfile;
+    if (user == null) return const SizedBox.shrink();
+
+    final followersCount = user['follower_count'] as int? ?? 0;
+    final followingCount = user['following_count'] as int? ?? 0;
+    final postsCount = user['post_count'] as int? ?? 0;
+    final bio = user['bio'] as String?;
+    final avatar = user['avatar_url'] as String?;
 
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: context.cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Avatar + name
+          // Avatar & Name
           Row(
             children: [
               // Avatar
               Container(
-                width: 72,
-                height: 72,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
                   color: AppColors.primary.withValues(alpha: 0.1),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    width: 2,
-                  ),
+                  shape: BoxShape.circle,
                 ),
-                child: avatarUrl != null
+                child: avatar != null
                     ? ClipOval(
                         child: Image.network(
-                          avatarUrl,
+                          avatar,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Center(
                             child: Text(
-                              name[0].toUpperCase(),
+                              widget.userName[0].toUpperCase(),
                               style: const TextStyle(
                                 color: AppColors.primary,
-                                fontSize: 28,
+                                fontSize: 32,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -215,204 +284,286 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       )
                     : Center(
                         child: Text(
-                          name[0].toUpperCase(),
+                          widget.userName[0].toUpperCase(),
                           style: const TextStyle(
                             color: AppColors.primary,
-                            fontSize: 28,
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
               ),
               const SizedBox(width: 16),
-              // Name + follow button
+              // Name & Stats
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      widget.userName,
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    if (!isOwnProfile)
-                      SizedBox(
-                        width: double.infinity,
-                        child: _isFollowLoading
-                            ? const Center(
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              )
-                            : ElevatedButton(
-                                onPressed: _toggleFollow,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _isFollowing
-                                      ? context.inputFill
-                                      : AppColors.primary,
-                                  foregroundColor: _isFollowing
-                                      ? context.textSecondary
-                                      : Colors.white,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    side: BorderSide(
-                                      color: _isFollowing
-                                          ? context.infoBoxBorder
-                                          : Colors.transparent,
-                                    ),
-                                  ),
-                                ),
-                                child: Text(
-                                  _isFollowing ? l10n.followingUser : l10n.followUser,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
+                    if (bio != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        bio,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.textSecondary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                    ],
+                    const SizedBox(height: 12),
+                    // Stats
+                    Row(
+                      children: [
+                        _buildStatItem(postsCount.toString(), l10n.posts),
+                        const SizedBox(width: 20),
+                        GestureDetector(
+                          onTap: _navigateToFollowers,
+                          child: _buildStatItem(
+                              followersCount.toString(), l10n.followers),
+                        ),
+                        const SizedBox(width: 20),
+                        GestureDetector(
+                          onTap: _navigateToFollowing,
+                          child: _buildStatItem(
+                              followingCount.toString(), l10n.following),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          // Stats row
-          Row(
-            children: [
-              _buildStat(l10n.posts, postCount),
-              _buildStatDivider(),
-              _buildStat(l10n.followers, followerCount),
-              _buildStatDivider(),
-              _buildStat(l10n.following, followingCount),
-            ],
-          ),
+          // Follow button
+          if (_currentUserId != null && _currentUserId != widget.userId) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: OutlinedButton(
+                onPressed: _toggleFollow,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: _isFollowing
+                      ? Colors.transparent
+                      : AppColors.primary,
+                  foregroundColor: _isFollowing
+                      ? AppColors.primary
+                      : Colors.white,
+                  side: BorderSide(
+                    color: AppColors.primary,
+                    width: 1,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      _isFollowing && _isFollowedBack
+                          ? Icons.people
+                          : _isFollowing
+                              ? Icons.person_remove_outlined
+                              : Icons.person_add_outlined,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _isFollowing && _isFollowedBack
+                          ? l10n.friends
+                          : _isFollowing
+                              ? l10n.followingUser
+                              : l10n.followUser,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildStat(String label, int value) {
-    return Expanded(
+  Widget _buildStatItem(String count, String label) {
+    return Column(
+      children: [
+        Text(
+          count,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: context.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: context.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPostsList(AppLocalizations l10n) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '$value',
+            l10n.posts,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
               color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: context.textSecondary,
+          const SizedBox(height: 12),
+          if (_isLoadingPosts)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          else if (_userPosts.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(Icons.article_outlined,
+                        size: 48, color: context.textSecondary),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.noPosts,
+                      style: TextStyle(color: context.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _userPosts.length,
+              itemBuilder: (context, index) {
+                return _buildPostItem(_userPosts[index], l10n);
+              },
             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatDivider() {
-    return Container(
-      width: 1,
-      height: 32,
-      color: context.infoBoxBorder,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-    );
-  }
-
-  Widget _buildPostCard(Post post, AppLocalizations l10n) {
+  Widget _buildPostItem(Post post, AppLocalizations l10n) {
     return GestureDetector(
-      onTap: () async {
-        final deleted = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute(builder: (_) => PostDetailScreen(post: post)),
-        );
-        if (deleted == true && mounted) _load();
-      },
+      onTap: () => _navigateToPostDetail(post),
       child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: context.inputFill,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.infoBoxBorder),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Time
-            Text(
-              _formatTime(post.createdAt, l10n),
-              style: TextStyle(fontSize: 12, color: context.textSecondary),
-            ),
+            // Content
             if (post.content.isNotEmpty) ...[
-              const SizedBox(height: 8),
               Text(
                 post.content,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 14,
                   color: context.textPrimary,
-                  height: 1.5,
                 ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
+              const SizedBox(height: 8),
             ],
+            // Image preview
             if (post.imageUrl != null) ...[
-              const SizedBox(height: 10),
               ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  post.imageUrl!,
-                  width: double.infinity,
-                  height: 160,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                borderRadius: BorderRadius.circular(8),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(
+                    post.imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: context.inputFill,
+                      child: Icon(Icons.broken_image,
+                          color: context.textSecondary),
+                    ),
+                  ),
                 ),
               ),
+              const SizedBox(height: 8),
             ],
-            const SizedBox(height: 10),
+            // Stats
             Row(
               children: [
-                Icon(
-                  post.isLiked ? Icons.favorite : Icons.favorite_border,
-                  size: 16,
-                  color: post.isLiked ? Colors.red : context.textSecondary,
-                ),
+                Icon(Icons.favorite,
+                    size: 16,
+                    color: post.isLiked ? Colors.red : context.textSecondary),
                 const SizedBox(width: 4),
                 Text(
-                  '${post.likeCount}',
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                  post.likeCount.toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textSecondary,
+                  ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.chat_bubble_outline, size: 16, color: context.textSecondary),
+                Icon(Icons.comment,
+                    size: 16, color: context.textSecondary),
                 const SizedBox(width: 4),
                 Text(
-                  '${post.commentCount}',
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                  post.commentCount.toString(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  _formatTime(post.createdAt, l10n),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -425,6 +576,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   String _formatTime(DateTime time, AppLocalizations l10n) {
     final now = DateTime.now();
     final diff = now.difference(time);
+
     if (diff.inMinutes < 1) return l10n.justNow;
     if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
     if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);

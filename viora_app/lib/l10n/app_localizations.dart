@@ -2354,6 +2354,12 @@ abstract class AppLocalizations {
   /// **'Đang theo'**
   String get followingUser;
 
+  /// No description provided for @friends.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn bè'**
+  String get friends;
+
   /// No description provided for @retry.
   ///
   /// In vi, this message translates to:

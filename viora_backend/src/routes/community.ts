@@ -99,6 +99,9 @@ function mapPostRow(row: any, currentUserId: number, req?: any) {
     created_at: row.created_at,
     challenge_name: row.challenge_name ?? null,
     days_streak: row.days_streak != null ? Number(row.days_streak) : null,
+    is_following: Boolean(row.is_following),
+    is_followed_back: Boolean(row.is_followed_back),
+    is_own_post: Number(row.user_id) === currentUserId,
   };
 }
 
@@ -133,13 +136,21 @@ const POST_SELECT = `
     EXISTS(
       SELECT 1 FROM community_post_likes pl2
       WHERE pl2.post_id = p.id AND pl2.user_id = ?
-    ) AS is_liked
+    ) AS is_liked,
+    EXISTS(
+      SELECT 1 FROM user_follows uf
+      WHERE uf.follower_id = ? AND uf.following_id = p.user_id
+    ) AS is_following,
+    EXISTS(
+      SELECT 1 FROM user_follows uf2
+      WHERE uf2.follower_id = p.user_id AND uf2.following_id = ?
+    ) AS is_followed_back
   FROM community_posts p
   JOIN users u ON u.id = p.user_id
 `;
 
 async function fetchPostById(postId: number, userId: number, req?: any) {
-  const [rows]: any = await pool.query(`${POST_SELECT} WHERE p.id = ?`, [userId, postId]);
+  const [rows]: any = await pool.query(`${POST_SELECT} WHERE p.id = ?`, [userId, userId, userId, postId]);
   if (!rows.length) return null;
   return mapPostRow(rows[0], userId, req);
 }
@@ -154,7 +165,7 @@ router.get("/posts", authMiddleware, async (req: any, res: Response) => {
 
   try {
     let sql = `${POST_SELECT}`;
-    const params: any[] = [userId];
+    const params: any[] = [userId, userId, userId];
 
     if (type === "following") {
       sql += `
@@ -549,6 +560,12 @@ router.get("/users/:userId/profile", authMiddleware, async (req: any, res: Respo
       "SELECT 1 FROM user_follows WHERE follower_id = ? AND following_id = ?",
       [currentUserId, targetUserId]
     );
+    
+    // Check if target user follows back
+    const [isFollowedBackRows]: any = await pool.query(
+      "SELECT 1 FROM user_follows WHERE follower_id = ? AND following_id = ?",
+      [targetUserId, currentUserId]
+    );
 
     res.json({
       user: {
@@ -557,6 +574,7 @@ router.get("/users/:userId/profile", authMiddleware, async (req: any, res: Respo
         follower_count: Number(followerCountRows[0].cnt),
         following_count: Number(followingCountRows[0].cnt),
         is_following: isFollowingRows.length > 0,
+        is_followed_back: isFollowedBackRows.length > 0,
         is_own_profile: targetUserId === currentUserId,
       }
     });
@@ -579,7 +597,7 @@ router.get("/users/:userId/posts", authMiddleware, async (req: any, res: Respons
   try {
     const [rows]: any = await pool.query(
       `${POST_SELECT} WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
-      [currentUserId, targetUserId, limit, offset]
+      [currentUserId, currentUserId, currentUserId, targetUserId, limit, offset]
     );
     const posts = rows.map((row: any) => mapPostRow(row, currentUserId, req));
     res.json({ posts, page, limit });
@@ -615,7 +633,7 @@ router.get("/search", authMiddleware, async (req: any, res: Response) => {
     const [postRows]: any = await pool.query(
       `${POST_SELECT} WHERE (p.content LIKE ? OR JSON_SEARCH(p.hashtags, 'one', ?) IS NOT NULL)
        ORDER BY p.created_at DESC LIMIT 20`,
-      [currentUserId, `%${q}%`, `%${q}%`]
+      [currentUserId, currentUserId, currentUserId, `%${q}%`, `%${q}%`]
     );
     const posts = postRows.map((row: any) => mapPostRow(row, currentUserId, req));
 
@@ -623,6 +641,96 @@ router.get("/search", authMiddleware, async (req: any, res: Response) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error", users: [], posts: [] });
+  }
+});
+
+// ================= GET FOLLOWERS =================
+router.get("/users/:userId/followers", authMiddleware, async (req: any, res: Response) => {
+  const targetUserId = parseInt(req.params.userId, 10);
+  const currentUserId = req.user.id;
+
+  if (isNaN(targetUserId)) return res.status(400).json({ message: "Invalid user id", users: [] });
+
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT 
+        u.id,
+        u.name,
+        u.avatar_url,
+        EXISTS(
+          SELECT 1 FROM user_follows uf2
+          WHERE uf2.follower_id = ? AND uf2.following_id = u.id
+        ) AS is_following,
+        EXISTS(
+          SELECT 1 FROM user_follows uf3
+          WHERE uf3.follower_id = u.id AND uf3.following_id = ?
+        ) AS is_followed_back,
+        (u.id = ?) AS is_current_user
+      FROM user_follows uf
+      JOIN users u ON u.id = uf.follower_id
+      WHERE uf.following_id = ?
+      ORDER BY uf.created_at DESC`,
+      [currentUserId, currentUserId, currentUserId, targetUserId]
+    );
+
+    const users = rows.map((row: any) => ({
+      id: String(row.id),
+      name: row.name,
+      avatar_url: resolveImageUrl(row.avatar_url, req),
+      is_following: Boolean(row.is_following),
+      is_followed_back: Boolean(row.is_followed_back),
+      is_current_user: Boolean(row.is_current_user),
+    }));
+
+    res.json({ users });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", users: [] });
+  }
+});
+
+// ================= GET FOLLOWING =================
+router.get("/users/:userId/following", authMiddleware, async (req: any, res: Response) => {
+  const targetUserId = parseInt(req.params.userId, 10);
+  const currentUserId = req.user.id;
+
+  if (isNaN(targetUserId)) return res.status(400).json({ message: "Invalid user id", users: [] });
+
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT 
+        u.id,
+        u.name,
+        u.avatar_url,
+        EXISTS(
+          SELECT 1 FROM user_follows uf2
+          WHERE uf2.follower_id = ? AND uf2.following_id = u.id
+        ) AS is_following,
+        EXISTS(
+          SELECT 1 FROM user_follows uf3
+          WHERE uf3.follower_id = u.id AND uf3.following_id = ?
+        ) AS is_followed_back,
+        (u.id = ?) AS is_current_user
+      FROM user_follows uf
+      JOIN users u ON u.id = uf.following_id
+      WHERE uf.follower_id = ?
+      ORDER BY uf.created_at DESC`,
+      [currentUserId, currentUserId, currentUserId, targetUserId]
+    );
+
+    const users = rows.map((row: any) => ({
+      id: String(row.id),
+      name: row.name,
+      avatar_url: resolveImageUrl(row.avatar_url, req),
+      is_following: Boolean(row.is_following),
+      is_followed_back: Boolean(row.is_followed_back),
+      is_current_user: Boolean(row.is_current_user),
+    }));
+
+    res.json({ users });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", users: [] });
   }
 });
 

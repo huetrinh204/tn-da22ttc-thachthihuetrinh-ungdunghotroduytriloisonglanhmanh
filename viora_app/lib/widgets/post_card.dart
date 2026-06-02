@@ -68,13 +68,42 @@ class PostCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        post.userName,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: context.textPrimary,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            post.userName,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                          // Following/Friend badge
+                          if (!post.isOwnPost && post.isFollowing) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: post.isFollowing && post.isFollowedBack
+                                    ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                post.isFollowing && post.isFollowedBack
+                                    ? l10n.friends
+                                    : l10n.followingUser,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: post.isFollowing && post.isFollowedBack
+                                      ? const Color(0xFF4CAF50)
+                                      : Colors.grey.shade600,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 2),
                       Text(

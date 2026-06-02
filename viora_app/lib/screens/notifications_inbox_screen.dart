@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/notification.dart';
+import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
-import '../services/notification_inbox_store.dart';
+import 'user_profile_screen.dart';
+import 'post_detail_screen.dart';
+import '../models/post.dart';
 
 class NotificationsInboxScreen extends StatefulWidget {
   const NotificationsInboxScreen({super.key});
@@ -15,135 +19,124 @@ class NotificationsInboxScreen extends StatefulWidget {
 }
 
 class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
-  List<InboxItem> _items = [];
-  bool _loading = true;
-  String? _token;
+  List<CommunityNotification> _notifications = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _loadNotifications();
   }
 
-  Future<void> _load() async {
+  Future<void> _loadNotifications() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('token') ?? '';
+    final token = prefs.getString("token") ?? "";
 
-    final items = await NotificationInboxStore.load(token: _token);
+    final response = await ApiService.getNotifications(token);
+
     if (!mounted) return;
-    setState(() {
-      _items = items;
-      _loading = false;
-    });
-  }
 
-  void _openItem(InboxItem item) async {
-    await NotificationInboxStore.markRead(item.id);
-    setState(() {
-      final idx = _items.indexWhere((e) => e.id == item.id);
-      if (idx != -1) {
-        _items[idx] = InboxItem(
-          id: item.id,
-          title: item.title,
-          body: item.body,
-          emoji: item.emoji,
-          targetTab: item.targetTab,
-          isRead: true,
-          createdAt: item.createdAt,
-          type: item.type,
-          actorName: item.actorName,
-          actorAvatar: item.actorAvatar,
-          postId: item.postId,
-          actorId: item.actorId,
-        );
-      }
-    });
-  }
-
-  String _typeEmoji(NotifType type) {
-    switch (type) {
-      case NotifType.like: return '❤️';
-      case NotifType.comment: return '💬';
-      case NotifType.follow: return '👤';
-      case NotifType.achievement: return '🏆';
-      case NotifType.plantLevel: return '🌳';
-      case NotifType.other: return '🔔';
+    if (response["notifications"] != null) {
+      final notifs = (response["notifications"] as List)
+          .map((j) => CommunityNotification.fromJson(j as Map<String, dynamic>))
+          .toList();
+      setState(() {
+        _notifications = notifs;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _error = response["message"] ?? "Failed to load notifications";
+        _isLoading = false;
+      });
     }
   }
 
-  Color _typeColor(NotifType type) {
-    switch (type) {
-      case NotifType.like: return Colors.red;
-      case NotifType.comment: return AppColors.primary;
-      case NotifType.follow: return const Color(0xFF9C27B0);
-      case NotifType.achievement: return const Color(0xFFFF9800);
-      case NotifType.plantLevel: return AppColors.primary;
-      case NotifType.other: return Colors.grey;
-    }
+  Future<void> _markAsRead(String notificationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    await ApiService.markNotificationAsRead(token, notificationId);
   }
 
-  String _formatTime(DateTime time, AppLocalizations l10n) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return l10n.justNow;
-    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
-    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
-    return l10n.daysAgo(diff.inDays);
-  }
-
-  Widget _buildAvatar(InboxItem item) {
-    final avatarUrl = item.actorAvatar;
-    final name = item.actorName ?? '';
-    final color = _typeColor(item.type);
-
-    if (avatarUrl != null && avatarUrl.isNotEmpty) {
-      return ClipOval(
-        child: Image.network(
-          avatarUrl,
-          width: 48,
-          height: 48,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildInitialsAvatar(name, color),
-        ),
-      );
+  void _handleNotificationTap(CommunityNotification notif) async {
+    if (!notif.isRead) {
+      _markAsRead(notif.id);
+      setState(() {
+        final index = _notifications.indexWhere((n) => n.id == notif.id);
+        if (index != -1) {
+          _notifications[index] = CommunityNotification(
+            id: notif.id,
+            type: notif.type,
+            userId: notif.userId,
+            userName: notif.userName,
+            userAvatar: notif.userAvatar,
+            postId: notif.postId,
+            commentId: notif.commentId,
+            content: notif.content,
+            isRead: true,
+            createdAt: notif.createdAt,
+          );
+        }
+      });
     }
 
-    if (name.isNotEmpty) {
-      return _buildInitialsAvatar(name, color);
-    }
-
-    // System notifications (achievement, plant)
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(item.emoji, style: const TextStyle(fontSize: 22)),
-      ),
-    );
-  }
-
-  Widget _buildInitialsAvatar(String name, Color color) {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          name[0].toUpperCase(),
-          style: TextStyle(
-            color: color,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+    // Navigate based on notification type
+    if (notif.type == 'follow') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserProfileScreen(
+            userId: notif.userId,
+            userName: notif.userName,
           ),
         ),
-      ),
-    );
+      );
+    } else if (notif.type == 'like' || notif.type == 'comment') {
+      if (notif.postId != null) {
+        // Load post and navigate
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString("token") ?? "";
+        
+        // Fetch post details from API
+        final response = await ApiService.getPosts(token, limit: 100);
+        final posts = (response["posts"] as List? ?? [])
+            .map((j) => Post.fromJson(j as Map<String, dynamic>))
+            .toList();
+        
+        final post = posts.firstWhere(
+          (p) => p.id == notif.postId,
+          orElse: () => Post(
+            id: notif.postId!,
+            userId: notif.userId,
+            userName: notif.userName,
+            userAvatar: notif.userAvatar,
+            content: notif.content ?? '',
+            imageUrl: null,
+            likeCount: 0,
+            commentCount: 0,
+            isLiked: false,
+            hashtags: [],
+            createdAt: DateTime.now(),
+            daysStreak: null,
+          ),
+        );
+        
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PostDetailScreen(post: post),
+            ),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -156,150 +149,213 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
         title: l10n.notificationsTitle,
         showBack: true,
       ),
-      body: _loading
+      body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             )
-          : RefreshIndicator(
-              onRefresh: _load,
-              color: AppColors.primary,
-              child: _items.isEmpty
-                  ? ListView(
-                      children: [
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.6,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text('🔔', style: TextStyle(fontSize: 56)),
-                                const SizedBox(height: 16),
-                                Text(
-                                  l10n.noNotifications,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: context.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                                  child: Text(
-                                    l10n.noNotificationsHint,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: context.textSecondary,
-                                    ),
-                                  ),
-                                ),
-                              ],
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline,
+                          size: 48, color: context.textSecondary),
+                      const SizedBox(height: 16),
+                      Text(_error!,
+                          style: TextStyle(color: context.textSecondary)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadNotifications,
+                        child: Text(l10n.retry),
+                      ),
+                    ],
+                  ),
+                )
+              : _notifications.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("🔔", style: TextStyle(fontSize: 64)),
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.noNotifications,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            l10n.noNotificationsHint,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadNotifications,
+                      color: AppColors.primary,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _notifications.length,
+                        itemBuilder: (context, index) {
+                          return _buildNotificationItem(_notifications[index]);
+                        },
+                      ),
+                    ),
+    );
+  }
+
+  Widget _buildNotificationItem(CommunityNotification notif) {
+    final l10n = AppLocalizations.of(context)!;
+
+    IconData icon;
+    Color iconColor;
+    String message;
+
+    switch (notif.type) {
+      case 'like':
+        icon = Icons.favorite;
+        iconColor = Colors.red;
+        message = l10n.notifLike(notif.userName);
+        break;
+      case 'comment':
+        icon = Icons.comment;
+        iconColor = AppColors.primary;
+        message = l10n.notifComment(notif.userName);
+        break;
+      case 'follow':
+        icon = Icons.person_add;
+        iconColor = AppColors.primary;
+        message = l10n.notifFollow(notif.userName);
+        break;
+      default:
+        icon = Icons.notifications;
+        iconColor = context.textSecondary;
+        message = notif.content ?? '';
+    }
+
+    return GestureDetector(
+      onTap: () => _handleNotificationTap(notif),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: notif.isRead
+              ? context.cardColor
+              : AppColors.primary.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: notif.isRead
+                ? context.infoBoxBorder
+                : AppColors.primary.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: notif.userAvatar != null
+                  ? ClipOval(
+                      child: Image.network(
+                        notif.userAvatar!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Text(
+                            notif.userName[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (_, i) {
-                        final item = _items[i];
-                        final color = _typeColor(item.type);
-                        return Material(
-                          color: item.isRead
-                              ? context.cardColor
-                              : color.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(14),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(14),
-                            onTap: () => _openItem(item),
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Avatar / emoji
-                                  Stack(
-                                    children: [
-                                      _buildAvatar(item),
-                                      Positioned(
-                                        bottom: 0,
-                                        right: 0,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(2),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context).scaffoldBackgroundColor,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Text(
-                                            _typeEmoji(item.type),
-                                            style: const TextStyle(fontSize: 14),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Content
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item.title,
-                                          style: TextStyle(
-                                            fontWeight: item.isRead
-                                                ? FontWeight.w500
-                                                : FontWeight.w700,
-                                            color: context.textPrimary,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        if (item.body.isNotEmpty) ...[
-                                          const SizedBox(height: 3),
-                                          Text(
-                                            item.body,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: context.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          _formatTime(item.createdAt, l10n),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: color,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Unread dot
-                                  if (!item.isRead)
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      margin: const EdgeInsets.only(top: 4),
-                                      decoration: BoxDecoration(
-                                        color: color,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                  : Center(
+                      child: Text(
+                        notif.userName[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
             ),
+            const SizedBox(width: 12),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight:
+                                notif.isRead ? FontWeight.normal : FontWeight.w600,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Icon(icon, size: 18, color: iconColor),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatTime(notif.createdAt, l10n),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: context.textSecondary,
+                    ),
+                  ),
+                  if (notif.content != null &&
+                      notif.type != 'follow') ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      notif.content!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: context.textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  String _formatTime(DateTime time, AppLocalizations l10n) {
+    final now = DateTime.now();
+    final diff = now.difference(time);
+
+    if (diff.inMinutes < 1) return l10n.justNow;
+    if (diff.inHours < 1) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inDays < 1) return l10n.hoursAgo(diff.inHours);
+    return l10n.daysAgo(diff.inDays);
   }
 }

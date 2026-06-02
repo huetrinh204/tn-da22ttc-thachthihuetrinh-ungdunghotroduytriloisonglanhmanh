@@ -12,6 +12,9 @@ class Post {
   final DateTime createdAt;
   final String? challengeName; // Tên thử thách nếu có
   final int? daysStreak; // Số ngày streak nếu có
+  final bool isFollowing; // Current user is following post author
+  final bool isFollowedBack; // Post author is following current user back
+  final bool isOwnPost; // Post belongs to current user
 
   Post({
     required this.id,
@@ -27,6 +30,9 @@ class Post {
     required this.createdAt,
     this.challengeName,
     this.daysStreak,
+    this.isFollowing = false,
+    this.isFollowedBack = false,
+    this.isOwnPost = false,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -48,6 +54,9 @@ class Post {
           : DateTime.now(),
       challengeName: json['challenge_name'],
       daysStreak: json['days_streak'],
+      isFollowing: json['is_following'] ?? false,
+      isFollowedBack: json['is_followed_back'] ?? false,
+      isOwnPost: json['is_own_post'] ?? false,
     );
   }
 
@@ -66,6 +75,9 @@ class Post {
       'created_at': createdAt.toIso8601String(),
       'challenge_name': challengeName,
       'days_streak': daysStreak,
+      'is_following': isFollowing,
+      'is_followed_back': isFollowedBack,
+      'is_own_post': isOwnPost,
     };
   }
 
@@ -83,6 +95,9 @@ class Post {
     DateTime? createdAt,
     String? challengeName,
     int? daysStreak,
+    bool? isFollowing,
+    bool? isFollowedBack,
+    bool? isOwnPost,
   }) {
     return Post(
       id: id ?? this.id,
@@ -98,6 +113,9 @@ class Post {
       createdAt: createdAt ?? this.createdAt,
       challengeName: challengeName ?? this.challengeName,
       daysStreak: daysStreak ?? this.daysStreak,
+      isFollowing: isFollowing ?? this.isFollowing,
+      isFollowedBack: isFollowedBack ?? this.isFollowedBack,
+      isOwnPost: isOwnPost ?? this.isOwnPost,
     );
   }
 }

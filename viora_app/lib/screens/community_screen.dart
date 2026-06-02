@@ -750,16 +750,62 @@ class _CommunityScreenState extends State<CommunityScreen>
                 width: double.infinity,
                 height: 200,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 200,
-                  color: context.inputFill,
-                  child: Center(
-                    child: Icon(Icons.image_outlined, 
-                      size: 48, 
-                      color: context.textSecondary,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 200,
+                    color: context.inputFill,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  // Debug: print error để xem vấn đề
+                  print('❌ Image load error: $error');
+                  print('📍 Image URL: ${post.imageUrl}');
+                  return Container(
+                    height: 200,
+                    color: context.inputFill,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image_outlined, 
+                            size: 48, 
+                            color: context.textSecondary,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Không load được ảnh',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                          if (post.imageUrl!.length < 100)
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                post.imageUrl!,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: context.textSecondary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],

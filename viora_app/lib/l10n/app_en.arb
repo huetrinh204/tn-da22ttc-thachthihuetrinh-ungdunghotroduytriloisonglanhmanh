@@ -535,6 +535,7 @@
   "following": "Following",
   "followUser": "Follow",
   "followingUser": "Following",
+  "friends": "Friends",
   "retry": "Retry",
   "loadFeedError": "Could not load posts",
   "followingTabEmpty": "Follow others to see their posts here",

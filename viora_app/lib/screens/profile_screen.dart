@@ -13,6 +13,7 @@ import 'achievements_screen.dart';
 import 'stats_screen.dart';
 import 'notification_settings_screen.dart';
 import 'forgot_password_screen.dart';
+import 'followers_list_screen.dart';
 import '../providers/locale_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -36,6 +37,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<String> goals = [];
   String? avatarUrl;
   bool _isUploadingAvatar = false;
+  
+  // Community stats
+  int _followersCount = 0;
+  int _followingCount = 0;
+  int _postsCount = 0;
+  String? _currentUserId;
 
   final List<Map<String, dynamic>> goalOptions = [
     {"id": "eat_healthy", "label": "Ăn lành mạnh", "icon": "🥗"},
@@ -64,6 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       gender = user["gender"];
       birthYear = user["birth_year"];
       avatarUrl = user["avatar_url"] as String?;
+      _currentUserId = user["id"]?.toString();
       height = user["height"] != null
           ? double.tryParse(user["height"].toString())
           : null;
@@ -76,6 +84,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       isLoading = false;
     });
+    
+    // Load community stats
+    if (_currentUserId != null) {
+      _loadCommunityStats();
+    }
+  }
+  
+  Future<void> _loadCommunityStats() async {
+    if (_currentUserId == null) return;
+    final profileRes = await ApiService.getUserProfile(token, _currentUserId!);
+    if (!mounted) return;
+    if (profileRes["user"] != null) {
+      setState(() {
+        _followersCount = profileRes["user"]["follower_count"] as int? ?? 0;
+        _followingCount = profileRes["user"]["following_count"] as int? ?? 0;
+        _postsCount = profileRes["user"]["post_count"] as int? ?? 0;
+      });
+    }
   }
 
   Future<void> _pickAndUploadAvatar() async {
@@ -496,6 +522,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Avatar + name
                 _buildAvatarCard(),
                 const SizedBox(height: 16),
+                
+                // Community stats (Followers, Following, Posts)
+                if (_currentUserId != null) ...[
+                  _buildCommunityStatsCard(),
+                  const SizedBox(height: 16),
+                ],
 
                 // Personal info
                 _buildSection(l10n.personalInfo, [
@@ -1117,6 +1149,117 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
       trailing: Icon(Icons.chevron_right, color: context.textSecondary),
       onTap: _showEditGoalsSheet,
+    );
+  }
+
+  Widget _buildCommunityStatsCard() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(
+            count: _postsCount.toString(),
+            label: l10n.posts,
+            onTap: null, // Không cần navigate, chỉ hiển thị
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: context.infoBoxBorder,
+          ),
+          _buildStatItem(
+            count: _followersCount.toString(),
+            label: l10n.followers,
+            onTap: () {
+              if (_currentUserId == null) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FollowersListScreen(
+                    userId: _currentUserId!,
+                    userName: name,
+                    type: 'followers',
+                  ),
+                ),
+              );
+            },
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: context.infoBoxBorder,
+          ),
+          _buildStatItem(
+            count: _followingCount.toString(),
+            label: l10n.following,
+            onTap: () {
+              if (_currentUserId == null) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => FollowersListScreen(
+                    userId: _currentUserId!,
+                    userName: name,
+                    type: 'following',
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required String count,
+    required String label,
+    required VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: onTap != null
+            ? BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+              )
+            : null,
+        child: Column(
+          children: [
+            Text(
+              count,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -1178,6 +1178,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get followingUser => 'Đang theo';
 
   @override
+  String get friends => 'Bạn bè';
+
+  @override
   String get retry => 'Thử lại';
 
   @override

@@ -823,4 +823,71 @@ class ApiService {
       return {"message": "Network error", "notifications": []};
     }
   }
+
+  // ================= COMMUNITY - GET FOLLOWERS =================
+  static Future<Map<String, dynamic>> getFollowers(
+      String token, String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/users/$userId/followers"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"users": [], "message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"users": [], "message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - GET FOLLOWING =================
+  static Future<Map<String, dynamic>> getFollowing(
+      String token, String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/users/$userId/following"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"users": [], "message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"users": [], "message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - GET NOTIFICATIONS =================
+  static Future<Map<String, dynamic>> getNotifications(
+    String token, {
+    int page = 1,
+    int limit = 50,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/notifications?page=$page&limit=$limit"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"notifications": [], "message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"notifications": [], "message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - MARK NOTIFICATION AS READ =================
+  static Future<Map<String, dynamic>> markNotificationAsRead(
+      String token, String notificationId) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/community/notifications/$notificationId/read"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
 }
