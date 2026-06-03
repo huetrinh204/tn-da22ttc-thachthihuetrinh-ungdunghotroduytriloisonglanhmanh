@@ -2315,7 +2315,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareYourProgress.
   ///
   /// In vi, this message translates to:
-  /// **'Chia sẻ tiến độ của bạn...'**
+  /// **'Bạn muốn chia sẻ gì với mọi người nào?'**
   String get shareYourProgress;
 
   /// No description provided for @photo.

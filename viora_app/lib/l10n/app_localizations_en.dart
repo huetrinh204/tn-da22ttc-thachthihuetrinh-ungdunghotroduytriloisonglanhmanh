@@ -1154,7 +1154,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get community => 'Community';
 
   @override
-  String get shareYourProgress => 'Share your progress...';
+  String get shareYourProgress => 'What would you like to share with everyone?';
 
   @override
   String get photo => 'Photo';

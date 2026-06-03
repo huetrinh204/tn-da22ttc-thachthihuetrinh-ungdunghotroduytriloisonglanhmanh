@@ -300,9 +300,15 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     final plantRes = await ApiService.getPlant(token);
     final incomplete = await FlowPrefs.isProfileIncomplete();
     
-    // Load notifications unread count
-    final inboxItems = await NotificationInboxStore.load();
-    final unread = inboxItems.where((item) => !item.isRead).length;
+    // Load community notifications unread count
+    final notificationsRes = await ApiService.getNotifications(token);
+    int unread = 0;
+    if (notificationsRes["notifications"] != null) {
+      final notifs = notificationsRes["notifications"] as List;
+      // Backend doesn't have is_read field, so count all notifications
+      // Or we can assume all are unread until user taps
+      unread = notifs.length;
+    }
 
     if (!mounted) return;
     setState(() {
@@ -440,7 +446,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
               context,
               MaterialPageRoute(builder: (_) => const NotificationsInboxScreen()),
             );
-            _loadData(); // refresh count when returning
+            // Reset unread count after viewing
+            setState(() {
+              unreadNotificationsCount = 0;
+            });
           },
         ),
         if (unreadNotificationsCount > 0)

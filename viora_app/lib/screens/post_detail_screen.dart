@@ -846,7 +846,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             padding: const EdgeInsets.only(left: 48),
             child: Column(
               children: replies.map((replyJson) {
-                return _buildReplyItem(replyJson, l10n);
+                return _buildReplyItem(comment, replyJson, l10n);
               }).toList(),
             ),
           ),
@@ -855,7 +855,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
-  Widget _buildReplyItem(Map<String, dynamic> replyJson, AppLocalizations l10n) {
+  Widget _buildReplyItem(Comment comment, Map<String, dynamic> replyJson, AppLocalizations l10n) {
     final replyUserId = replyJson['user_id'] ?? '';
     final replyUserName = replyJson['user_name'] ?? 'Unknown';
     final replyUserAvatar = replyJson['user_avatar'];
@@ -959,12 +959,29 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  _formatTime(replyCreatedAt, l10n),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: context.textSecondary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      _formatTime(replyCreatedAt, l10n),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Reply button
+                    InkWell(
+                      onTap: () => _startReply(comment),
+                      child: Text(
+                        l10n.reply,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: context.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

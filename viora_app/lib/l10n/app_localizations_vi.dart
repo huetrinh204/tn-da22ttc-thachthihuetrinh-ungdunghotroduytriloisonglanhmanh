@@ -1157,7 +1157,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get community => 'Cộng đồng';
 
   @override
-  String get shareYourProgress => 'Chia sẻ tiến độ của bạn...';
+  String get shareYourProgress => 'Bạn muốn chia sẻ gì với mọi người nào?';
 
   @override
   String get photo => 'Ảnh';
