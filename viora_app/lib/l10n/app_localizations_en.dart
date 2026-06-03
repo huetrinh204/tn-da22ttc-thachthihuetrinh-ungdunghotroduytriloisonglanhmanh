@@ -1230,6 +1230,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get writeComment => 'Write a comment...';
 
   @override
+  String get writeReply => 'Write a reply...';
+
+  @override
+  String get reply => 'Reply';
+
+  @override
+  String get replies => 'Replies';
+
+  @override
+  String viewReplies(int count) {
+    return 'View $count replies';
+  }
+
+  @override
+  String get hideReplies => 'Hide replies';
+
+  @override
   String get send => 'Send';
 
   @override

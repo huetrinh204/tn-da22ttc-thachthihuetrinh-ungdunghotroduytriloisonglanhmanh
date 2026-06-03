@@ -567,6 +567,18 @@
   },
   "share": "Share",
   "writeComment": "Write a comment...",
+  "writeReply": "Write a reply...",
+  "reply": "Reply",
+  "replies": "Replies",
+  "viewReplies": "View {count} replies",
+  "@viewReplies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hideReplies": "Hide replies",
   "send": "Send",
   "deletePost": "Delete Post?",
   "confirmDeletePost": "Are you sure you want to delete this post?",

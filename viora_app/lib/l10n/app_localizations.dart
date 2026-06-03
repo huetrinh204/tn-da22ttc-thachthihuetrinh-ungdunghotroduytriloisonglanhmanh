@@ -2456,6 +2456,36 @@ abstract class AppLocalizations {
   /// **'Viết bình luận...'**
   String get writeComment;
 
+  /// No description provided for @writeReply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Viết trả lời...'**
+  String get writeReply;
+
+  /// No description provided for @reply.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời'**
+  String get reply;
+
+  /// No description provided for @replies.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời'**
+  String get replies;
+
+  /// No description provided for @viewReplies.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem {count} trả lời'**
+  String viewReplies(int count);
+
+  /// No description provided for @hideReplies.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn trả lời'**
+  String get hideReplies;
+
   /// No description provided for @send.
   ///
   /// In vi, this message translates to:

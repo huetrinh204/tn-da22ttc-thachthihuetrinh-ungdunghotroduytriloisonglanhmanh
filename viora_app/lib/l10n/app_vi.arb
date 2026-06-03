@@ -567,6 +567,18 @@
   },
   "share": "Chia sẻ",
   "writeComment": "Viết bình luận...",
+  "writeReply": "Viết trả lời...",
+  "reply": "Trả lời",
+  "replies": "Trả lời",
+  "viewReplies": "Xem {count} trả lời",
+  "@viewReplies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hideReplies": "Ẩn trả lời",
   "send": "Gửi",
   "deletePost": "Xóa bài viết?",
   "confirmDeletePost": "Bạn có chắc muốn xóa bài viết này không?",

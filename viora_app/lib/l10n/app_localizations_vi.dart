@@ -1233,6 +1233,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get writeComment => 'Viết bình luận...';
 
   @override
+  String get writeReply => 'Viết trả lời...';
+
+  @override
+  String get reply => 'Trả lời';
+
+  @override
+  String get replies => 'Trả lời';
+
+  @override
+  String viewReplies(int count) {
+    return 'Xem $count trả lời';
+  }
+
+  @override
+  String get hideReplies => 'Ẩn trả lời';
+
+  @override
   String get send => 'Gửi';
 
   @override
