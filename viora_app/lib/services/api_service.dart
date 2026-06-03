@@ -654,6 +654,45 @@ class ApiService {
     }
   }
 
+  // ================= COMMUNITY - GET COMMENT REPLIES =================
+  static Future<Map<String, dynamic>> getReplies(
+      String token, String commentId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/comments/$commentId/replies"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"replies": [], "message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"replies": [], "message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - CREATE COMMENT REPLY =================
+  static Future<Map<String, dynamic>> createReply({
+    required String token,
+    required String commentId,
+    required String content,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/comments/$commentId/replies"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"content": content}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
   // ================= COMMUNITY - DELETE POST =================
   static Future<Map<String, dynamic>> deletePost(
       String token, String postId) async {

@@ -7,6 +7,7 @@ class Comment {
   final String content;
   final int likeCount;
   final bool isLiked;
+  final int replyCount;
   final DateTime createdAt;
 
   Comment({
@@ -18,6 +19,7 @@ class Comment {
     required this.content,
     this.likeCount = 0,
     this.isLiked = false,
+    this.replyCount = 0,
     required this.createdAt,
   });
 
@@ -31,6 +33,7 @@ class Comment {
       content: json['content'] ?? '',
       likeCount: json['like_count'] ?? 0,
       isLiked: json['is_liked'] ?? false,
+      replyCount: json['reply_count'] ?? 0,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
@@ -47,6 +50,7 @@ class Comment {
       'content': content,
       'like_count': likeCount,
       'is_liked': isLiked,
+      'reply_count': replyCount,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -60,6 +64,7 @@ class Comment {
     String? content,
     int? likeCount,
     bool? isLiked,
+    int? replyCount,
     DateTime? createdAt,
   }) {
     return Comment(
@@ -71,6 +76,7 @@ class Comment {
       content: content ?? this.content,
       likeCount: likeCount ?? this.likeCount,
       isLiked: isLiked ?? this.isLiked,
+      replyCount: replyCount ?? this.replyCount,
       createdAt: createdAt ?? this.createdAt,
     );
   }

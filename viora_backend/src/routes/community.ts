@@ -105,16 +105,17 @@ function mapPostRow(row: any, currentUserId: number, req?: any) {
   };
 }
 
-function mapCommentRow(row: any) {
+function mapCommentRow(row: any, req?: any) {
   return {
     id: String(row.id),
     post_id: String(row.post_id),
     user_id: String(row.user_id),
     user_name: row.user_name,
-    user_avatar: row.user_avatar ?? null,
+    user_avatar: resolveImageUrl(row.user_avatar, req),
     content: row.content,
     like_count: Number(row.like_count) || 0,
     is_liked: Boolean(row.is_liked),
+    reply_count: Number(row.reply_count) || 0,
     created_at: row.created_at,
   };
 }
@@ -352,9 +353,11 @@ router.get("/posts/:postId/comments", authMiddleware, async (req: any, res: Resp
         c.post_id,
         c.user_id,
         u.name AS user_name,
+        u.avatar_url AS user_avatar,
         c.content,
         c.created_at,
         (SELECT COUNT(*) FROM community_comment_likes cl WHERE cl.comment_id = c.id) AS like_count,
+        (SELECT COUNT(*) FROM community_comment_replies cr WHERE cr.comment_id = c.id) AS reply_count,
         EXISTS(
           SELECT 1 FROM community_comment_likes cl2
           WHERE cl2.comment_id = c.id AND cl2.user_id = ?
@@ -367,7 +370,7 @@ router.get("/posts/:postId/comments", authMiddleware, async (req: any, res: Resp
       [userId, postId, limit, offset]
     );
 
-    res.json({ comments: rows.map(mapCommentRow), page, limit });
+    res.json({ comments: rows.map((row: any) => mapCommentRow(row, req)), page, limit });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error", comments: [] });
@@ -399,9 +402,11 @@ router.post("/posts/:postId/comments", authMiddleware, async (req: any, res: Res
         c.post_id,
         c.user_id,
         u.name AS user_name,
+        u.avatar_url AS user_avatar,
         c.content,
         c.created_at,
         0 AS like_count,
+        0 AS reply_count,
         0 AS is_liked
       FROM community_comments c
       JOIN users u ON u.id = c.user_id
@@ -409,7 +414,7 @@ router.post("/posts/:postId/comments", authMiddleware, async (req: any, res: Res
       [result.insertId]
     );
 
-    res.json({ comment: mapCommentRow(rows[0]) });
+    res.json({ comment: mapCommentRow(rows[0], req) });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -459,6 +464,103 @@ router.delete("/comments/:commentId/like", authMiddleware, async (req: any, res:
     );
 
     res.json({ like_count: countRows[0].cnt, is_liked: false });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= COMMENT REPLIES =================
+// Get replies for a comment
+router.get("/comments/:commentId/replies", authMiddleware, async (req: any, res: Response) => {
+  const commentId = parseInt(req.params.commentId, 10);
+  const userId = req.user.id;
+
+  if (isNaN(commentId)) return res.status(400).json({ message: "Invalid comment id", replies: [] });
+
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT
+        r.id,
+        r.comment_id,
+        r.user_id,
+        u.name AS user_name,
+        u.avatar_url AS user_avatar,
+        r.content,
+        r.created_at
+      FROM community_comment_replies r
+      JOIN users u ON u.id = r.user_id
+      WHERE r.comment_id = ?
+      ORDER BY r.created_at ASC`,
+      [commentId]
+    );
+
+    const replies = rows.map((row: any) => ({
+      id: String(row.id),
+      comment_id: String(row.comment_id),
+      user_id: String(row.user_id),
+      user_name: row.user_name,
+      user_avatar: resolveImageUrl(row.user_avatar, req),
+      content: row.content,
+      created_at: row.created_at,
+    }));
+
+    res.json({ replies });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error", replies: [] });
+  }
+});
+
+// Create a reply to a comment
+router.post("/comments/:commentId/replies", authMiddleware, async (req: any, res: Response) => {
+  const commentId = parseInt(req.params.commentId, 10);
+  const userId = req.user.id;
+  const { content } = req.body;
+
+  if (isNaN(commentId)) return res.status(400).json({ message: "Invalid comment id" });
+  if (!content || String(content).trim() === "") {
+    return res.status(400).json({ message: "Content is required" });
+  }
+
+  try {
+    const [comments]: any = await pool.query(
+      "SELECT id FROM community_comments WHERE id = ?",
+      [commentId]
+    );
+    if (!comments.length) return res.status(404).json({ message: "Comment not found" });
+
+    const [result]: any = await pool.query(
+      "INSERT INTO community_comment_replies (comment_id, user_id, content) VALUES (?, ?, ?)",
+      [commentId, userId, String(content).trim()]
+    );
+
+    const [rows]: any = await pool.query(
+      `SELECT
+        r.id,
+        r.comment_id,
+        r.user_id,
+        u.name AS user_name,
+        u.avatar_url AS user_avatar,
+        r.content,
+        r.created_at
+      FROM community_comment_replies r
+      JOIN users u ON u.id = r.user_id
+      WHERE r.id = ?`,
+      [result.insertId]
+    );
+
+    const reply = {
+      id: String(rows[0].id),
+      comment_id: String(rows[0].comment_id),
+      user_id: String(rows[0].user_id),
+      user_name: rows[0].user_name,
+      user_avatar: resolveImageUrl(rows[0].user_avatar, req),
+      content: rows[0].content,
+      created_at: rows[0].created_at,
+    };
+
+    res.json({ reply });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -854,6 +956,17 @@ async function ensureCommunitySchema() {
       content TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (post_id) REFERENCES community_posts(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS community_comment_replies (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      comment_id INT NOT NULL,
+      user_id INT NOT NULL,
+      content TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (comment_id) REFERENCES community_comments(id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);

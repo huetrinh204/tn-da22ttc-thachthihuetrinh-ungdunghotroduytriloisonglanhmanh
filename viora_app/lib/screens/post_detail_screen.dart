@@ -560,26 +560,58 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Widget _buildCommentItem(Comment comment, AppLocalizations l10n) {
+    void goToCommentUserProfile() {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserProfileScreen(
+            userId: comment.userId,
+            userName: comment.userName,
+          ),
+        ),
+      );
+    }
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Avatar
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              comment.userName[0].toUpperCase(),
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+        // Avatar — tappable
+        GestureDetector(
+          onTap: goToCommentUserProfile,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
+            child: comment.userAvatar != null
+                ? ClipOval(
+                    child: Image.network(
+                      comment.userAvatar!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(
+                        child: Text(
+                          comment.userName[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      comment.userName[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
           ),
         ),
         const SizedBox(width: 12),
@@ -597,12 +629,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      comment.userName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: context.textPrimary,
+                    GestureDetector(
+                      onTap: goToCommentUserProfile,
+                      child: Text(
+                        comment.userName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: context.textPrimary,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
