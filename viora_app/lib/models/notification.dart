@@ -27,12 +27,12 @@ class CommunityNotification {
     return CommunityNotification(
       id: json['id']?.toString() ?? '',
       type: json['type'] as String? ?? 'like',
-      userId: json['user_id']?.toString() ?? '',
-      userName: json['user_name'] as String? ?? 'Unknown',
-      userAvatar: json['user_avatar'] as String?,
+      userId: (json['actor_id'] ?? json['user_id'])?.toString() ?? '',
+      userName: (json['actor_name'] ?? json['user_name']) as String? ?? 'Unknown',
+      userAvatar: (json['actor_avatar'] ?? json['user_avatar']) as String?,
       postId: json['post_id']?.toString(),
       commentId: json['comment_id']?.toString(),
-      content: json['content'] as String?,
+      content: json['comment_content'] ?? json['post_content'] ?? json['content'],
       isRead: (json['is_read'] as int? ?? 0) == 1,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)

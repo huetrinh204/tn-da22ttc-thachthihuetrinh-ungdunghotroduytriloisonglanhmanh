@@ -8,14 +8,12 @@ class PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback onTap;
   final VoidCallback onLike;
-  final VoidCallback onShare;
 
   const PostCard({
     super.key,
     required this.post,
     required this.onTap,
     required this.onLike,
-    required this.onShare,
   });
 
   @override
@@ -223,14 +221,6 @@ class PostCard extends StatelessWidget {
                   label: l10n.comments(post.commentCount),
                   color: context.textSecondary,
                   onTap: onTap,
-                ),
-                const Spacer(),
-                _buildActionIcon(
-                  context,
-                  icon: Icons.share_outlined,
-                  label: l10n.share,
-                  color: context.textSecondary,
-                  onTap: onShare,
                 ),
               ],
             ),

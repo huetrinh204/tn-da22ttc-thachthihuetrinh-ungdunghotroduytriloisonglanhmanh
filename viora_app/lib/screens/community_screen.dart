@@ -39,7 +39,7 @@ class _CommunityScreenState extends State<CommunityScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
     _searchController.addListener(_onSearchChanged);
     _initSession();
@@ -132,8 +132,6 @@ class _CommunityScreenState extends State<CommunityScreen>
     String type = "trending";
     if (_tabController.index == 1) {
       type = "following";
-    } else if (_tabController.index == 2) {
-      type = "achievements";
     }
 
     final response = await ApiService.getPosts(token, type: type);
@@ -242,7 +240,6 @@ class _CommunityScreenState extends State<CommunityScreen>
                       children: [
                         _buildPostsList(), // Xu hướng
                         _buildPostsList(), // Đang theo dõi
-                        _buildPostsList(), // Thành tích
                       ],
                     ),
                   ),
@@ -323,20 +320,10 @@ class _CommunityScreenState extends State<CommunityScreen>
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildActionButton(
-                icon: Icons.image_outlined,
-                label: l10n.photo,
-                onTap: _navigateToCreatePost,
-              ),
-              const SizedBox(width: 12),
-              _buildActionButton(
-                icon: Icons.emoji_events_outlined,
-                label: l10n.achievement,
-                onTap: _navigateToCreatePost,
-              ),
-            ],
+          _buildActionButton(
+            icon: Icons.image_outlined,
+            label: l10n.photo,
+            onTap: _navigateToCreatePost,
           ),
         ],
       ),
@@ -348,7 +335,8 @@ class _CommunityScreenState extends State<CommunityScreen>
     required String label,
     required VoidCallback onTap,
   }) {
-    return Expanded(
+    return SizedBox(
+      width: double.infinity,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
@@ -401,7 +389,6 @@ class _CommunityScreenState extends State<CommunityScreen>
         tabs: [
           Tab(text: l10n.trending),
           Tab(text: l10n.following),
-          Tab(text: l10n.achievements),
         ],
       ),
     );
@@ -745,67 +732,56 @@ class _CommunityScreenState extends State<CommunityScreen>
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                post.imageUrl!,
-                width: double.infinity,
-                height: 200,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    height: 200,
-                    color: context.inputFill,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
-                        color: AppColors.primary,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 400,
+                ),
+                child: Image.network(
+                  post.imageUrl!,
+                  width: double.infinity,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      height: 200,
+                      color: context.inputFill,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                              : null,
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  // Debug: print error để xem vấn đề
-                  print('❌ Image load error: $error');
-                  print('📍 Image URL: ${post.imageUrl}');
-                  return Container(
-                    height: 200,
-                    color: context.inputFill,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.broken_image_outlined, 
-                            size: 48, 
-                            color: context.textSecondary,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Không load được ảnh',
-                            style: TextStyle(
-                              fontSize: 12,
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      height: 200,
+                      color: context.inputFill,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.broken_image_outlined, 
+                              size: 48, 
                               color: context.textSecondary,
                             ),
-                          ),
-                          if (post.imageUrl!.length < 100)
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                post.imageUrl!,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: context.textSecondary,
-                                ),
-                                textAlign: TextAlign.center,
+                            const SizedBox(height: 8),
+                            Text(
+                              'Không load được ảnh',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.textSecondary,
                               ),
                             ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -849,13 +825,6 @@ class _CommunityScreenState extends State<CommunityScreen>
                   label: l10n.comments(post.commentCount),
                   color: context.textSecondary,
                   onTap: () => _navigateToPostDetail(post),
-                ),
-                const Spacer(),
-                _buildActionIcon(
-                  icon: Icons.share_outlined,
-                  label: l10n.share,
-                  color: context.textSecondary,
-                  onTap: () => _handleShare(post),
                 ),
               ],
             ),
@@ -1001,15 +970,5 @@ class _CommunityScreenState extends State<CommunityScreen>
         }
       });
     }
-  }
-
-  void _handleShare(Post post) {
-    // TODO: Implement share functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context)!.share),
-        backgroundColor: AppColors.primary,
-      ),
-    );
   }
 }

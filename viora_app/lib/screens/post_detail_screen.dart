@@ -356,19 +356,26 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   // Post image
                   if (_post.imageUrl != null) ...[
                     const SizedBox(height: 12),
-                    Image.network(
-                      _post.imageUrl!,
-                      width: double.infinity,
-                      height: 300,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        height: 300,
-                        color: context.inputFill,
-                        child: Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            size: 48,
-                            color: context.textSecondary,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxHeight: 500,
+                        ),
+                        child: Image.network(
+                          _post.imageUrl!,
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 300,
+                            color: context.inputFill,
+                            child: Center(
+                              child: Icon(
+                                Icons.image_outlined,
+                                size: 48,
+                                color: context.textSecondary,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -548,15 +555,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             label: l10n.comments(_post.commentCount),
             color: context.textSecondary,
             onTap: () {},
-          ),
-          const Spacer(),
-          _buildActionButton(
-            icon: Icons.share_outlined,
-            label: l10n.share,
-            color: context.textSecondary,
-            onTap: () {
-              // TODO: Implement share
-            },
           ),
         ],
       ),
