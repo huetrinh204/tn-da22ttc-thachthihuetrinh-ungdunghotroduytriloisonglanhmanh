@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import 'admin_dashboard_tab.dart';
@@ -6,6 +7,7 @@ import 'admin_users_tab.dart';
 import 'admin_posts_tab.dart';
 import 'admin_plants_tab.dart';
 import 'admin_settings_tab.dart';
+import 'login_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -107,7 +109,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
 
     if (confirm == true && context.mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
+      // Clear token from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('token');
+      
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 }
