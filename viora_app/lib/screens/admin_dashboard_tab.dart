@@ -1,0 +1,495 @@
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
+
+class AdminDashboardTab extends StatefulWidget {
+  const AdminDashboardTab({super.key});
+
+  @override
+  State<AdminDashboardTab> createState() => _AdminDashboardTabState();
+}
+
+class _AdminDashboardTabState extends State<AdminDashboardTab> {
+  bool _isLoading = true;
+  String _token = '';
+  
+  int _totalUsers = 0;
+  int _totalPosts = 0;
+  int _totalComments = 0;
+  int _todayUsers = 0;
+  int _todayPosts = 0;
+  int _totalHabits = 0;
+  
+  List<Map<String, dynamic>> _userGrowthData = [];
+  List<Map<String, dynamic>> _postGrowthData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('token') ?? '';
+    
+    try {
+      final stats = await ApiService.getAdminStats(_token);
+      
+      // Get total habits count from users
+      final usersRes = await ApiService.getAdminUsers(_token);
+      int habitCount = 0;
+      for (var user in usersRes['users']) {
+        habitCount += (user['habit_count'] as int?) ?? 0;
+      }
+      
+      // Load growth data
+      await _loadGrowthData();
+      
+      if (!mounted) return;
+      setState(() {
+        _totalUsers = stats['totalUsers'] ?? 0;
+        _totalPosts = stats['totalPosts'] ?? 0;
+        _totalComments = stats['totalComments'] ?? 0;
+        _todayUsers = stats['todayUsers'] ?? 0;
+        _todayPosts = stats['todayPosts'] ?? 0;
+        _totalHabits = habitCount;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadGrowthData() async {
+    try {
+      final growthRes = await ApiService.getAdminGrowthData(_token);
+      setState(() {
+        _userGrowthData = List<Map<String, dynamic>>.from(growthRes['userGrowth'] ?? []);
+        _postGrowthData = List<Map<String, dynamic>>.from(growthRes['postGrowth'] ?? []);
+      });
+    } catch (e) {
+      // If endpoint doesn't exist yet, use mock data
+      setState(() {
+        _userGrowthData = _generateMockUserGrowth();
+        _postGrowthData = _generateMockPostGrowth();
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _generateMockUserGrowth() {
+    final now = DateTime.now();
+    return List.generate(30, (index) {
+      final date = now.subtract(Duration(days: 29 - index));
+      return {
+        'date': date.toIso8601String().split('T')[0],
+        'count': 10 + index + (index % 7) * 2, // Simulated growth
+      };
+    });
+  }
+
+  List<Map<String, dynamic>> _generateMockPostGrowth() {
+    final now = DateTime.now();
+    return List.generate(30, (index) {
+      final date = now.subtract(Duration(days: 29 - index));
+      return {
+        'date': date.toIso8601String().split('T')[0],
+        'count': 5 + (index * 0.8).round() + (index % 5), // Simulated post growth
+      };
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadStats,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Tổng quan',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            
+            // Stats Cards
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.5,
+              children: [
+                _buildStatCard(
+                  'Người dùng',
+                  _totalUsers.toString(),
+                  Icons.people,
+                  Colors.blue,
+                  '+$_todayUsers hôm nay',
+                ),
+                _buildStatCard(
+                  'Bài viết',
+                  _totalPosts.toString(),
+                  Icons.article,
+                  Colors.green,
+                  '+$_todayPosts hôm nay',
+                ),
+                _buildStatCard(
+                  'Bình luận',
+                  _totalComments.toString(),
+                  Icons.comment,
+                  Colors.orange,
+                  '',
+                ),
+                _buildStatCard(
+                  'Thói quen',
+                  _totalHabits.toString(),
+                  Icons.check_circle,
+                  Colors.purple,
+                  '',
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 30),
+            
+            // Line Charts section
+            const Text(
+              'Biểu đồ tăng trưởng',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            
+            _buildLineCharts(),
+            
+            const SizedBox(height: 30),
+            
+            // Pie Chart section  
+            const Text(
+              'Phân bổ dữ liệu',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            
+            _buildPieChart(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    String subtitle,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, color: color, size: 32),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (subtitle.isNotEmpty)
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLineCharts() {
+    return Column(
+      children: [
+        // Users growth chart
+        Container(
+          height: 300,
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tăng trưởng người dùng (30 ngày qua)',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: LineChart(
+                  LineChartData(
+                    gridData: const FlGridData(show: true),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 40,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 12),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          interval: 5,
+                          getTitlesWidget: (value, meta) {
+                            if (value.toInt() % 5 == 0 && value.toInt() < _userGrowthData.length) {
+                              return Text(
+                                '${value.toInt() + 1}',
+                                style: const TextStyle(fontSize: 10),
+                              );
+                            }
+                            return const Text('');
+                          },
+                        ),
+                      ),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(show: true),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _userGrowthData.asMap().entries.map((entry) {
+                          return FlSpot(entry.key.toDouble(), (entry.value['count'] as num).toDouble());
+                        }).toList(),
+                        isCurved: true,
+                        color: Colors.blue,
+                        barWidth: 3,
+                        dotData: const FlDotData(show: false),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.blue.withOpacity(0.1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Posts growth chart
+        Container(
+          height: 300,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tăng trưởng bài viết (30 ngày qua)',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: LineChart(
+                  LineChartData(
+                    gridData: const FlGridData(show: true),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 40,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 12),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          interval: 5,
+                          getTitlesWidget: (value, meta) {
+                            if (value.toInt() % 5 == 0 && value.toInt() < _postGrowthData.length) {
+                              return Text(
+                                '${value.toInt() + 1}',
+                                style: const TextStyle(fontSize: 10),
+                              );
+                            }
+                            return const Text('');
+                          },
+                        ),
+                      ),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    borderData: FlBorderData(show: true),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _postGrowthData.asMap().entries.map((entry) {
+                          return FlSpot(entry.key.toDouble(), (entry.value['count'] as num).toDouble());
+                        }).toList(),
+                        isCurved: true,
+                        color: Colors.green,
+                        barWidth: 3,
+                        dotData: const FlDotData(show: false),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color: Colors.green.withOpacity(0.1),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPieChart() {
+    return Container(
+      height: 300,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Phân bổ dữ liệu',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 2,
+                centerSpaceRadius: 40,
+                sections: [
+                  PieChartSectionData(
+                    value: _totalUsers.toDouble(),
+                    title: '$_totalUsers\nNgười dùng',
+                    color: Colors.blue,
+                    radius: 80,
+                    titleStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    value: _totalPosts.toDouble(),
+                    title: '$_totalPosts\nBài viết',
+                    color: Colors.green,
+                    radius: 80,
+                    titleStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    value: _totalHabits.toDouble(),
+                    title: '$_totalHabits\nThói quen',
+                    color: Colors.purple,
+                    radius: 80,
+                    titleStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

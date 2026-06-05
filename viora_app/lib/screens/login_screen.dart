@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
+import 'admin_home_screen.dart';
 import 'register_screen.dart';
 import 'onboarding_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -61,15 +62,30 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", token);
-      final needsOnboarding = await OnboardingGate.needsOnboarding(token);
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              needsOnboarding ? const OnboardingScreen() : const HomeScreen(),
-        ),
-      );
+      
+      // Check if user is admin
+      final profileRes = await ApiService.getProfile(token);
+      final userRole = profileRes['user']?['role'] as String?;
+      
+      if (userRole == 'admin') {
+        // Admin goes to AdminHomeScreen
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+        );
+      } else {
+        // Regular user goes to normal flow
+        final needsOnboarding = await OnboardingGate.needsOnboarding(token);
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                needsOnboarding ? const OnboardingScreen() : const HomeScreen(),
+          ),
+        );
+      }
     } else {
       if (!mounted) return;
       AppSnackbar.showError(context, res["message"] ?? l10n.loginFailed);
@@ -102,18 +118,33 @@ class _LoginScreenState extends State<LoginScreen> {
         }
         await prefs.setString("token", token);
         final isNewUser = res["isNewUser"] == true;
-        final needsOnboarding = await OnboardingGate.needsOnboarding(
-          token,
-          isNewUser: isNewUser,
-        );
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) =>
-                needsOnboarding ? const OnboardingScreen() : const HomeScreen(),
-          ),
-        );
+        
+        // Check if user is admin
+        final profileRes = await ApiService.getProfile(token);
+        final userRole = profileRes['user']?['role'] as String?;
+        
+        if (userRole == 'admin') {
+          // Admin goes to AdminHomeScreen
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
+          );
+        } else {
+          // Regular user goes to normal flow
+          final needsOnboarding = await OnboardingGate.needsOnboarding(
+            token,
+            isNewUser: isNewUser,
+          );
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  needsOnboarding ? const OnboardingScreen() : const HomeScreen(),
+            ),
+          );
+        }
       } else {
         if (!mounted) return;
         AppSnackbar.showError(context, res["message"] ?? l10n.googleLoginFailed);

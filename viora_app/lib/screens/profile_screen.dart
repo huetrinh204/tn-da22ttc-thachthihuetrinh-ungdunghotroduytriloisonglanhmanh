@@ -7,6 +7,7 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import 'admin_screen.dart';
 import '../main.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
@@ -37,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<String> goals = [];
   String? avatarUrl;
   bool _isUploadingAvatar = false;
+  String? role; // admin or user
   
   // Community stats
   int _followersCount = 0;
@@ -72,6 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       birthYear = user["birth_year"];
       avatarUrl = user["avatar_url"] as String?;
       _currentUserId = user["id"]?.toString();
+      role = user["role"] as String?;
       height = user["height"] != null
           ? double.tryParse(user["height"].toString())
           : null;
@@ -631,6 +634,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildLanguageTile(),
                 ]),
                 const SizedBox(height: 24),
+
+                // Admin Panel (only for admin)
+                if (role == 'admin') ...[
+                  Container(
+                    width: double.infinity,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withValues(alpha: 0.7),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminScreen(),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.admin_panel_settings, 
+                                color: Colors.white, size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'Admin Panel',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // Logout
                 Container(

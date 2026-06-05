@@ -929,4 +929,145 @@ class ApiService {
       return {"message": "Network error"};
     }
   }
+
+  // ================= ADMIN APIS =================
+  
+  // Get admin dashboard stats
+  static Future<Map<String, dynamic>> getAdminStats(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/stats"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Get growth data for charts
+  static Future<Map<String, dynamic>> getAdminGrowthData(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/growth"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Get all users for admin
+  static Future<Map<String, dynamic>> getAdminUsers(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/users"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Update user role
+  static Future<Map<String, dynamic>> updateUserRole(String token, String userId, String role) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/users/$userId/role"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"role": role}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Delete user
+  static Future<Map<String, dynamic>> deleteUser(String token, String userId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/admin/users/$userId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Get all posts for admin
+  static Future<Map<String, dynamic>> getAdminPosts(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/posts"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Delete post (admin)
+  static Future<Map<String, dynamic>> deletePostAdmin(String token, String postId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/admin/posts/$postId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Get all comments for admin
+  static Future<Map<String, dynamic>> getAdminComments(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/comments"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Delete comment (admin)
+  static Future<Map<String, dynamic>> deleteCommentAdmin(String token, String commentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/admin/comments/$commentId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
 }

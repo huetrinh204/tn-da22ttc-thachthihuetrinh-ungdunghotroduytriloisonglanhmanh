@@ -112,7 +112,7 @@ router.get("/profile", async (req, res) => {
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET);
     const [rows]: any = await pool.query(
-      "SELECT id, name, email, gender, birth_year, height, weight, goals, avatar_url, created_at FROM users WHERE id = ?",
+      "SELECT id, name, email, gender, birth_year, height, weight, goals, avatar_url, role, created_at FROM users WHERE id = ?",
       [decoded.id]
     );
 

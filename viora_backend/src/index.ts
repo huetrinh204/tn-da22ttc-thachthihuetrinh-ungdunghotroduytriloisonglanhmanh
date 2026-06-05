@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth";
 import habitRoutes from "./routes/habits";
 import statsRoutes from "./routes/stats";
 import communityRoutes from "./routes/community";
+import adminRoutes from "./routes/admin";
 import { startCronJobs, sendMorningEmails, sendEveningEmails } from "./services/cron_service";
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/auth", authRoutes);
 app.use("/habits", habitRoutes);
 app.use("/stats", statsRoutes);
 app.use("/community", communityRoutes);
+app.use("/admin", adminRoutes);
 app.listen(3000, () => {
   console.log("===============🚀 Server running at http://localhost:3000 ===============");
   startCronJobs();
