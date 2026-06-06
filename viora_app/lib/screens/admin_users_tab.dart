@@ -71,13 +71,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getUserActivityStatus(user['updated_at']) == 'Đang hoạt động' 
+                      color: _getUserActivityStatus(user['created_at']) == 'Đang hoạt động' 
                           ? Colors.green 
                           : Colors.grey,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      _getUserActivityStatus(user['updated_at']),
+                      _getUserActivityStatus(user['created_at']),
                       style: const TextStyle(color: Colors.white, fontSize: 10),
                     ),
                   ),

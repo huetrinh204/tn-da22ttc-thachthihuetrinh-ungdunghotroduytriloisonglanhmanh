@@ -51,7 +51,7 @@ router.get("/users", authMiddleware, adminMiddleware, async (req: any, res: Resp
     const [users]: any = await pool.query(`
       SELECT 
         id, name, email, role, gender, birth_year, height, weight, 
-        avatar_url, created_at, updated_at,
+        avatar_url, created_at,
         (SELECT COUNT(*) FROM habits WHERE user_id = users.id) as habit_count,
         (SELECT COUNT(*) FROM community_posts WHERE user_id = users.id) as post_count
       FROM users 
@@ -204,31 +204,111 @@ router.get("/stats", authMiddleware, adminMiddleware, async (req: any, res: Resp
 // Get growth data for charts
 router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
   try {
-    // Get user growth data (last 30 days)
+    // Get daily user counts for last 30 days
     const [userGrowth]: any = await pool.query(`
       SELECT 
         DATE(created_at) as date,
-        COUNT(*) as count
-      FROM users 
+        COUNT(*) as daily_count
+      FROM users
       WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
       GROUP BY DATE(created_at)
-      ORDER BY date ASC
+      ORDER BY DATE(created_at) ASC
     `);
 
-    // Get post growth data (last 30 days)
+    // Get daily post counts for last 30 days
     const [postGrowth]: any = await pool.query(`
       SELECT 
         DATE(created_at) as date,
-        COUNT(*) as count
-      FROM community_posts 
+        COUNT(*) as daily_count
+      FROM community_posts
       WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
       GROUP BY DATE(created_at)
-      ORDER BY date ASC
+      ORDER BY DATE(created_at) ASC
     `);
 
+    // If no data in last 30 days, get all-time data
+    let finalUserGrowth = userGrowth;
+    let finalPostGrowth = postGrowth;
+    
+    if (userGrowth.length === 0) {
+      const [allTimeUsers]: any = await pool.query(`
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(*) as daily_count
+        FROM users
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+        LIMIT 30
+      `);
+      finalUserGrowth = allTimeUsers;
+    }
+    
+    if (postGrowth.length === 0) {
+      const [allTimePosts]: any = await pool.query(`
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(*) as daily_count
+        FROM community_posts
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) ASC
+        LIMIT 30
+      `);
+      finalPostGrowth = allTimePosts;
+    }
+
+    // Helper function to fill missing dates
+    const fillMissingDates = (data: any[], days: number = 30) => {
+      const result: any[] = [];
+      const today = new Date();
+      const dataMap = new Map();
+      
+      // Create map of existing data
+      data.forEach((row: any) => {
+        const dateStr = new Date(row.date).toISOString().split('T')[0];
+        dataMap.set(dateStr, row.daily_count);
+      });
+      
+      // Fill all dates in range
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        result.push({
+          date: dateStr,
+          daily_count: dataMap.get(dateStr) || 0
+        });
+      }
+      
+      return result;
+    };
+
+    // Fill missing dates for both datasets
+    const filledUserGrowth = fillMissingDates(finalUserGrowth);
+    const filledPostGrowth = fillMissingDates(finalPostGrowth);
+
+    // Calculate cumulative counts in JavaScript
+    let cumulativeUserCount = 0;
+    const formattedUserGrowth = filledUserGrowth.map((row: any) => {
+      cumulativeUserCount += row.daily_count;
+      return {
+        date: row.date,
+        count: cumulativeUserCount,
+      };
+    });
+
+    let cumulativePostCount = 0;
+    const formattedPostGrowth = filledPostGrowth.map((row: any) => {
+      cumulativePostCount += row.daily_count;
+      return {
+        date: row.date,
+        count: cumulativePostCount,
+      };
+    });
+
     res.json({
-      userGrowth,
-      postGrowth,
+      userGrowth: formattedUserGrowth,
+      postGrowth: formattedPostGrowth,
     });
   } catch (error) {
     console.error("Get growth data error:", error);

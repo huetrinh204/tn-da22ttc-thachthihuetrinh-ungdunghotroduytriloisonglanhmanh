@@ -18,14 +18,24 @@ class AdminHomeScreen extends StatefulWidget {
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _currentIndex = 0;
+  
+  late final List<Widget> _tabsWithCallback;
 
-  final List<Widget> _tabs = [
-    const AdminDashboardTab(),
-    const AdminUsersTab(),
-    const AdminPostsTab(),
-    const AdminPlantsTab(),
-    const AdminSettingsTab(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _tabsWithCallback = [
+      AdminDashboardTab(onNavigateToTab: switchTab),
+      const AdminUsersTab(),
+      const AdminPostsTab(),
+      const AdminPlantsTab(),
+      const AdminSettingsTab(),
+    ];
+  }
+
+  void switchTab(int index) {
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +49,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           ),
         ],
       ),
-      body: _tabs[_currentIndex],
+      body: _tabsWithCallback[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
