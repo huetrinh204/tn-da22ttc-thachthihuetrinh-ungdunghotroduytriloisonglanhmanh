@@ -191,16 +191,41 @@ router.post("/users/bulk-delete", authMiddleware, adminMiddleware, async (req: a
 // Get all posts with user info
 router.get("/posts", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
   try {
-    const [posts]: any = await pool.query(`
+    const { search, sort } = req.query;
+    
+    let query = `
       SELECT 
-        p.id, p.content, p.image_url, p.hashtags, p.created_at,
-        u.name as user_name, u.email as user_email,
+        p.id, p.content, p.image_url, p.hashtags, p.created_at, p.user_id,
+        u.name as user_name, u.email as user_email, u.avatar_url as user_avatar,
         (SELECT COUNT(*) FROM community_post_likes WHERE post_id = p.id) as like_count,
         (SELECT COUNT(*) FROM community_comments WHERE post_id = p.id) as comment_count
       FROM community_posts p
       JOIN users u ON p.user_id = u.id
-      ORDER BY p.created_at DESC
-    `);
+    `;
+    
+    const params: any[] = [];
+    
+    // Search filter
+    if (search) {
+      query += ` WHERE p.content LIKE ? OR u.name LIKE ?`;
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    
+    // Sort order
+    switch (sort) {
+      case 'oldest':
+        query += ` ORDER BY p.created_at ASC`;
+        break;
+      case 'trending':
+        query += ` ORDER BY like_count DESC, comment_count DESC, p.created_at DESC`;
+        break;
+      case 'latest':
+      default:
+        query += ` ORDER BY p.created_at DESC`;
+        break;
+    }
+
+    const [posts]: any = await pool.query(query, params);
 
     res.json({ posts });
   } catch (error) {

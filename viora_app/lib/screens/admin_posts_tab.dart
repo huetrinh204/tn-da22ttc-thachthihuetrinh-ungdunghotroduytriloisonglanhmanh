@@ -16,11 +16,19 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
   bool _isLoading = true;
   String _token = '';
   List<dynamic> _posts = [];
+  final TextEditingController _searchController = TextEditingController();
+  String _currentSort = 'latest'; // latest, oldest, trending
 
   @override
   void initState() {
     super.initState();
     _loadPosts();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPosts() async {
@@ -29,7 +37,8 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
     _token = prefs.getString('token') ?? '';
     
     try {
-      final res = await ApiService.getAdminPosts(_token);
+      final search = _searchController.text.isNotEmpty ? _searchController.text : null;
+      final res = await ApiService.getAdminPosts(_token, search: search, sort: _currentSort);
       if (!mounted) return;
       setState(() {
         _posts = res['posts'] ?? [];
@@ -41,96 +50,192 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
     }
   }
 
+  void _onSearchChanged(String value) {
+    // Debounce search
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (_searchController.text == value) {
+        _loadPosts();
+      }
+    });
+  }
+
+  void _changeSortOrder(String sort) {
+    setState(() {
+      _currentSort = sort;
+    });
+    _loadPosts();
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_posts.isEmpty) {
-      return const Center(child: Text('Chưa có bài viết nào'));
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadPosts,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _posts.length,
-        itemBuilder: (context, index) {
-          final post = _posts[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ListTile(
-                  title: Text(post['user_name'] ?? 'Unknown'),
-                  subtitle: Text(post['user_email'] ?? ''),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.visibility, color: Colors.blue),
-                        onPressed: () => _viewPostDetails(post),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deletePost(post['id'], post['content']),
-                      ),
-                    ],
+    return Column(
+      children: [
+        // Search and filter bar
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.grey[50],
+          child: Column(
+            children: [
+              // Search bar
+              TextField(
+                controller: _searchController,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm bài viết hoặc tác giả...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _loadPosts();
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
-                if (post['content'] != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      post['content'],
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                if (post['image_url'] != null)
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        post['image_url'],
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 200,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.broken_image),
-                        ),
-                      ),
-                    ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.favorite, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text('${post['like_count'] ?? 0}'),
-                      const SizedBox(width: 16),
-                      Icon(Icons.comment, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text('${post['comment_count'] ?? 0}'),
-                      const Spacer(),
-                      Text(
-                        _formatDate(post['created_at']),
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
+              ),
+              const SizedBox(height: 12),
+              // Filter chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip('Mới nhất', 'latest'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Cũ nhất', 'oldest'),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Xu hướng', 'trending'),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Posts list
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _posts.isEmpty
+                  ? Center(
+                      child: Text(
+                        _searchController.text.isNotEmpty
+                            ? 'Không tìm thấy bài viết'
+                            : 'Chưa có bài viết nào',
+                        style: const TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadPosts,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _posts.length,
+                        itemBuilder: (context, index) {
+                          final post = _posts[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundImage: post['user_avatar'] != null
+                                        ? NetworkImage(ApiService.resolveImageUrl(post['user_avatar']))
+                                        : null,
+                                    child: post['user_avatar'] == null
+                                        ? Text(post['user_name']?[0]?.toUpperCase() ?? 'U')
+                                        : null,
+                                  ),
+                                  title: Text(post['user_name'] ?? 'Unknown'),
+                                  subtitle: Text(post['user_email'] ?? ''),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.visibility, color: Colors.blue),
+                                        onPressed: () => _viewPostDetails(post),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete, color: Colors.red),
+                                        onPressed: () => _deletePost(post['id'], post['content']),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (post['content'] != null && post['content'].toString().isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      post['content'],
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                if (post['image_url'] != null)
+                                  Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        ApiService.resolveImageUrl(post['image_url']),
+                                        height: 200,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          height: 200,
+                                          color: Colors.grey[300],
+                                          child: const Icon(Icons.broken_image),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.favorite, size: 16, color: Colors.grey[600]),
+                                      const SizedBox(width: 4),
+                                      Text('${post['like_count'] ?? 0}'),
+                                      const SizedBox(width: 16),
+                                      Icon(Icons.comment, size: 16, color: Colors.grey[600]),
+                                      const SizedBox(width: 4),
+                                      Text('${post['comment_count'] ?? 0}'),
+                                      const Spacer(),
+                                      Text(
+                                        _formatDate(post['created_at']),
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _currentSort == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          _changeSortOrder(value);
+        }
+      },
+      selectedColor: Colors.blue[100],
+      checkmarkColor: Colors.blue[700],
     );
   }
 
@@ -166,16 +271,20 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
       });
       
       // Navigate to post detail screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PostDetailScreen(post: post),
-        ),
-      );
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PostDetailScreen(post: post),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
+      }
     }
   }
 
@@ -199,7 +308,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
     try {
       await ApiService.deletePostAdmin(_token, postId.toString());

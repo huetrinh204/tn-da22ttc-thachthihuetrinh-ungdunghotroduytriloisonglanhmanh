@@ -1075,10 +1075,24 @@ class ApiService {
   }
 
   // Get all posts for admin
-  static Future<Map<String, dynamic>> getAdminPosts(String token) async {
+  static Future<Map<String, dynamic>> getAdminPosts(String token, {String? search, String? sort}) async {
     try {
+      var url = "$baseUrl/admin/posts";
+      final params = <String>[];
+      
+      if (search != null && search.isNotEmpty) {
+        params.add("search=$search");
+      }
+      if (sort != null && sort.isNotEmpty) {
+        params.add("sort=$sort");
+      }
+      
+      if (params.isNotEmpty) {
+        url += "?${params.join('&')}";
+      }
+      
       final response = await http.get(
-        Uri.parse("$baseUrl/admin/posts"),
+        Uri.parse(url),
         headers: {"Authorization": "Bearer $token"},
       );
       final data = jsonDecode(response.body);
