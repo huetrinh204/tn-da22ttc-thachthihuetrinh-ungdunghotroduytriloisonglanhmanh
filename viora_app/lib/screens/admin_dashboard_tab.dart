@@ -87,6 +87,39 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
     widget.onNavigateToTab?.call(tabIndex);
   }
 
+  double _calculateYInterval(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return 1;
+    
+    // Find max value
+    double maxVal = 0;
+    for (var item in data) {
+      final count = (item['count'] as num).toDouble();
+      if (count > maxVal) maxVal = count;
+    }
+    
+    // Calculate appropriate interval
+    if (maxVal <= 5) return 1;
+    if (maxVal <= 10) return 2;
+    if (maxVal <= 20) return 5;
+    if (maxVal <= 50) return 10;
+    if (maxVal <= 100) return 20;
+    return (maxVal / 5).ceil().toDouble();
+  }
+
+  double _calculateMaxY(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return 10;
+    
+    // Find max value
+    double maxVal = 0;
+    for (var item in data) {
+      final count = (item['count'] as num).toDouble();
+      if (count > maxVal) maxVal = count;
+    }
+    
+    // Add some padding to max value (20% more)
+    return (maxVal * 1.2).ceilToDouble();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -284,12 +317,15 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                       )
                     : LineChart(
                         LineChartData(
+                          minY: 0,
+                          maxY: _calculateMaxY(_userGrowthData),
                           gridData: const FlGridData(show: true),
                           titlesData: FlTitlesData(
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 reservedSize: 40,
+                                interval: _calculateYInterval(_userGrowthData),
                                 getTitlesWidget: (value, meta) {
                                   return Text(
                                     value.toInt().toString(),
@@ -399,12 +435,15 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                       )
                     : LineChart(
                         LineChartData(
+                          minY: 0,
+                          maxY: _calculateMaxY(_postGrowthData),
                           gridData: const FlGridData(show: true),
                           titlesData: FlTitlesData(
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
                                 reservedSize: 40,
+                                interval: _calculateYInterval(_postGrowthData),
                                 getTitlesWidget: (value, meta) {
                                   return Text(
                                     value.toInt().toString(),
