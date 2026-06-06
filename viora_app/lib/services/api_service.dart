@@ -10,6 +10,15 @@ class ApiService {
       ? "http://192.168.1.5:3000"
       : "http://10.0.2.2:3000";
 
+  // Helper method to resolve image URLs
+  static String resolveImageUrl(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return '';
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    return '$baseUrl$imagePath';
+  }
+
   // ================= GET PROFILE ====Uu=============
   static Future<Map<String, dynamic>> getProfile(String token) async {
     try {
@@ -963,10 +972,15 @@ class ApiService {
   }
 
   // Get all users for admin
-  static Future<Map<String, dynamic>> getAdminUsers(String token) async {
+  static Future<Map<String, dynamic>> getAdminUsers(String token, {String? search}) async {
     try {
+      var url = "$baseUrl/admin/users";
+      if (search != null && search.isNotEmpty) {
+        url += "?search=$search";
+      }
+      
       final response = await http.get(
-        Uri.parse("$baseUrl/admin/users"),
+        Uri.parse(url),
         headers: {"Authorization": "Bearer $token"},
       );
       final data = jsonDecode(response.body);
@@ -974,6 +988,36 @@ class ApiService {
       return {"message": data["message"] ?? "Failed"};
     } catch (e) {
       return {"message": "Network error"};
+    }
+  }
+
+  // Create new user (admin only)
+  static Future<Map<String, dynamic>> createUser(
+    String token,
+    String name,
+    String email,
+    String password,
+    String role,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/admin/users"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "name": name,
+          "email": email,
+          "password": password,
+          "role": role,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      throw Exception(data["message"] ?? "Failed to create user");
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -1008,6 +1052,25 @@ class ApiService {
       return {"message": data["message"] ?? "Failed"};
     } catch (e) {
       return {"message": "Network error"};
+    }
+  }
+
+  // Bulk delete users
+  static Future<Map<String, dynamic>> bulkDeleteUsers(String token, List<int> userIds) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/admin/users/bulk-delete"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"userIds": userIds}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      throw Exception(data["message"] ?? "Failed to delete users");
+    } catch (e) {
+      rethrow;
     }
   }
 

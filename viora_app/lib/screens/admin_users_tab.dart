@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import 'admin_user_detail_screen.dart';
 
 class AdminUsersTab extends StatefulWidget {
   const AdminUsersTab({super.key});
@@ -13,6 +14,12 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   bool _isLoading = true;
   String _token = '';
   List<dynamic> _users = [];
+  List<dynamic> _filteredUsers = [];
+  final TextEditingController _searchController = TextEditingController();
+  
+  // Selection mode
+  bool _isSelectionMode = false;
+  final Set<int> _selectedUserIds = {};
 
   @override
   void initState() {
@@ -20,16 +27,23 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     _loadUsers();
   }
 
-  Future<void> _loadUsers() async {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUsers({String? search}) async {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('token') ?? '';
     
     try {
-      final res = await ApiService.getAdminUsers(_token);
+      final res = await ApiService.getAdminUsers(_token, search: search);
       if (!mounted) return;
       setState(() {
         _users = res['users'] ?? [];
+        _filteredUsers = _users;
         _isLoading = false;
       });
     } catch (e) {
@@ -38,96 +52,332 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     }
   }
 
+  void _onSearchChanged(String value) {
+    setState(() {
+      if (value.isEmpty) {
+        _filteredUsers = _users;
+      } else {
+        _filteredUsers = _users.where((user) {
+          final name = (user['name'] ?? '').toLowerCase();
+          final email = (user['email'] ?? '').toLowerCase();
+          final searchLower = value.toLowerCase();
+          return name.contains(searchLower) || email.contains(searchLower);
+        }).toList();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadUsers,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _users.length,
-        itemBuilder: (context, index) {
-          final user = _users[index];
-          final isAdmin = user['role'] == 'admin';
-          
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundImage: user['avatar_url'] != null
-                    ? NetworkImage(user['avatar_url'])
+    return Scaffold(
+      appBar: _isSelectionMode
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  setState(() {
+                    _isSelectionMode = false;
+                    _selectedUserIds.clear();
+                  });
+                },
+              ),
+              title: Text('${_selectedUserIds.length} đã chọn'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: _selectedUserIds.isEmpty ? null : _bulkDeleteUsers,
+                ),
+              ],
+            )
+          : null,
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Tìm kiếm theo tên hoặc email...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
                     : null,
-                child: user['avatar_url'] == null
-                    ? Text(user['name']?[0]?.toUpperCase() ?? 'U')
-                    : null,
-              ),
-              title: Row(
-                children: [
-                  Expanded(child: Text(user['name'] ?? 'Unknown')),
-                  // Activity status
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _getUserActivityStatus(user['created_at']) == 'Đang hoạt động' 
-                          ? Colors.green 
-                          : Colors.grey,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      _getUserActivityStatus(user['created_at']),
-                      style: const TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (isAdmin)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'ADMIN',
-                        style: TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                    ),
-                ],
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(user['email'] ?? ''),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${user['habit_count'] ?? 0} thói quen • ${user['post_count'] ?? 0} bài viết',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-              trailing: PopupMenuButton(
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    child: Text(isAdmin ? 'Hạ xuống User' : 'Lên Admin'),
-                    onTap: () => _toggleRole(user['id'], isAdmin),
-                  ),
-                  PopupMenuItem(
-                    child: const Text('Chặn người dùng'),
-                    onTap: () => _blockUser(user['id'], user['name']),
-                  ),
-                  PopupMenuItem(
-                    child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-                    onTap: () => _deleteUser(user['id'], user['name']),
-                  ),
-                ],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
               ),
             ),
-          );
-        },
+          ),
+          
+          // User list
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: () => _loadUsers(),
+                    child: _filteredUsers.isEmpty
+                        ? Center(
+                            child: Text(
+                              _searchController.text.isNotEmpty
+                                  ? 'Không tìm thấy người dùng'
+                                  : 'Chưa có người dùng',
+                              style: const TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _filteredUsers.length,
+                            itemBuilder: (context, index) {
+                              final user = _filteredUsers[index];
+                              final isAdmin = user['role'] == 'admin';
+                              final userId = user['id'] as int;
+                              final isSelected = _selectedUserIds.contains(userId);
+                              
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: ListTile(
+                                  onTap: () {
+                                    if (_isSelectionMode) {
+                                      setState(() {
+                                        if (isSelected) {
+                                          _selectedUserIds.remove(userId);
+                                        } else {
+                                          _selectedUserIds.add(userId);
+                                        }
+                                      });
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AdminUserDetailScreen(user: user),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  onLongPress: () {
+                                    setState(() {
+                                      _isSelectionMode = true;
+                                      _selectedUserIds.add(userId);
+                                    });
+                                  },
+                                  leading: _isSelectionMode
+                                      ? Checkbox(
+                                          value: isSelected,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              if (value == true) {
+                                                _selectedUserIds.add(userId);
+                                              } else {
+                                                _selectedUserIds.remove(userId);
+                                              }
+                                            });
+                                          },
+                                        )
+                                      : CircleAvatar(
+                                          backgroundImage: user['avatar_url'] != null
+                                              ? NetworkImage(ApiService.resolveImageUrl(user['avatar_url']))
+                                              : null,
+                                          child: user['avatar_url'] == null
+                                              ? Text(user['name']?[0]?.toUpperCase() ?? 'U')
+                                              : null,
+                                        ),
+                                  title: Row(
+                                    children: [
+                                      Expanded(child: Text(user['name'] ?? 'Unknown')),
+                                      // Activity status
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: _getUserActivityStatus(user['created_at']) == 'Đang hoạt động' 
+                                              ? Colors.green 
+                                              : Colors.grey,
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          _getUserActivityStatus(user['created_at']),
+                                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      if (isAdmin)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: const Text(
+                                            'ADMIN',
+                                            style: TextStyle(color: Colors.white, fontSize: 10),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(user['email'] ?? ''),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${user['habit_count'] ?? 0} thói quen • ${user['post_count'] ?? 0} bài viết',
+                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: _isSelectionMode
+                                      ? null
+                                      : PopupMenuButton(
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        child: Text(isAdmin ? 'Hạ xuống User' : 'Lên Admin'),
+                                        onTap: () => _toggleRole(user['id'], isAdmin),
+                                      ),
+                                      PopupMenuItem(
+                                        child: const Text('Chặn người dùng'),
+                                        onTap: () => _blockUser(user['id'], user['name']),
+                                      ),
+                                      PopupMenuItem(
+                                        child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                                        onTap: () => _deleteUser(user['id'], user['name']),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: _isSelectionMode
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _showAddUserDialog,
+              icon: const Icon(Icons.person_add),
+              label: const Text('Thêm user'),
+            ),
+    );
+  }
+
+  Future<void> _showAddUserDialog() async {
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    String selectedRole = 'user';
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Thêm người dùng mới'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tên',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordController,
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu',
+                    border: OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedRole,
+                  decoration: const InputDecoration(
+                    labelText: 'Vai trò',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'user', child: Text('User')),
+                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                  ],
+                  onChanged: (value) {
+                    setState(() => selectedRole = value ?? 'user');
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (nameController.text.isEmpty ||
+                    emailController.text.isEmpty ||
+                    passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin')),
+                  );
+                  return;
+                }
+
+                try {
+                  await ApiService.createUser(
+                    _token,
+                    nameController.text,
+                    emailController.text,
+                    passwordController.text,
+                    selectedRole,
+                  );
+                  if (context.mounted) {
+                    Navigator.pop(context, true);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Lỗi: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Tạo'),
+            ),
+          ],
+        ),
       ),
     );
+
+    if (result == true) {
+      _loadUsers();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã tạo người dùng mới')),
+        );
+      }
+    }
   }
 
   Future<void> _toggleRole(int userId, bool isCurrentlyAdmin) async {
@@ -185,7 +435,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
     // TODO: Implement block user API
     ScaffoldMessenger.of(context).showSnackBar(
@@ -213,7 +463,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true || !mounted) return;
 
     try {
       await ApiService.deleteUser(_token, userId.toString());
@@ -221,6 +471,50 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đã xóa user')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _bulkDeleteUsers() async {
+    final count = _selectedUserIds.length;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận xóa'),
+        content: Text('Bạn có chắc muốn xóa $count người dùng đã chọn?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Xóa tất cả'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await ApiService.bulkDeleteUsers(_token, _selectedUserIds.toList());
+      setState(() {
+        _isSelectionMode = false;
+        _selectedUserIds.clear();
+      });
+      _loadUsers();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã xóa $count người dùng')),
         );
       }
     } catch (e) {

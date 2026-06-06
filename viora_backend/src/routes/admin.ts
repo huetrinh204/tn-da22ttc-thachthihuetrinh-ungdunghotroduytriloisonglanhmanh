@@ -48,15 +48,27 @@ const adminMiddleware = async (req: any, res: Response, next: any) => {
 // Get all users
 router.get("/users", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
   try {
-    const [users]: any = await pool.query(`
+    const { search } = req.query;
+    
+    let query = `
       SELECT 
         id, name, email, role, gender, birth_year, height, weight, 
-        avatar_url, created_at,
+        avatar_url, created_at, goals,
         (SELECT COUNT(*) FROM habits WHERE user_id = users.id) as habit_count,
         (SELECT COUNT(*) FROM community_posts WHERE user_id = users.id) as post_count
       FROM users 
-      ORDER BY created_at DESC
-    `);
+    `;
+    
+    const params: any[] = [];
+    
+    if (search) {
+      query += ` WHERE name LIKE ? OR email LIKE ?`;
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    
+    query += ` ORDER BY created_at DESC`;
+    
+    const [users]: any = await pool.query(query, params);
 
     res.json({ users });
   } catch (error) {
@@ -87,6 +99,45 @@ router.put("/users/:userId/role", authMiddleware, adminMiddleware, async (req: a
   }
 });
 
+// Create new user (admin only)
+router.post("/users", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "Name, email, and password are required" });
+    }
+
+    // Check if email already exists
+    const [existing]: any = await pool.query(
+      "SELECT id FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // Hash password
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user
+    const [result]: any = await pool.query(
+      "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
+      [name, email, hashedPassword, role || 'user']
+    );
+
+    res.json({ 
+      message: "User created successfully",
+      userId: result.insertId
+    });
+  } catch (error) {
+    console.error("Create user error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Delete user
 router.delete("/users/:userId", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
   try {
@@ -101,6 +152,36 @@ router.delete("/users/:userId", authMiddleware, adminMiddleware, async (req: any
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error("Delete user error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Delete multiple users
+router.post("/users/bulk-delete", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: "User IDs array is required" });
+    }
+
+    // Filter out current admin's ID
+    const idsToDelete = userIds.filter((id: any) => id !== req.user.id);
+
+    if (idsToDelete.length === 0) {
+      return res.status(400).json({ message: "No valid users to delete" });
+    }
+
+    // Delete users
+    const placeholders = idsToDelete.map(() => '?').join(',');
+    await pool.query(`DELETE FROM users WHERE id IN (${placeholders})`, idsToDelete);
+
+    res.json({ 
+      message: "Users deleted successfully",
+      deleted: idsToDelete.length
+    });
+  } catch (error) {
+    console.error("Bulk delete users error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
