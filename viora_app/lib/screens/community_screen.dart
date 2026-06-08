@@ -19,7 +19,7 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   
@@ -32,6 +32,7 @@ class _CommunityScreenState extends State<CommunityScreen>
   String? _currentUserId;
   final Set<String> _followingIds = {};
   String? _token;
+  int _unreadNotificationsCount = 0;
 
   List<Post> get _visiblePosts =>
       _isSearching ? _filteredPosts : _posts;
@@ -39,10 +40,28 @@ class _CommunityScreenState extends State<CommunityScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
     _searchController.addListener(_onSearchChanged);
     _initSession();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUnreadCount();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _initSession() async {
@@ -56,7 +75,22 @@ class _CommunityScreenState extends State<CommunityScreen>
       _currentUserId = profile["user"]["id"]?.toString();
     }
 
-    if (mounted) await _loadPosts();
+    if (mounted) {
+      await _loadPosts();
+      _loadUnreadCount();
+    }
+  }
+
+  Future<void> _loadUnreadCount() async {
+    if (_token == null) return;
+    final notificationsRes = await ApiService.getNotifications(_token!);
+    if (!mounted) return;
+    if (notificationsRes["notifications"] != null) {
+      final notifs = notificationsRes["notifications"] as List;
+      setState(() {
+        _unreadNotificationsCount = notifs.where((n) => (n['is_read'] as int? ?? 0) == 0).length;
+      });
+    }
   }
 
   void _onTabChanged() {
@@ -101,15 +135,6 @@ class _CommunityScreenState extends State<CommunityScreen>
         _searchUsers = searchUsers;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadPosts() async {
@@ -203,16 +228,49 @@ class _CommunityScreenState extends State<CommunityScreen>
       appBar: VioraAppBar(
         title: l10n.community,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, size: 24),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const NotificationsInboxScreen(),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined, size: 24),
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsInboxScreen(),
+                    ),
+                  );
+                  // Reload unread count after viewing notifications
+                  _loadUnreadCount();
+                },
+              ),
+              if (_unreadNotificationsCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$_unreadNotificationsCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
+            ],
           ),
           const SizedBox(width: 4),
         ],

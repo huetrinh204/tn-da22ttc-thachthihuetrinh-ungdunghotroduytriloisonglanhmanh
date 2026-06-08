@@ -882,6 +882,15 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
       [userId]
     );
 
+    // User notifications (admin warnings, etc.)
+    const [userNotifRows]: any = await pool.query(
+      `SELECT id, type, title, body, emoji, payload, is_read, created_at
+       FROM user_notifications
+       WHERE user_id = ?
+       ORDER BY created_at DESC LIMIT 20`,
+      [userId]
+    );
+
     const notifications: any[] = [];
 
     for (const row of likeRows) {
@@ -893,6 +902,7 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
         actor_avatar: resolveAvatar(row.actor_avatar),
         post_id: String(row.post_id),
         post_content: row.post_content,
+        is_read: 0, // Community notifications are always treated as unread initially
         created_at: row.created_at,
       });
     }
@@ -907,6 +917,7 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
         post_id: String(row.post_id),
         post_content: row.post_content,
         comment_content: row.comment_content,
+        is_read: 0,
         created_at: row.created_at,
       });
     }
@@ -918,6 +929,32 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
         actor_id: String(row.actor_id),
         actor_name: row.actor_name,
         actor_avatar: resolveAvatar(row.actor_avatar),
+        is_read: 0,
+        created_at: row.created_at,
+      });
+    }
+
+    // Add user notifications (admin warnings)
+    for (const row of userNotifRows) {
+      let payload = null;
+      try {
+        payload = row.payload ? JSON.parse(row.payload) : null;
+      } catch (e) {
+        // Ignore parse errors
+      }
+
+      notifications.push({
+        id: `user_notif_${row.id}`,
+        type: row.type, // 'warning' for admin warnings
+        actor_id: "admin",
+        actor_name: "Viora Admin",
+        actor_avatar: null,
+        title: row.title,
+        body: row.body,
+        emoji: row.emoji,
+        content: row.body,
+        post_id: payload?.post_id ? String(payload.post_id) : null,
+        is_read: row.is_read,
         created_at: row.created_at,
       });
     }
@@ -931,6 +968,30 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error", notifications: [] });
+  }
+});
+
+// Mark notification as read
+router.put("/notifications/:notificationId/read", authMiddleware, async (req: any, res: Response) => {
+  const userId = req.user.id;
+  const { notificationId } = req.params;
+
+  try {
+    // Check if it's a user_notification (format: user_notif_123)
+    if (notificationId.startsWith('user_notif_')) {
+      const actualId = notificationId.replace('user_notif_', '');
+      await pool.query(
+        "UPDATE user_notifications SET is_read = 1 WHERE id = ? AND user_id = ?",
+        [actualId, userId]
+      );
+    }
+    // For community notifications (like, comment, follow), we don't persist read status
+    // They are treated as read once viewed
+
+    res.json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Mark notification as read error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

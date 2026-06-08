@@ -305,9 +305,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     int unread = 0;
     if (notificationsRes["notifications"] != null) {
       final notifs = notificationsRes["notifications"] as List;
-      // Backend doesn't have is_read field, so count all notifications
-      // Or we can assume all are unread until user taps
-      unread = notifs.length;
+      // Count only unread notifications (is_read = 0)
+      unread = notifs.where((n) => (n['is_read'] as int? ?? 0) == 0).length;
     }
 
     if (!mounted) return;
@@ -446,10 +445,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
               context,
               MaterialPageRoute(builder: (_) => const NotificationsInboxScreen()),
             );
-            // Reset unread count after viewing
-            setState(() {
-              unreadNotificationsCount = 0;
-            });
+            // Reload data to update unread count
+            _loadData();
           },
         ),
         if (unreadNotificationsCount > 0)

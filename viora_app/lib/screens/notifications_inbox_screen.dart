@@ -79,6 +79,9 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
             postId: notif.postId,
             commentId: notif.commentId,
             content: notif.content,
+            title: notif.title,
+            body: notif.body,
+            emoji: notif.emoji,
             isRead: true,
             createdAt: notif.createdAt,
           );
@@ -87,7 +90,11 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
     }
 
     // Navigate based on notification type
-    if (notif.type == 'follow') {
+    if (notif.type == 'warning') {
+      // Admin warning - just show dialog or stay in notifications
+      // User can see the warning message already in the notification
+      return;
+    } else if (notif.type == 'follow') {
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -234,6 +241,11 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
         icon = Icons.person_add;
         iconColor = AppColors.primary;
         message = l10n.notifFollow(notif.userName);
+        break;
+      case 'warning':
+        icon = Icons.warning;
+        iconColor = Colors.orange;
+        message = notif.title ?? 'Admin Warning';
         break;
       default:
         icon = Icons.notifications;
