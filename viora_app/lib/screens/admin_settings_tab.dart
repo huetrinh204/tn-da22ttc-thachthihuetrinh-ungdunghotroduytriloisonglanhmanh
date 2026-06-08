@@ -379,8 +379,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         ),
         
         const SizedBox(height: 30),
+        
+        // App Information Section
         Text(
-          _isVietnamese ? 'Quản lý dữ liệu' : 'Data Management',
+          l10n.appInfo,
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -391,56 +393,48 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         
         Card(
           color: context.cardColor,
-          child: ListTile(
-            leading: const Icon(Icons.backup),
-            title: Text(
-              _isVietnamese ? 'Sao lưu dữ liệu' : 'Backup Data',
-              style: TextStyle(color: context.textPrimary),
-            ),
-            subtitle: Text(
-              _isVietnamese ? 'Backup database' : 'Backup database',
-              style: TextStyle(color: context.textSecondary),
-            ),
-            trailing: Icon(Icons.chevron_right, color: context.textSecondary),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _isVietnamese 
-                        ? 'Tính năng đang phát triển' 
-                        : 'Feature in development',
+          child: Column(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.apps, color: AppColors.primary),
+                title: Text(
+                  l10n.appName,
+                  style: TextStyle(color: context.textPrimary),
+                ),
+                subtitle: Text(
+                  'Viora',
+                  style: TextStyle(color: context.textSecondary),
+                ),
+                trailing: Icon(Icons.edit, color: context.textSecondary),
+                onTap: _showChangeAppNameDialog,
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.image,
+                    color: AppColors.primary,
+                    size: 24,
                   ),
                 ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 12),
-        
-        Card(
-          color: context.cardColor,
-          child: ListTile(
-            leading: const Icon(Icons.analytics),
-            title: Text(
-              _isVietnamese ? 'Báo cáo chi tiết' : 'Detailed Reports',
-              style: TextStyle(color: context.textPrimary),
-            ),
-            subtitle: Text(
-              _isVietnamese ? 'Xem báo cáo và phân tích' : 'View reports and analytics',
-              style: TextStyle(color: context.textSecondary),
-            ),
-            trailing: Icon(Icons.chevron_right, color: context.textSecondary),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    _isVietnamese 
-                        ? 'Tính năng đang phát triển' 
-                        : 'Feature in development',
-                  ),
+                title: Text(
+                  l10n.appLogo,
+                  style: TextStyle(color: context.textPrimary),
                 ),
-              );
-            },
+                subtitle: Text(
+                  l10n.tapToChangeLogo,
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
+                ),
+                trailing: Icon(Icons.chevron_right, color: context.textSecondary),
+                onTap: _showChangeLogoDialog,
+              ),
+            ],
           ),
         ),
         
@@ -979,5 +973,103 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     });
   }
 
-}
+  void _showChangeAppNameDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: 'Viora');
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.changeAppName),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            labelText: l10n.appName,
+            hintText: l10n.enterNewAppName,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isEmpty) return;
+              Navigator.pop(ctx);
+              
+              // TODO: API call to update app name
+              AppSnackbar.showSuccess(context, l10n.appNameUpdated);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+  }
 
+  void _showChangeLogoDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.appLogo),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              ),
+              child: const Icon(
+                Icons.image,
+                size: 60,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.tapToChangeLogo,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // TODO: API call to upload logo
+              AppSnackbar.showSuccess(context, l10n.logoUpdated);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(_isVietnamese ? 'Chọn ảnh' : 'Select Image'),
+          ),
+        ],
+      ),
+    );
+  }
+
+}

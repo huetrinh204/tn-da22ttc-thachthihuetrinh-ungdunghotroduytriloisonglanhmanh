@@ -873,5 +873,14 @@
   "plantTypeSprout": "Cây mầm",
   "plantTypeCactus": "Xương rồng",
   "plantTypeSunflower": "Hướng dương",
-  "plantTypeFlower": "Hoa"
+  "plantTypeFlower": "Hoa",
+  "appInfo": "Thông tin ứng dụng",
+  "appName": "Tên ứng dụng",
+  "appLogo": "Logo ứng dụng",
+  "tapToChangeLogo": "Chạm để thay đổi logo",
+  "changeAppName": "Đổi tên ứng dụng",
+  "enterNewAppName": "Nhập tên mới cho ứng dụng",
+  "appNameUpdated": "Đã cập nhật tên ứng dụng",
+  "logoUpdated": "Đã cập nhật logo ứng dụng",
+  "updateFailed": "Cập nhật thất bại"
 }

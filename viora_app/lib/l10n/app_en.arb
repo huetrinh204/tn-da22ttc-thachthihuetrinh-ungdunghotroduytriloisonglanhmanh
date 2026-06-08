@@ -873,5 +873,14 @@
   "plantTypeSprout": "Sprout",
   "plantTypeCactus": "Cactus",
   "plantTypeSunflower": "Sunflower",
-  "plantTypeFlower": "Flower"
+  "plantTypeFlower": "Flower",
+  "appInfo": "App Information",
+  "appName": "App Name",
+  "appLogo": "App Logo",
+  "tapToChangeLogo": "Tap to change logo",
+  "changeAppName": "Change App Name",
+  "enterNewAppName": "Enter new app name",
+  "appNameUpdated": "App name updated",
+  "logoUpdated": "App logo updated",
+  "updateFailed": "Update failed"
 }

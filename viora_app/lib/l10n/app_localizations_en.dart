@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'Viora';
+  String get appName => 'App Name';
 
   @override
   String get home => 'Home';
@@ -1765,4 +1765,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plantTypeFlower => 'Flower';
+
+  @override
+  String get appInfo => 'App Information';
+
+  @override
+  String get appLogo => 'App Logo';
+
+  @override
+  String get tapToChangeLogo => 'Tap to change logo';
+
+  @override
+  String get changeAppName => 'Change App Name';
+
+  @override
+  String get enterNewAppName => 'Enter new app name';
+
+  @override
+  String get appNameUpdated => 'App name updated';
+
+  @override
+  String get logoUpdated => 'App logo updated';
+
+  @override
+  String get updateFailed => 'Update failed';
 }

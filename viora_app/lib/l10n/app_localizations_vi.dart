@@ -9,7 +9,7 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
-  String get appName => 'Viora';
+  String get appName => 'Tên ứng dụng';
 
   @override
   String get home => 'Trang chủ';
@@ -1765,4 +1765,28 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get plantTypeFlower => 'Hoa';
+
+  @override
+  String get appInfo => 'Thông tin ứng dụng';
+
+  @override
+  String get appLogo => 'Logo ứng dụng';
+
+  @override
+  String get tapToChangeLogo => 'Chạm để thay đổi logo';
+
+  @override
+  String get changeAppName => 'Đổi tên ứng dụng';
+
+  @override
+  String get enterNewAppName => 'Nhập tên mới cho ứng dụng';
+
+  @override
+  String get appNameUpdated => 'Đã cập nhật tên ứng dụng';
+
+  @override
+  String get logoUpdated => 'Đã cập nhật logo ứng dụng';
+
+  @override
+  String get updateFailed => 'Cập nhật thất bại';
 }

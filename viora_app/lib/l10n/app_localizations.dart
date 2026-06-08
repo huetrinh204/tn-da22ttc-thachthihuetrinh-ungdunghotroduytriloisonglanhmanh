@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In vi, this message translates to:
-  /// **'Viora'**
+  /// **'Tên ứng dụng'**
   String get appName;
 
   /// No description provided for @home.
@@ -3445,6 +3445,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hoa'**
   String get plantTypeFlower;
+
+  /// No description provided for @appInfo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin ứng dụng'**
+  String get appInfo;
+
+  /// No description provided for @appLogo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Logo ứng dụng'**
+  String get appLogo;
+
+  /// No description provided for @tapToChangeLogo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chạm để thay đổi logo'**
+  String get tapToChangeLogo;
+
+  /// No description provided for @changeAppName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi tên ứng dụng'**
+  String get changeAppName;
+
+  /// No description provided for @enterNewAppName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập tên mới cho ứng dụng'**
+  String get enterNewAppName;
+
+  /// No description provided for @appNameUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật tên ứng dụng'**
+  String get appNameUpdated;
+
+  /// No description provided for @logoUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật logo ứng dụng'**
+  String get logoUpdated;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật thất bại'**
+  String get updateFailed;
 }
 
 class _AppLocalizationsDelegate
