@@ -251,8 +251,8 @@
   
   "appearance": "Giao diện",
   "selectLanguage": "Chọn ngôn ngữ",
-  "languageChanged": "Đã chuyển sang Tiếng Việt. Khởi động lại app để áp dụng.",
-  "languageChangedEn": "Switched to English. Restart app to apply.",
+  "languageChanged": "Đã chuyển sang Tiếng Việt",
+  "languageChangedEn": "Đã chuyển sang Tiếng Anh",
   
   "editName": "Đổi tên",
   "save": "Lưu",
@@ -686,5 +686,192 @@
   "searchResultsPosts": "Bài viết",
   "shareAchievement": "Chia sẻ thành tích",
   "achievementShared": "Đã chia sẻ thành tích lên cộng đồng!",
-  "noSearchResultsUsers": "Không tìm thấy người dùng"
+  "noSearchResultsUsers": "Không tìm thấy người dùng",
+  
+  "adminDashboard": "Admin Dashboard",
+  "adminUsers": "Quản lý người dùng",
+  "adminPosts": "Quản lý bài viết",
+  "adminPlants": "Quản lý cây",
+  "adminSettings": "Cài đặt",
+  "admin": "Admin",
+  "dashboard": "Dashboard",
+  "users": "Người dùng",
+  "postsLabel": "Bài viết",
+  "plants": "Cây",
+  "overview": "Tổng quan",
+  "commentsLabel": "Bình luận",
+  "habits": "Thói quen",
+  "todayLabel": "hôm nay",
+  "growthCharts": "Biểu đồ tăng trưởng",
+  "dataDistribution": "Phân bổ dữ liệu",
+  "userGrowth30Days": "Tăng trưởng người dùng (30 ngày qua)",
+  "postGrowth30Days": "Tăng trưởng bài viết (30 ngày qua)",
+  "noGrowthData": "Chưa có dữ liệu tăng trưởng",
+  "searchByNameEmail": "Tìm kiếm theo tên hoặc email...",
+  "noUsersFound": "Không tìm thấy người dùng",
+  "noUsersYet": "Chưa có người dùng",
+  "active": "Đang hoạt động",
+  "inactive": "Không hoạt động",
+  "demoteToUser": "Hạ xuống User",
+  "promoteToAdmin": "Lên Admin",
+  "blockUser": "Chặn người dùng",
+  "confirmBlock": "Xác nhận chặn",
+  "confirmBlockMessage": "Bạn có chắc muốn chặn user \"{name}\"?",
+  "@confirmBlockMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "block": "Chặn",
+  "confirmDelete": "Xác nhận xóa",
+  "confirmDeleteUserMessage": "Bạn có chắc muốn xóa user \"{name}\"?",
+  "@confirmDeleteUserMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "userDeleted": "Đã xóa user",
+  "selected": "đã chọn",
+  "deleteAll": "Xóa tất cả",
+  "confirmBulkDeleteMessage": "Bạn có chắc muốn xóa {count} người dùng đã chọn?",
+  "@confirmBulkDeleteMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usersDeleted": "Đã xóa {count} người dùng",
+  "@usersDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addUser": "Thêm user",
+  "addNewUser": "Thêm người dùng mới",
+  "name": "Tên",
+  "role": "Vai trò",
+  "user": "User",
+  "admin": "Admin",
+  "create": "Tạo",
+  "pleaseEnterAllFields": "Vui lòng điền đầy đủ thông tin",
+  "userCreated": "Đã tạo người dùng mới",
+  "roleUpdated": "Đã cập nhật role",
+  "blockFeatureInDev": "Tính năng chặn user đang phát triển",
+  "searchPostsOrAuthors": "Tìm kiếm bài viết hoặc tác giả...",
+  "noPostsFound": "Không tìm thấy bài viết",
+  "noPostsYet": "Chưa có bài viết nào",
+  "latest": "Mới nhất",
+  "oldest": "Cũ nhất",
+  "trendingLabel": "Xu hướng",
+  "reportViolation": "Cảnh báo vi phạm",
+  "viewDetails": "Xem chi tiết",
+  "deletePost": "Xóa bài viết",
+  "confirmDeletePostMessage": "Bạn có chắc muốn xóa bài viết này?\n\n\"{content}\"",
+  "@confirmDeletePostMessage": {
+    "placeholders": {
+      "content": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleted": "Đã xóa bài viết",
+  "warningViolation": "Cảnh báo vi phạm",
+  "content": "Nội dung",
+  "selectViolationReason": "Chọn lý do vi phạm:",
+  "violentContent": "Nội dung bạo lực hoặc gây shock",
+  "spamContent": "Nội dung spam hoặc lừa đảo",
+  "hateSpeech": "Ngôn từ thù địch hoặc phân biệt đối xử",
+  "misinformation": "Thông tin sai sự thật",
+  "adultContent": "Nội dung khiêu dâm",
+  "copyrightViolation": "Vi phạm quyền sở hữu trí tuệ",
+  "otherReason": "Lý do khác",
+  "enterReason": "Nhập lý do",
+  "sendWarning": "Gửi cảnh báo",
+  "warningSent": "Đã gửi cảnh báo đến người dùng (in-app + email)",
+  "userDetails": "Chi tiết người dùng",
+  "personalInfo": "Thông tin cá nhân",
+  "gender": "Giới tính",
+  "male": "Nam",
+  "female": "Nữ",
+  "other": "Khác",
+  "notUpdated": "Chưa cập nhật",
+  "birthYear": "Năm sinh",
+  "height": "Chiều cao",
+  "weight": "Cân nặng",
+  "goals": "Mục tiêu",
+  "noGoalsSet": "Chưa thiết lập mục tiêu",
+  "stats": "Thống kê",
+  "habitCount": "Số thói quen",
+  "postCount": "Số bài viết",
+  "joinedDate": "Ngày tham gia",
+  "noDate": "Chưa có",
+  "goalExercise": "Tập thể dục",
+  "goalEatHealthy": "Ăn uống lành mạnh",
+  "goalSleep": "Ngủ đủ giấc",
+  "goalHydration": "Uống đủ nước",
+  "goalWeight": "Quản lý cân nặng",
+  "goalMental": "Sức khỏe tinh thần",
+  "noPlantsYet": "Chưa có cây nào",
+  "exp": "EXP",
+  "plantOwnerOf": "Cây của {name}",
+  "@plantOwnerOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "userHasNoPlant": "Người dùng chưa có cây",
+  "owner": "Chủ sở hữu",
+  "joinedDate": "Tham gia",
+  "plantType": "Loại cây",
+  "levelWithExp": "Cấp độ {level} • {exp} EXP",
+  "@levelWithExp": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "exp": {
+        "type": "int"
+      }
+    }
+  },
+  "planted": "Gieo",
+  "watered": "Tưới",
+  "statistics": "Thống kê",
+  "streakDays": "Chuỗi ngày",
+  "habitsLabel": "Thói quen",
+  "daysCompleted": "Ngày hoàn thành",
+  "expHistory": "Lịch sử nhận điểm",
+  "expPerHabit": "Mỗi thói quen hoàn thành = +1 EXP",
+  "noExpHistory": "Chưa có lịch sử nhận điểm",
+  "habitsCompletedCount": "{count} thói quen hoàn thành:",
+  "@habitsCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "today": "Hôm nay",
+  "yesterday": "Hôm qua",
+  "daysAgoCount": "{count} ngày trước",
+  "@daysAgoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plantTypeSprout": "Cây mầm",
+  "plantTypeCactus": "Xương rồng",
+  "plantTypeSunflower": "Hướng dương",
+  "plantTypeFlower": "Hoa"
 }

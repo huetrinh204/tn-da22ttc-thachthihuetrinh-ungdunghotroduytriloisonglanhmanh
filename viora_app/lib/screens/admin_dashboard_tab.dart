@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class AdminDashboardTab extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -123,6 +124,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -136,7 +139,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Tổng quan',
+              l10n.overview,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -155,23 +158,23 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
               childAspectRatio: 1.5,
               children: [
                 _buildStatCard(
-                  'Người dùng',
+                  l10n.users,
                   _totalUsers.toString(),
                   Icons.people,
                   Colors.blue,
-                  '+$_todayUsers hôm nay',
+                  '+$_todayUsers ${l10n.todayLabel}',
                   onTap: () => _navigateToTab(1), // Navigate to Users tab
                 ),
                 _buildStatCard(
-                  'Bài viết',
+                  l10n.postsLabel,
                   _totalPosts.toString(),
                   Icons.article,
                   Colors.green,
-                  '+$_todayPosts hôm nay',
+                  '+$_todayPosts ${l10n.todayLabel}',
                   onTap: () => _navigateToTab(2), // Navigate to Posts tab
                 ),
                 _buildStatCard(
-                  'Bình luận',
+                  l10n.commentsLabel,
                   _totalComments.toString(),
                   Icons.comment,
                   Colors.orange,
@@ -179,7 +182,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   onTap: () => _navigateToTab(2), // Navigate to Posts tab (where comments are)
                 ),
                 _buildStatCard(
-                  'Thói quen',
+                  l10n.habits,
                   _totalHabits.toString(),
                   Icons.check_circle,
                   Colors.purple,
@@ -193,7 +196,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             
             // Line Charts section
             Text(
-              'Biểu đồ tăng trưởng',
+              l10n.growthCharts,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -202,13 +205,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             ),
             const SizedBox(height: 16),
             
-            _buildLineCharts(),
+            _buildLineCharts(l10n),
             
             const SizedBox(height: 30),
             
             // Pie Chart section  
             Text(
-              'Phân bổ dữ liệu',
+              l10n.dataDistribution,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -217,7 +220,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             ),
             const SizedBox(height: 16),
             
-            _buildPieChart(),
+            _buildPieChart(l10n),
           ],
         ),
       ),
@@ -295,7 +298,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
     );
   }
 
-  Widget _buildLineCharts() {
+  Widget _buildLineCharts(AppLocalizations l10n) {
     return Column(
       children: [
         // Users growth chart
@@ -320,7 +323,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Tăng trưởng người dùng (30 ngày qua)',
+                l10n.userGrowth30Days,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -332,7 +335,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 child: _userGrowthData.isEmpty
                     ? Center(
                         child: Text(
-                          'Chưa có dữ liệu tăng trưởng',
+                          l10n.noGrowthData,
                           style: TextStyle(color: context.textSecondary),
                         ),
                       )
@@ -479,7 +482,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Tăng trưởng bài viết (30 ngày qua)',
+                l10n.postGrowth30Days,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -491,7 +494,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 child: _postGrowthData.isEmpty
                     ? Center(
                         child: Text(
-                          'Chưa có dữ liệu tăng trưởng',
+                          l10n.noGrowthData,
                           style: TextStyle(color: context.textSecondary),
                         ),
                       )
@@ -620,7 +623,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
     );
   }
 
-  Widget _buildPieChart() {
+  Widget _buildPieChart(AppLocalizations l10n) {
     return Container(
       height: 300,
       padding: const EdgeInsets.all(16),
@@ -640,7 +643,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
       child: Column(
         children: [
           Text(
-            'Phân bổ dữ liệu',
+            l10n.dataDistribution,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -656,7 +659,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                 sections: [
                   PieChartSectionData(
                     value: _totalUsers.toDouble(),
-                    title: '$_totalUsers\nNgười dùng',
+                    title: '$_totalUsers\n${l10n.users}',
                     color: Colors.blue,
                     radius: 80,
                     titleStyle: const TextStyle(
@@ -667,7 +670,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   ),
                   PieChartSectionData(
                     value: _totalPosts.toDouble(),
-                    title: '$_totalPosts\nBài viết',
+                    title: '$_totalPosts\n${l10n.postsLabel}',
                     color: Colors.green,
                     radius: 80,
                     titleStyle: const TextStyle(
@@ -678,7 +681,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   ),
                   PieChartSectionData(
                     value: _totalHabits.toDouble(),
-                    title: '$_totalHabits\nThói quen',
+                    title: '$_totalHabits\n${l10n.habits}',
                     color: Colors.purple,
                     radius: 80,
                     titleStyle: const TextStyle(

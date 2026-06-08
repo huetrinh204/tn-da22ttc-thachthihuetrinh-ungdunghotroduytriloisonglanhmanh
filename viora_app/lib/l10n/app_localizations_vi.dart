@@ -491,11 +491,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get selectLanguage => 'Chọn ngôn ngữ';
 
   @override
-  String get languageChanged =>
-      'Đã chuyển sang Tiếng Việt. Khởi động lại app để áp dụng.';
+  String get languageChanged => 'Đã chuyển sang Tiếng Việt';
 
   @override
-  String get languageChangedEn => 'Switched to English. Restart app to apply.';
+  String get languageChangedEn => 'Đã chuyển sang Tiếng Anh';
 
   @override
   String get editName => 'Đổi tên';
@@ -747,7 +746,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get yourToday => 'Hôm nay của bạn';
 
   @override
-  String get habitsLabel => 'thói quen';
+  String get habitsLabel => 'Thói quen';
 
   @override
   String consecutiveDays(int count) {
@@ -895,22 +894,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get weightMax => 'Cân nặng tối đa 300 kg';
 
   @override
-  String get goalEatHealthy => 'Ăn lành mạnh';
+  String get goalEatHealthy => 'Ăn uống lành mạnh';
 
   @override
-  String get goalExercise => 'Vận động';
+  String get goalExercise => 'Tập thể dục';
 
   @override
-  String get goalSleep => 'Giấc ngủ';
+  String get goalSleep => 'Ngủ đủ giấc';
 
   @override
-  String get goalMental => 'Tinh thần';
+  String get goalMental => 'Sức khỏe tinh thần';
 
   @override
-  String get goalWeight => 'Cân nặng';
+  String get goalWeight => 'Quản lý cân nặng';
 
   @override
-  String get goalHydration => 'Uống nước';
+  String get goalHydration => 'Uống đủ nước';
 
   @override
   String get goalOther => 'Khác';
@@ -1253,7 +1252,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get send => 'Gửi';
 
   @override
-  String get deletePost => 'Xóa bài viết?';
+  String get deletePost => 'Xóa bài viết';
 
   @override
   String get confirmDeletePost => 'Bạn có chắc muốn xóa bài viết này không?';
@@ -1460,4 +1459,310 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noSearchResultsUsers => 'Không tìm thấy người dùng';
+
+  @override
+  String get adminDashboard => 'Admin Dashboard';
+
+  @override
+  String get adminUsers => 'Quản lý người dùng';
+
+  @override
+  String get adminPosts => 'Quản lý bài viết';
+
+  @override
+  String get adminPlants => 'Quản lý cây';
+
+  @override
+  String get adminSettings => 'Cài đặt';
+
+  @override
+  String get admin => 'Admin';
+
+  @override
+  String get dashboard => 'Dashboard';
+
+  @override
+  String get users => 'Người dùng';
+
+  @override
+  String get postsLabel => 'Bài viết';
+
+  @override
+  String get plants => 'Cây';
+
+  @override
+  String get overview => 'Tổng quan';
+
+  @override
+  String get commentsLabel => 'Bình luận';
+
+  @override
+  String get todayLabel => 'hôm nay';
+
+  @override
+  String get growthCharts => 'Biểu đồ tăng trưởng';
+
+  @override
+  String get dataDistribution => 'Phân bổ dữ liệu';
+
+  @override
+  String get userGrowth30Days => 'Tăng trưởng người dùng (30 ngày qua)';
+
+  @override
+  String get postGrowth30Days => 'Tăng trưởng bài viết (30 ngày qua)';
+
+  @override
+  String get noGrowthData => 'Chưa có dữ liệu tăng trưởng';
+
+  @override
+  String get searchByNameEmail => 'Tìm kiếm theo tên hoặc email...';
+
+  @override
+  String get noUsersFound => 'Không tìm thấy người dùng';
+
+  @override
+  String get noUsersYet => 'Chưa có người dùng';
+
+  @override
+  String get active => 'Đang hoạt động';
+
+  @override
+  String get inactive => 'Không hoạt động';
+
+  @override
+  String get demoteToUser => 'Hạ xuống User';
+
+  @override
+  String get promoteToAdmin => 'Lên Admin';
+
+  @override
+  String get blockUser => 'Chặn người dùng';
+
+  @override
+  String get confirmBlock => 'Xác nhận chặn';
+
+  @override
+  String confirmBlockMessage(String name) {
+    return 'Bạn có chắc muốn chặn user \"$name\"?';
+  }
+
+  @override
+  String get block => 'Chặn';
+
+  @override
+  String get confirmDelete => 'Xác nhận xóa';
+
+  @override
+  String confirmDeleteUserMessage(String name) {
+    return 'Bạn có chắc muốn xóa user \"$name\"?';
+  }
+
+  @override
+  String get userDeleted => 'Đã xóa user';
+
+  @override
+  String get selected => 'đã chọn';
+
+  @override
+  String get deleteAll => 'Xóa tất cả';
+
+  @override
+  String confirmBulkDeleteMessage(int count) {
+    return 'Bạn có chắc muốn xóa $count người dùng đã chọn?';
+  }
+
+  @override
+  String usersDeleted(int count) {
+    return 'Đã xóa $count người dùng';
+  }
+
+  @override
+  String get addUser => 'Thêm user';
+
+  @override
+  String get addNewUser => 'Thêm người dùng mới';
+
+  @override
+  String get name => 'Tên';
+
+  @override
+  String get role => 'Vai trò';
+
+  @override
+  String get user => 'User';
+
+  @override
+  String get create => 'Tạo';
+
+  @override
+  String get pleaseEnterAllFields => 'Vui lòng điền đầy đủ thông tin';
+
+  @override
+  String get userCreated => 'Đã tạo người dùng mới';
+
+  @override
+  String get roleUpdated => 'Đã cập nhật role';
+
+  @override
+  String get blockFeatureInDev => 'Tính năng chặn user đang phát triển';
+
+  @override
+  String get searchPostsOrAuthors => 'Tìm kiếm bài viết hoặc tác giả...';
+
+  @override
+  String get noPostsFound => 'Không tìm thấy bài viết';
+
+  @override
+  String get noPostsYet => 'Chưa có bài viết nào';
+
+  @override
+  String get latest => 'Mới nhất';
+
+  @override
+  String get oldest => 'Cũ nhất';
+
+  @override
+  String get trendingLabel => 'Xu hướng';
+
+  @override
+  String get reportViolation => 'Cảnh báo vi phạm';
+
+  @override
+  String get viewDetails => 'Xem chi tiết';
+
+  @override
+  String confirmDeletePostMessage(String content) {
+    return 'Bạn có chắc muốn xóa bài viết này?\n\n\"$content\"';
+  }
+
+  @override
+  String get warningViolation => 'Cảnh báo vi phạm';
+
+  @override
+  String get content => 'Nội dung';
+
+  @override
+  String get selectViolationReason => 'Chọn lý do vi phạm:';
+
+  @override
+  String get violentContent => 'Nội dung bạo lực hoặc gây shock';
+
+  @override
+  String get spamContent => 'Nội dung spam hoặc lừa đảo';
+
+  @override
+  String get hateSpeech => 'Ngôn từ thù địch hoặc phân biệt đối xử';
+
+  @override
+  String get misinformation => 'Thông tin sai sự thật';
+
+  @override
+  String get adultContent => 'Nội dung khiêu dâm';
+
+  @override
+  String get copyrightViolation => 'Vi phạm quyền sở hữu trí tuệ';
+
+  @override
+  String get otherReason => 'Lý do khác';
+
+  @override
+  String get enterReason => 'Nhập lý do';
+
+  @override
+  String get sendWarning => 'Gửi cảnh báo';
+
+  @override
+  String get warningSent => 'Đã gửi cảnh báo đến người dùng (in-app + email)';
+
+  @override
+  String get userDetails => 'Chi tiết người dùng';
+
+  @override
+  String get noGoalsSet => 'Chưa thiết lập mục tiêu';
+
+  @override
+  String get habitCount => 'Số thói quen';
+
+  @override
+  String get postCount => 'Số bài viết';
+
+  @override
+  String get joinedDate => 'Tham gia';
+
+  @override
+  String get noDate => 'Chưa có';
+
+  @override
+  String get noPlantsYet => 'Chưa có cây nào';
+
+  @override
+  String get exp => 'EXP';
+
+  @override
+  String plantOwnerOf(String name) {
+    return 'Cây của $name';
+  }
+
+  @override
+  String get userHasNoPlant => 'Người dùng chưa có cây';
+
+  @override
+  String get owner => 'Chủ sở hữu';
+
+  @override
+  String get plantType => 'Loại cây';
+
+  @override
+  String levelWithExp(int level, int exp) {
+    return 'Cấp độ $level • $exp EXP';
+  }
+
+  @override
+  String get planted => 'Gieo';
+
+  @override
+  String get watered => 'Tưới';
+
+  @override
+  String get statistics => 'Thống kê';
+
+  @override
+  String get streakDays => 'Chuỗi ngày';
+
+  @override
+  String get daysCompleted => 'Ngày hoàn thành';
+
+  @override
+  String get expHistory => 'Lịch sử nhận điểm';
+
+  @override
+  String get expPerHabit => 'Mỗi thói quen hoàn thành = +1 EXP';
+
+  @override
+  String get noExpHistory => 'Chưa có lịch sử nhận điểm';
+
+  @override
+  String habitsCompletedCount(int count) {
+    return '$count thói quen hoàn thành:';
+  }
+
+  @override
+  String get yesterday => 'Hôm qua';
+
+  @override
+  String daysAgoCount(int count) {
+    return '$count ngày trước';
+  }
+
+  @override
+  String get plantTypeSprout => 'Cây mầm';
+
+  @override
+  String get plantTypeCactus => 'Xương rồng';
+
+  @override
+  String get plantTypeSunflower => 'Hướng dương';
+
+  @override
+  String get plantTypeFlower => 'Hoa';
 }

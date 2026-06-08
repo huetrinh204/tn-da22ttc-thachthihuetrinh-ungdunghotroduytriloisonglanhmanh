@@ -21,7 +21,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plant => 'Plant';
 
   @override
-  String get stats => 'Stats';
+  String get stats => 'Statistics';
 
   @override
   String get profile => 'Profile';
@@ -491,10 +491,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectLanguage => 'Select Language';
 
   @override
-  String get languageChanged => 'Switched to Vietnamese. Restart app to apply.';
+  String get languageChanged => 'Switched to Vietnamese';
 
   @override
-  String get languageChangedEn => 'Switched to English. Restart app to apply.';
+  String get languageChangedEn => 'Switched to English';
 
   @override
   String get editName => 'Edit Name';
@@ -745,7 +745,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourToday => 'Your Today';
 
   @override
-  String get habitsLabel => 'habits';
+  String get habitsLabel => 'Habits';
 
   @override
   String consecutiveDays(int count) {
@@ -899,16 +899,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalExercise => 'Exercise';
 
   @override
-  String get goalSleep => 'Sleep';
+  String get goalSleep => 'Get Enough Sleep';
 
   @override
   String get goalMental => 'Mental Health';
 
   @override
-  String get goalWeight => 'Weight';
+  String get goalWeight => 'Weight Management';
 
   @override
-  String get goalHydration => 'Hydration';
+  String get goalHydration => 'Drink Enough Water';
 
   @override
   String get goalOther => 'Other';
@@ -1250,7 +1250,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get send => 'Send';
 
   @override
-  String get deletePost => 'Delete Post?';
+  String get deletePost => 'Delete Post';
 
   @override
   String get confirmDeletePost => 'Are you sure you want to delete this post?';
@@ -1459,4 +1459,310 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noSearchResultsUsers => 'No users found';
+
+  @override
+  String get adminDashboard => 'Admin Dashboard';
+
+  @override
+  String get adminUsers => 'User Management';
+
+  @override
+  String get adminPosts => 'Post Management';
+
+  @override
+  String get adminPlants => 'Plant Management';
+
+  @override
+  String get adminSettings => 'Settings';
+
+  @override
+  String get admin => 'Admin';
+
+  @override
+  String get dashboard => 'Dashboard';
+
+  @override
+  String get users => 'Users';
+
+  @override
+  String get postsLabel => 'Posts';
+
+  @override
+  String get plants => 'Plants';
+
+  @override
+  String get overview => 'Overview';
+
+  @override
+  String get commentsLabel => 'Comments';
+
+  @override
+  String get todayLabel => 'today';
+
+  @override
+  String get growthCharts => 'Growth Charts';
+
+  @override
+  String get dataDistribution => 'Data Distribution';
+
+  @override
+  String get userGrowth30Days => 'User Growth (Last 30 Days)';
+
+  @override
+  String get postGrowth30Days => 'Post Growth (Last 30 Days)';
+
+  @override
+  String get noGrowthData => 'No growth data yet';
+
+  @override
+  String get searchByNameEmail => 'Search by name or email...';
+
+  @override
+  String get noUsersFound => 'No users found';
+
+  @override
+  String get noUsersYet => 'No users yet';
+
+  @override
+  String get active => 'Active';
+
+  @override
+  String get inactive => 'Inactive';
+
+  @override
+  String get demoteToUser => 'Demote to User';
+
+  @override
+  String get promoteToAdmin => 'Promote to Admin';
+
+  @override
+  String get blockUser => 'Block User';
+
+  @override
+  String get confirmBlock => 'Confirm Block';
+
+  @override
+  String confirmBlockMessage(String name) {
+    return 'Are you sure you want to block user \"$name\"?';
+  }
+
+  @override
+  String get block => 'Block';
+
+  @override
+  String get confirmDelete => 'Confirm Delete';
+
+  @override
+  String confirmDeleteUserMessage(String name) {
+    return 'Are you sure you want to delete user \"$name\"?';
+  }
+
+  @override
+  String get userDeleted => 'User deleted';
+
+  @override
+  String get selected => 'selected';
+
+  @override
+  String get deleteAll => 'Delete All';
+
+  @override
+  String confirmBulkDeleteMessage(int count) {
+    return 'Are you sure you want to delete $count selected users?';
+  }
+
+  @override
+  String usersDeleted(int count) {
+    return '$count users deleted';
+  }
+
+  @override
+  String get addUser => 'Add User';
+
+  @override
+  String get addNewUser => 'Add New User';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get user => 'User';
+
+  @override
+  String get create => 'Create';
+
+  @override
+  String get pleaseEnterAllFields => 'Please fill in all fields';
+
+  @override
+  String get userCreated => 'New user created';
+
+  @override
+  String get roleUpdated => 'Role updated';
+
+  @override
+  String get blockFeatureInDev => 'Block user feature in development';
+
+  @override
+  String get searchPostsOrAuthors => 'Search posts or authors...';
+
+  @override
+  String get noPostsFound => 'No posts found';
+
+  @override
+  String get noPostsYet => 'No posts yet';
+
+  @override
+  String get latest => 'Latest';
+
+  @override
+  String get oldest => 'Oldest';
+
+  @override
+  String get trendingLabel => 'Trending';
+
+  @override
+  String get reportViolation => 'Report Violation';
+
+  @override
+  String get viewDetails => 'View Details';
+
+  @override
+  String confirmDeletePostMessage(String content) {
+    return 'Are you sure you want to delete this post?\n\n\"$content\"';
+  }
+
+  @override
+  String get warningViolation => 'Violation Warning';
+
+  @override
+  String get content => 'Content';
+
+  @override
+  String get selectViolationReason => 'Select violation reason:';
+
+  @override
+  String get violentContent => 'Violent or shocking content';
+
+  @override
+  String get spamContent => 'Spam or scam content';
+
+  @override
+  String get hateSpeech => 'Hate speech or discrimination';
+
+  @override
+  String get misinformation => 'Misinformation';
+
+  @override
+  String get adultContent => 'Adult content';
+
+  @override
+  String get copyrightViolation => 'Copyright violation';
+
+  @override
+  String get otherReason => 'Other reason';
+
+  @override
+  String get enterReason => 'Enter reason';
+
+  @override
+  String get sendWarning => 'Send Warning';
+
+  @override
+  String get warningSent => 'Warning sent to user (in-app + email)';
+
+  @override
+  String get userDetails => 'User Details';
+
+  @override
+  String get noGoalsSet => 'No goals set';
+
+  @override
+  String get habitCount => 'Habit Count';
+
+  @override
+  String get postCount => 'Post Count';
+
+  @override
+  String get joinedDate => 'Joined';
+
+  @override
+  String get noDate => 'No date';
+
+  @override
+  String get noPlantsYet => 'No plants yet';
+
+  @override
+  String get exp => 'EXP';
+
+  @override
+  String plantOwnerOf(String name) {
+    return '$name\'s Plant';
+  }
+
+  @override
+  String get userHasNoPlant => 'User has no plant yet';
+
+  @override
+  String get owner => 'Owner';
+
+  @override
+  String get plantType => 'Plant Type';
+
+  @override
+  String levelWithExp(int level, int exp) {
+    return 'Level $level • $exp EXP';
+  }
+
+  @override
+  String get planted => 'Planted';
+
+  @override
+  String get watered => 'Watered';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get streakDays => 'Streak Days';
+
+  @override
+  String get daysCompleted => 'Days Completed';
+
+  @override
+  String get expHistory => 'EXP History';
+
+  @override
+  String get expPerHabit => 'Each habit completed = +1 EXP';
+
+  @override
+  String get noExpHistory => 'No EXP history yet';
+
+  @override
+  String habitsCompletedCount(int count) {
+    return '$count habits completed:';
+  }
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String daysAgoCount(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get plantTypeSprout => 'Sprout';
+
+  @override
+  String get plantTypeCactus => 'Cactus';
+
+  @override
+  String get plantTypeSunflower => 'Sunflower';
+
+  @override
+  String get plantTypeFlower => 'Flower';
 }

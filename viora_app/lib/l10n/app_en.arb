@@ -251,8 +251,8 @@
   
   "appearance": "Appearance",
   "selectLanguage": "Select Language",
-  "languageChanged": "Switched to Vietnamese. Restart app to apply.",
-  "languageChangedEn": "Switched to English. Restart app to apply.",
+  "languageChanged": "Switched to Vietnamese",
+  "languageChangedEn": "Switched to English",
   
   "editName": "Edit Name",
   "save": "Save",
@@ -686,5 +686,192 @@
   "searchResultsPosts": "Posts",
   "shareAchievement": "Share Achievement",
   "achievementShared": "Achievement shared to community!",
-  "noSearchResultsUsers": "No users found"
+  "noSearchResultsUsers": "No users found",
+  
+  "adminDashboard": "Admin Dashboard",
+  "adminUsers": "User Management",
+  "adminPosts": "Post Management",
+  "adminPlants": "Plant Management",
+  "adminSettings": "Settings",
+  "admin": "Admin",
+  "dashboard": "Dashboard",
+  "users": "Users",
+  "postsLabel": "Posts",
+  "plants": "Plants",
+  "overview": "Overview",
+  "commentsLabel": "Comments",
+  "habits": "Habits",
+  "todayLabel": "today",
+  "growthCharts": "Growth Charts",
+  "dataDistribution": "Data Distribution",
+  "userGrowth30Days": "User Growth (Last 30 Days)",
+  "postGrowth30Days": "Post Growth (Last 30 Days)",
+  "noGrowthData": "No growth data yet",
+  "searchByNameEmail": "Search by name or email...",
+  "noUsersFound": "No users found",
+  "noUsersYet": "No users yet",
+  "active": "Active",
+  "inactive": "Inactive",
+  "demoteToUser": "Demote to User",
+  "promoteToAdmin": "Promote to Admin",
+  "blockUser": "Block User",
+  "confirmBlock": "Confirm Block",
+  "confirmBlockMessage": "Are you sure you want to block user \"{name}\"?",
+  "@confirmBlockMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "block": "Block",
+  "confirmDelete": "Confirm Delete",
+  "confirmDeleteUserMessage": "Are you sure you want to delete user \"{name}\"?",
+  "@confirmDeleteUserMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "userDeleted": "User deleted",
+  "selected": "selected",
+  "deleteAll": "Delete All",
+  "confirmBulkDeleteMessage": "Are you sure you want to delete {count} selected users?",
+  "@confirmBulkDeleteMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usersDeleted": "{count} users deleted",
+  "@usersDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addUser": "Add User",
+  "addNewUser": "Add New User",
+  "name": "Name",
+  "role": "Role",
+  "user": "User",
+  "admin": "Admin",
+  "create": "Create",
+  "pleaseEnterAllFields": "Please fill in all fields",
+  "userCreated": "New user created",
+  "roleUpdated": "Role updated",
+  "blockFeatureInDev": "Block user feature in development",
+  "searchPostsOrAuthors": "Search posts or authors...",
+  "noPostsFound": "No posts found",
+  "noPostsYet": "No posts yet",
+  "latest": "Latest",
+  "oldest": "Oldest",
+  "trendingLabel": "Trending",
+  "reportViolation": "Report Violation",
+  "viewDetails": "View Details",
+  "deletePost": "Delete Post",
+  "confirmDeletePostMessage": "Are you sure you want to delete this post?\n\n\"{content}\"",
+  "@confirmDeletePostMessage": {
+    "placeholders": {
+      "content": {
+        "type": "String"
+      }
+    }
+  },
+  "postDeleted": "Post deleted",
+  "warningViolation": "Violation Warning",
+  "content": "Content",
+  "selectViolationReason": "Select violation reason:",
+  "violentContent": "Violent or shocking content",
+  "spamContent": "Spam or scam content",
+  "hateSpeech": "Hate speech or discrimination",
+  "misinformation": "Misinformation",
+  "adultContent": "Adult content",
+  "copyrightViolation": "Copyright violation",
+  "otherReason": "Other reason",
+  "enterReason": "Enter reason",
+  "sendWarning": "Send Warning",
+  "warningSent": "Warning sent to user (in-app + email)",
+  "userDetails": "User Details",
+  "personalInfo": "Personal Information",
+  "gender": "Gender",
+  "male": "Male",
+  "female": "Female",
+  "other": "Other",
+  "notUpdated": "Not updated",
+  "birthYear": "Birth Year",
+  "height": "Height",
+  "weight": "Weight",
+  "goals": "Goals",
+  "noGoalsSet": "No goals set",
+  "stats": "Statistics",
+  "habitCount": "Habit Count",
+  "postCount": "Post Count",
+  "joinedDate": "Join Date",
+  "noDate": "No date",
+  "goalExercise": "Exercise",
+  "goalEatHealthy": "Eat Healthy",
+  "goalSleep": "Get Enough Sleep",
+  "goalHydration": "Drink Enough Water",
+  "goalWeight": "Weight Management",
+  "goalMental": "Mental Health",
+  "noPlantsYet": "No plants yet",
+  "exp": "EXP",
+  "plantOwnerOf": "{name}'s Plant",
+  "@plantOwnerOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "userHasNoPlant": "User has no plant yet",
+  "owner": "Owner",
+  "joinedDate": "Joined",
+  "plantType": "Plant Type",
+  "levelWithExp": "Level {level} • {exp} EXP",
+  "@levelWithExp": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "exp": {
+        "type": "int"
+      }
+    }
+  },
+  "planted": "Planted",
+  "watered": "Watered",
+  "statistics": "Statistics",
+  "streakDays": "Streak Days",
+  "habitsLabel": "Habits",
+  "daysCompleted": "Days Completed",
+  "expHistory": "EXP History",
+  "expPerHabit": "Each habit completed = +1 EXP",
+  "noExpHistory": "No EXP history yet",
+  "habitsCompletedCount": "{count} habits completed:",
+  "@habitsCompletedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "daysAgoCount": "{count} days ago",
+  "@daysAgoCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plantTypeSprout": "Sprout",
+  "plantTypeCactus": "Cactus",
+  "plantTypeSunflower": "Sunflower",
+  "plantTypeFlower": "Flower"
 }

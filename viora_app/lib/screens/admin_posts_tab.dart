@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'post_detail_screen.dart';
 import '../models/post.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class AdminPostsTab extends StatefulWidget {
   const AdminPostsTab({super.key});
@@ -69,6 +70,8 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Column(
       children: [
         // Search and filter bar
@@ -83,7 +86,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                 onChanged: _onSearchChanged,
                 style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Tìm kiếm bài viết hoặc tác giả...',
+                  hintText: l10n.searchPostsOrAuthors,
                   hintStyle: TextStyle(color: context.textSecondary),
                   prefixIcon: Icon(Icons.search, color: context.textSecondary),
                   suffixIcon: _searchController.text.isNotEmpty
@@ -117,11 +120,11 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildFilterChip('Mới nhất', 'latest'),
+                    _buildFilterChip(l10n.latest, 'latest', l10n),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Cũ nhất', 'oldest'),
+                    _buildFilterChip(l10n.oldest, 'oldest', l10n),
                     const SizedBox(width: 8),
-                    _buildFilterChip('Xu hướng', 'trending'),
+                    _buildFilterChip(l10n.trendingLabel, 'trending', l10n),
                   ],
                 ),
               ),
@@ -137,8 +140,8 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                   ? Center(
                       child: Text(
                         _searchController.text.isNotEmpty
-                            ? 'Không tìm thấy bài viết'
-                            : 'Chưa có bài viết nào',
+                            ? l10n.noPostsFound
+                            : l10n.noPostsYet,
                         style: const TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                     )
@@ -171,17 +174,17 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                                       IconButton(
                                         icon: const Icon(Icons.flag, color: Colors.orange),
                                         onPressed: () => _reportViolation(post['id'], post['user_id'], post['content']),
-                                        tooltip: 'Cảnh báo vi phạm',
+                                        tooltip: l10n.reportViolation,
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.visibility, color: Colors.blue),
                                         onPressed: () => _viewPostDetails(post),
-                                        tooltip: 'Xem chi tiết',
+                                        tooltip: l10n.viewDetails,
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.delete, color: Colors.red),
                                         onPressed: () => _deletePost(post['id'], post['content']),
-                                        tooltip: 'Xóa bài viết',
+                                        tooltip: l10n.deletePost,
                                       ),
                                     ],
                                   ),
@@ -243,18 +246,33 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
     );
   }
 
-  Widget _buildFilterChip(String label, String value) {
+  Widget _buildFilterChip(String label, String value, AppLocalizations l10n) {
     final isSelected = _currentSort == value;
     return FilterChip(
-      label: Text(label),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected 
+              ? (context.isDark ? Colors.blue[300] : Colors.blue[700])
+              : context.textPrimary,
+        ),
+      ),
       selected: isSelected,
       onSelected: (selected) {
         if (selected) {
           _changeSortOrder(value);
         }
       },
-      selectedColor: Colors.blue[100],
-      checkmarkColor: Colors.blue[700],
+      backgroundColor: context.isDark ? Colors.grey[800] : Colors.grey[200],
+      selectedColor: context.isDark 
+          ? Colors.blue[900]!.withValues(alpha: 0.3)
+          : Colors.blue[100],
+      checkmarkColor: context.isDark ? Colors.blue[300] : Colors.blue[700],
+      side: BorderSide(
+        color: isSelected
+            ? (context.isDark ? Colors.blue[700]! : Colors.blue[300]!)
+            : context.infoBoxBorder,
+      ),
     );
   }
 
@@ -269,6 +287,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
   }
 
   void _viewPostDetails(Map<String, dynamic> postData) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       // Convert post data to Post model
       final post = Post.fromJson({
@@ -301,27 +320,28 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('${l10n.failed}: $e')),
         );
       }
     }
   }
 
   Future<void> _deletePost(int postId, String? content) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa bài viết này?\n\n"${content ?? ''}"'),
+        title: Text(l10n.confirmDelete),
+        content: Text(l10n.confirmDeletePostMessage(content ?? '')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xóa'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -334,48 +354,49 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
       _loadPosts();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã xóa bài viết')),
+          SnackBar(content: Text(l10n.postDeleted)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('${l10n.failed}: $e')),
         );
       }
     }
   }
 
   Future<void> _reportViolation(int postId, dynamic userId, String? content) async {
+    final l10n = AppLocalizations.of(context)!;
     final customReasonController = TextEditingController();
     String? selectedReason;
 
     final reasons = [
-      'Nội dung bạo lực hoặc gây shock',
-      'Nội dung spam hoặc lừa đảo',
-      'Ngôn từ thù địch hoặc phân biệt đối xử',
-      'Thông tin sai sự thật',
-      'Nội dung khiêu dâm',
-      'Vi phạm quyền sở hữu trí tuệ',
-      'Lý do khác',
+      l10n.violentContent,
+      l10n.spamContent,
+      l10n.hateSpeech,
+      l10n.misinformation,
+      l10n.adultContent,
+      l10n.copyrightViolation,
+      l10n.otherReason,
     ];
 
     final result = await showDialog<String>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Cảnh báo vi phạm'),
+          title: Text(l10n.warningViolation),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nội dung: "${content ?? ''}"',
+                  '${l10n.content}: "${content ?? ''}"',
                   style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 16),
-                const Text('Chọn lý do vi phạm:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(l10n.selectViolationReason, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 ...reasons.map((reason) => RadioListTile<String>(
                       title: Text(reason, style: const TextStyle(fontSize: 14)),
@@ -387,13 +408,13 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                         setState(() => selectedReason = value);
                       },
                     )),
-                if (selectedReason == 'Lý do khác') ...[
+                if (selectedReason == l10n.otherReason) ...[
                   const SizedBox(height: 8),
                   TextField(
                     controller: customReasonController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nhập lý do',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.enterReason,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     maxLines: 2,
@@ -405,12 +426,12 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () {
                 String? finalReason;
-                if (selectedReason == 'Lý do khác') {
+                if (selectedReason == l10n.otherReason) {
                   finalReason = customReasonController.text.trim();
                 } else {
                   finalReason = selectedReason;
@@ -418,7 +439,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                 Navigator.pop(context, finalReason);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.orange),
-              child: const Text('Gửi cảnh báo'),
+              child: Text(l10n.sendWarning),
             ),
           ],
         ),
@@ -431,8 +452,8 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
       await ApiService.reportPostViolation(_token, postId.toString(), result);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đã gửi cảnh báo đến người dùng (in-app + email)'),
+          SnackBar(
+            content: Text(l10n.warningSent),
             backgroundColor: Colors.orange,
           ),
         );
@@ -440,7 +461,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('${l10n.failed}: $e')),
         );
       }
     }

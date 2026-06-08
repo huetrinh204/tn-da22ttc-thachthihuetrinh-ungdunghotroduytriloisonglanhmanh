@@ -1031,13 +1031,13 @@ abstract class AppLocalizations {
   /// No description provided for @languageChanged.
   ///
   /// In vi, this message translates to:
-  /// **'Đã chuyển sang Tiếng Việt. Khởi động lại app để áp dụng.'**
+  /// **'Đã chuyển sang Tiếng Việt'**
   String get languageChanged;
 
   /// No description provided for @languageChangedEn.
   ///
   /// In vi, this message translates to:
-  /// **'Switched to English. Restart app to apply.'**
+  /// **'Đã chuyển sang Tiếng Anh'**
   String get languageChangedEn;
 
   /// No description provided for @editName.
@@ -1517,7 +1517,7 @@ abstract class AppLocalizations {
   /// No description provided for @habitsLabel.
   ///
   /// In vi, this message translates to:
-  /// **'thói quen'**
+  /// **'Thói quen'**
   String get habitsLabel;
 
   /// No description provided for @consecutiveDays.
@@ -1805,37 +1805,37 @@ abstract class AppLocalizations {
   /// No description provided for @goalEatHealthy.
   ///
   /// In vi, this message translates to:
-  /// **'Ăn lành mạnh'**
+  /// **'Ăn uống lành mạnh'**
   String get goalEatHealthy;
 
   /// No description provided for @goalExercise.
   ///
   /// In vi, this message translates to:
-  /// **'Vận động'**
+  /// **'Tập thể dục'**
   String get goalExercise;
 
   /// No description provided for @goalSleep.
   ///
   /// In vi, this message translates to:
-  /// **'Giấc ngủ'**
+  /// **'Ngủ đủ giấc'**
   String get goalSleep;
 
   /// No description provided for @goalMental.
   ///
   /// In vi, this message translates to:
-  /// **'Tinh thần'**
+  /// **'Sức khỏe tinh thần'**
   String get goalMental;
 
   /// No description provided for @goalWeight.
   ///
   /// In vi, this message translates to:
-  /// **'Cân nặng'**
+  /// **'Quản lý cân nặng'**
   String get goalWeight;
 
   /// No description provided for @goalHydration.
   ///
   /// In vi, this message translates to:
-  /// **'Uống nước'**
+  /// **'Uống đủ nước'**
   String get goalHydration;
 
   /// No description provided for @goalOther.
@@ -2495,7 +2495,7 @@ abstract class AppLocalizations {
   /// No description provided for @deletePost.
   ///
   /// In vi, this message translates to:
-  /// **'Xóa bài viết?'**
+  /// **'Xóa bài viết'**
   String get deletePost;
 
   /// No description provided for @confirmDeletePost.
@@ -2869,6 +2869,582 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không tìm thấy người dùng'**
   String get noSearchResultsUsers;
+
+  /// No description provided for @adminDashboard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Admin Dashboard'**
+  String get adminDashboard;
+
+  /// No description provided for @adminUsers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý người dùng'**
+  String get adminUsers;
+
+  /// No description provided for @adminPosts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý bài viết'**
+  String get adminPosts;
+
+  /// No description provided for @adminPlants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý cây'**
+  String get adminPlants;
+
+  /// No description provided for @adminSettings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cài đặt'**
+  String get adminSettings;
+
+  /// No description provided for @admin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Admin'**
+  String get admin;
+
+  /// No description provided for @dashboard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dashboard'**
+  String get dashboard;
+
+  /// No description provided for @users.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng'**
+  String get users;
+
+  /// No description provided for @postsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết'**
+  String get postsLabel;
+
+  /// No description provided for @plants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây'**
+  String get plants;
+
+  /// No description provided for @overview.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tổng quan'**
+  String get overview;
+
+  /// No description provided for @commentsLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bình luận'**
+  String get commentsLabel;
+
+  /// No description provided for @todayLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'hôm nay'**
+  String get todayLabel;
+
+  /// No description provided for @growthCharts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Biểu đồ tăng trưởng'**
+  String get growthCharts;
+
+  /// No description provided for @dataDistribution.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phân bổ dữ liệu'**
+  String get dataDistribution;
+
+  /// No description provided for @userGrowth30Days.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng trưởng người dùng (30 ngày qua)'**
+  String get userGrowth30Days;
+
+  /// No description provided for @postGrowth30Days.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng trưởng bài viết (30 ngày qua)'**
+  String get postGrowth30Days;
+
+  /// No description provided for @noGrowthData.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu tăng trưởng'**
+  String get noGrowthData;
+
+  /// No description provided for @searchByNameEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm theo tên hoặc email...'**
+  String get searchByNameEmail;
+
+  /// No description provided for @noUsersFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy người dùng'**
+  String get noUsersFound;
+
+  /// No description provided for @noUsersYet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có người dùng'**
+  String get noUsersYet;
+
+  /// No description provided for @active.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang hoạt động'**
+  String get active;
+
+  /// No description provided for @inactive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không hoạt động'**
+  String get inactive;
+
+  /// No description provided for @demoteToUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạ xuống User'**
+  String get demoteToUser;
+
+  /// No description provided for @promoteToAdmin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lên Admin'**
+  String get promoteToAdmin;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn người dùng'**
+  String get blockUser;
+
+  /// No description provided for @confirmBlock.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận chặn'**
+  String get confirmBlock;
+
+  /// No description provided for @confirmBlockMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn chặn user \"{name}\"?'**
+  String confirmBlockMessage(String name);
+
+  /// No description provided for @block.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chặn'**
+  String get block;
+
+  /// No description provided for @confirmDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận xóa'**
+  String get confirmDelete;
+
+  /// No description provided for @confirmDeleteUserMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xóa user \"{name}\"?'**
+  String confirmDeleteUserMessage(String name);
+
+  /// No description provided for @userDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa user'**
+  String get userDeleted;
+
+  /// No description provided for @selected.
+  ///
+  /// In vi, this message translates to:
+  /// **'đã chọn'**
+  String get selected;
+
+  /// No description provided for @deleteAll.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xóa tất cả'**
+  String get deleteAll;
+
+  /// No description provided for @confirmBulkDeleteMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xóa {count} người dùng đã chọn?'**
+  String confirmBulkDeleteMessage(int count);
+
+  /// No description provided for @usersDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa {count} người dùng'**
+  String usersDeleted(int count);
+
+  /// No description provided for @addUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm user'**
+  String get addUser;
+
+  /// No description provided for @addNewUser.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm người dùng mới'**
+  String get addNewUser;
+
+  /// No description provided for @name.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên'**
+  String get name;
+
+  /// No description provided for @role.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vai trò'**
+  String get role;
+
+  /// No description provided for @user.
+  ///
+  /// In vi, this message translates to:
+  /// **'User'**
+  String get user;
+
+  /// No description provided for @create.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tạo'**
+  String get create;
+
+  /// No description provided for @pleaseEnterAllFields.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng điền đầy đủ thông tin'**
+  String get pleaseEnterAllFields;
+
+  /// No description provided for @userCreated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tạo người dùng mới'**
+  String get userCreated;
+
+  /// No description provided for @roleUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật role'**
+  String get roleUpdated;
+
+  /// No description provided for @blockFeatureInDev.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tính năng chặn user đang phát triển'**
+  String get blockFeatureInDev;
+
+  /// No description provided for @searchPostsOrAuthors.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm kiếm bài viết hoặc tác giả...'**
+  String get searchPostsOrAuthors;
+
+  /// No description provided for @noPostsFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy bài viết'**
+  String get noPostsFound;
+
+  /// No description provided for @noPostsYet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có bài viết nào'**
+  String get noPostsYet;
+
+  /// No description provided for @latest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mới nhất'**
+  String get latest;
+
+  /// No description provided for @oldest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cũ nhất'**
+  String get oldest;
+
+  /// No description provided for @trendingLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xu hướng'**
+  String get trendingLabel;
+
+  /// No description provided for @reportViolation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảnh báo vi phạm'**
+  String get reportViolation;
+
+  /// No description provided for @viewDetails.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem chi tiết'**
+  String get viewDetails;
+
+  /// No description provided for @confirmDeletePostMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn xóa bài viết này?\n\n\"{content}\"'**
+  String confirmDeletePostMessage(String content);
+
+  /// No description provided for @warningViolation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảnh báo vi phạm'**
+  String get warningViolation;
+
+  /// No description provided for @content.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get content;
+
+  /// No description provided for @selectViolationReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn lý do vi phạm:'**
+  String get selectViolationReason;
+
+  /// No description provided for @violentContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung bạo lực hoặc gây shock'**
+  String get violentContent;
+
+  /// No description provided for @spamContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung spam hoặc lừa đảo'**
+  String get spamContent;
+
+  /// No description provided for @hateSpeech.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngôn từ thù địch hoặc phân biệt đối xử'**
+  String get hateSpeech;
+
+  /// No description provided for @misinformation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin sai sự thật'**
+  String get misinformation;
+
+  /// No description provided for @adultContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung khiêu dâm'**
+  String get adultContent;
+
+  /// No description provided for @copyrightViolation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vi phạm quyền sở hữu trí tuệ'**
+  String get copyrightViolation;
+
+  /// No description provided for @otherReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do khác'**
+  String get otherReason;
+
+  /// No description provided for @enterReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập lý do'**
+  String get enterReason;
+
+  /// No description provided for @sendWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi cảnh báo'**
+  String get sendWarning;
+
+  /// No description provided for @warningSent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi cảnh báo đến người dùng (in-app + email)'**
+  String get warningSent;
+
+  /// No description provided for @userDetails.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chi tiết người dùng'**
+  String get userDetails;
+
+  /// No description provided for @noGoalsSet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa thiết lập mục tiêu'**
+  String get noGoalsSet;
+
+  /// No description provided for @habitCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số thói quen'**
+  String get habitCount;
+
+  /// No description provided for @postCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số bài viết'**
+  String get postCount;
+
+  /// No description provided for @joinedDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tham gia'**
+  String get joinedDate;
+
+  /// No description provided for @noDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có'**
+  String get noDate;
+
+  /// No description provided for @noPlantsYet.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có cây nào'**
+  String get noPlantsYet;
+
+  /// No description provided for @exp.
+  ///
+  /// In vi, this message translates to:
+  /// **'EXP'**
+  String get exp;
+
+  /// No description provided for @plantOwnerOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây của {name}'**
+  String plantOwnerOf(String name);
+
+  /// No description provided for @userHasNoPlant.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng chưa có cây'**
+  String get userHasNoPlant;
+
+  /// No description provided for @owner.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chủ sở hữu'**
+  String get owner;
+
+  /// No description provided for @plantType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Loại cây'**
+  String get plantType;
+
+  /// No description provided for @levelWithExp.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấp độ {level} • {exp} EXP'**
+  String levelWithExp(int level, int exp);
+
+  /// No description provided for @planted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gieo'**
+  String get planted;
+
+  /// No description provided for @watered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tưới'**
+  String get watered;
+
+  /// No description provided for @statistics.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thống kê'**
+  String get statistics;
+
+  /// No description provided for @streakDays.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuỗi ngày'**
+  String get streakDays;
+
+  /// No description provided for @daysCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày hoàn thành'**
+  String get daysCompleted;
+
+  /// No description provided for @expHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử nhận điểm'**
+  String get expHistory;
+
+  /// No description provided for @expPerHabit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mỗi thói quen hoàn thành = +1 EXP'**
+  String get expPerHabit;
+
+  /// No description provided for @noExpHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có lịch sử nhận điểm'**
+  String get noExpHistory;
+
+  /// No description provided for @habitsCompletedCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} thói quen hoàn thành:'**
+  String habitsCompletedCount(int count);
+
+  /// No description provided for @yesterday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm qua'**
+  String get yesterday;
+
+  /// No description provided for @daysAgoCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} ngày trước'**
+  String daysAgoCount(int count);
+
+  /// No description provided for @plantTypeSprout.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây mầm'**
+  String get plantTypeSprout;
+
+  /// No description provided for @plantTypeCactus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng'**
+  String get plantTypeCactus;
+
+  /// No description provided for @plantTypeSunflower.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hướng dương'**
+  String get plantTypeSunflower;
+
+  /// No description provided for @plantTypeFlower.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoa'**
+  String get plantTypeFlower;
 }
 
 class _AppLocalizationsDelegate

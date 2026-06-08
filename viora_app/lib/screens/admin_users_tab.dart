@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'admin_user_detail_screen.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class AdminUsersTab extends StatefulWidget {
   const AdminUsersTab({super.key});
@@ -70,6 +71,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: _isSelectionMode
           ? AppBar(
@@ -82,7 +85,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                   });
                 },
               ),
-              title: Text('${_selectedUserIds.length} đã chọn'),
+              title: Text('${_selectedUserIds.length} ${l10n.selected}'),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.delete),
@@ -101,7 +104,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               onChanged: _onSearchChanged,
               style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm theo tên hoặc email...',
+                hintText: l10n.searchByNameEmail,
                 hintStyle: TextStyle(color: context.textSecondary),
                 prefixIcon: Icon(Icons.search, color: context.textSecondary),
                 suffixIcon: _searchController.text.isNotEmpty
@@ -141,8 +144,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                         ? Center(
                             child: Text(
                               _searchController.text.isNotEmpty
-                                  ? 'Không tìm thấy người dùng'
-                                  : 'Chưa có người dùng',
+                                  ? l10n.noUsersFound
+                                  : l10n.noUsersYet,
                               style: TextStyle(fontSize: 16, color: context.textSecondary),
                             ),
                           )
@@ -210,13 +213,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: _getUserActivityStatus(user['created_at']) == 'Đang hoạt động' 
+                                          color: _getUserActivityStatus(user['created_at'], l10n) == l10n.active 
                                               ? Colors.green 
                                               : Colors.grey,
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Text(
-                                          _getUserActivityStatus(user['created_at']),
+                                          _getUserActivityStatus(user['created_at'], l10n),
                                           style: const TextStyle(color: Colors.white, fontSize: 10),
                                         ),
                                       ),
@@ -241,7 +244,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                                       Text(user['email'] ?? ''),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${user['habit_count'] ?? 0} thói quen • ${user['post_count'] ?? 0} bài viết',
+                                        '${user['habit_count'] ?? 0} ${l10n.habits.toLowerCase()} • ${user['post_count'] ?? 0} ${l10n.postsLabel.toLowerCase()}',
                                         style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                       ),
                                     ],
@@ -251,15 +254,15 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                                       : PopupMenuButton(
                                     itemBuilder: (context) => [
                                       PopupMenuItem(
-                                        child: Text(isAdmin ? 'Hạ xuống User' : 'Lên Admin'),
+                                        child: Text(isAdmin ? l10n.demoteToUser : l10n.promoteToAdmin),
                                         onTap: () => _toggleRole(user['id'], isAdmin),
                                       ),
                                       PopupMenuItem(
-                                        child: const Text('Chặn người dùng'),
+                                        child: Text(l10n.blockUser),
                                         onTap: () => _blockUser(user['id'], user['name']),
                                       ),
                                       PopupMenuItem(
-                                        child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                                        child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
                                         onTap: () => _deleteUser(user['id'], user['name']),
                                       ),
                                     ],
@@ -277,12 +280,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           : FloatingActionButton.extended(
               onPressed: _showAddUserDialog,
               icon: const Icon(Icons.person_add),
-              label: const Text('Thêm user'),
+              label: Text(l10n.addUser),
             ),
     );
   }
 
   Future<void> _showAddUserDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
@@ -292,46 +296,46 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Thêm người dùng mới'),
+          title: Text(l10n.addNewUser),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Tên',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.name,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.email,
+                    border: const OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: passwordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Mật khẩu',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.password,
+                    border: const OutlineInputBorder(),
                   ),
                   obscureText: true,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: selectedRole,
-                  decoration: const InputDecoration(
-                    labelText: 'Vai trò',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.role,
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'user', child: Text('User')),
-                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                  items: [
+                    DropdownMenuItem(value: 'user', child: Text(l10n.user)),
+                    DropdownMenuItem(value: 'admin', child: Text(l10n.admin)),
                   ],
                   onChanged: (value) {
                     setState(() => selectedRole = value ?? 'user');
@@ -343,7 +347,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Hủy'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () async {
@@ -351,7 +355,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                     emailController.text.isEmpty ||
                     passwordController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Vui lòng điền đầy đủ thông tin')),
+                    SnackBar(content: Text(l10n.pleaseEnterAllFields)),
                   );
                   return;
                 }
@@ -370,12 +374,12 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Lỗi: $e')),
+                      SnackBar(content: Text('${l10n.failed}: $e')),
                     );
                   }
                 }
               },
-              child: const Text('Tạo'),
+              child: Text(l10n.create),
             ),
           ],
         ),
@@ -386,7 +390,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       _loadUsers();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã tạo người dùng mới')),
+          SnackBar(content: Text(l10n.userCreated)),
         );
       }
     }
@@ -414,16 +418,16 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     }
   }
 
-  String _getUserActivityStatus(dynamic lastActivity) {
-    if (lastActivity == null) return 'Không hoạt động';
+  String _getUserActivityStatus(dynamic lastActivity, AppLocalizations l10n) {
+    if (lastActivity == null) return l10n.inactive;
     
     try {
       final lastDate = DateTime.parse(lastActivity.toString());
       final daysSinceLastActivity = DateTime.now().difference(lastDate).inDays;
       
-      return daysSinceLastActivity <= 7 ? 'Đang hoạt động' : 'Không hoạt động';
+      return daysSinceLastActivity <= 7 ? l10n.active : l10n.inactive;
     } catch (e) {
-      return 'Không hoạt động';
+      return l10n.inactive;
     }
   }
 

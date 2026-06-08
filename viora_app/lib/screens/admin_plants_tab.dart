@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 import 'admin_plant_detail_screen.dart';
 
 class AdminPlantsTab extends StatefulWidget {
@@ -62,23 +63,24 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
     return imagePaths[level - 1];
   }
 
-  String _getPlantName(int level) {
-    const names = [
-      'Hạt giống',
-      'Hạt nảy mầm',
-      'Mầm non',
-      'Cây non',
-      'Cây con',
-      'Cây nhỏ',
-      'Cây lớn',
-      'Cây xanh tốt',
-      'Cây phát triển',
-      'Cây ra hoa',
-      'Cây kết trái non',
-      'Cây trái lớn dần',
-      'Cây kết trái chín',
-      'Cây sai quả',
-      'Cây trưởng thành',
+  String _getPlantName(BuildContext context, int level) {
+    final loc = AppLocalizations.of(context)!;
+    final names = [
+      loc.plantLevel1,
+      loc.plantLevel2,
+      loc.plantLevel3,
+      loc.plantLevel4,
+      loc.plantLevel5,
+      loc.plantLevel6,
+      loc.plantLevel7,
+      loc.plantLevel8,
+      loc.plantLevel9,
+      loc.plantLevel10,
+      loc.plantLevel11,
+      loc.plantLevel12,
+      loc.plantLevel13,
+      loc.plantLevel14,
+      loc.plantLevel15,
     ];
     return names[level - 1];
   }
@@ -104,6 +106,8 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
@@ -116,7 +120,7 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
             Icon(Icons.park_outlined, size: 64, color: context.textSecondary),
             const SizedBox(height: 16),
             Text(
-              'Chưa có cây nào',
+              loc.noPlantsYet,
               style: TextStyle(
                 fontSize: 16,
                 color: context.textSecondary,
@@ -143,6 +147,7 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
           
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
+            color: context.cardColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -232,7 +237,7 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
                           const SizedBox(height: 8),
                           // Plant name and level
                           Text(
-                            '${_getPlantName(level)} (Level $level)',
+                            '${_getPlantName(context, level)} (${loc.level(level)})',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -241,7 +246,7 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '$experience EXP',
+                            '$experience ${loc.exp}',
                             style: TextStyle(
                               fontSize: 13,
                               color: context.textSecondary,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import 'admin_dashboard_tab.dart';
 import 'admin_users_tab.dart';
 import 'admin_posts_tab.dart';
@@ -39,9 +40,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: VioraAppBar(
-        title: _getTitle(),
+        title: _getTitle(l10n),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -56,63 +59,65 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+            icon: const Icon(Icons.dashboard),
+            label: l10n.dashboard,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Người dùng',
+            icon: const Icon(Icons.people),
+            label: l10n.users,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.article),
-            label: 'Bài viết',
+            icon: const Icon(Icons.article),
+            label: l10n.postsLabel,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.eco),
-            label: 'Cây',
+            icon: const Icon(Icons.eco),
+            label: l10n.plants,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Cài đặt',
+            icon: const Icon(Icons.settings),
+            label: l10n.settings,
           ),
         ],
       ),
     );
   }
 
-  String _getTitle() {
+  String _getTitle(AppLocalizations l10n) {
     switch (_currentIndex) {
       case 0:
-        return 'Admin Dashboard';
+        return l10n.adminDashboard;
       case 1:
-        return 'Quản lý người dùng';
+        return l10n.adminUsers;
       case 2:
-        return 'Quản lý bài viết';
+        return l10n.adminPosts;
       case 3:
-        return 'Quản lý cây';
+        return l10n.adminPlants;
       case 4:
-        return 'Cài đặt';
+        return l10n.adminSettings;
       default:
-        return 'Admin';
+        return l10n.admin;
     }
   }
 
   Future<void> _logout(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc muốn đăng xuất?'),
+        title: Text(l10n.logout),
+        content: Text(l10n.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Đăng xuất'),
+            child: Text(l10n.logout),
           ),
         ],
       ),

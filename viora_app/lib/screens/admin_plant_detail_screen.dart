@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class AdminPlantDetailScreen extends StatefulWidget {
   final String userId;
@@ -77,33 +78,36 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
     return imagePaths[level - 1];
   }
 
-  String _getPlantName(int level) {
-    const names = [
-      'Hạt giống',
-      'Hạt nảy mầm',
-      'Mầm non',
-      'Cây non',
-      'Cây con',
-      'Cây nhỏ',
-      'Cây lớn',
-      'Cây xanh tốt',
-      'Cây phát triển',
-      'Cây ra hoa',
-      'Cây kết trái non',
-      'Cây trái lớn dần',
-      'Cây kết trái chín',
-      'Cây sai quả',
-      'Cây trưởng thành',
+  String _getPlantName(BuildContext context, int level) {
+    final loc = AppLocalizations.of(context)!;
+    final names = [
+      loc.plantLevel1,
+      loc.plantLevel2,
+      loc.plantLevel3,
+      loc.plantLevel4,
+      loc.plantLevel5,
+      loc.plantLevel6,
+      loc.plantLevel7,
+      loc.plantLevel8,
+      loc.plantLevel9,
+      loc.plantLevel10,
+      loc.plantLevel11,
+      loc.plantLevel12,
+      loc.plantLevel13,
+      loc.plantLevel14,
+      loc.plantLevel15,
     ];
     return names[level - 1];
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
-        title: 'Cây của ${widget.userName}',
+        title: loc.plantOwnerOf(widget.userName),
         showBack: true,
       ),
       body: _isLoading
@@ -116,7 +120,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                       const Icon(Icons.park_outlined, size: 64, color: Colors.grey),
                       const SizedBox(height: 16),
                       Text(
-                        'Người dùng chưa có cây',
+                        loc.userHasNoPlant,
                         style: TextStyle(
                           fontSize: 16,
                           color: context.textSecondary,
@@ -145,6 +149,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
   }
 
   Widget _buildOwnerCard() {
+    final loc = AppLocalizations.of(context)!;
     final userName = _user?['name'] ?? widget.userName;
     final userEmail = _user?['email'] ?? '';
     final userAvatar = _user?['avatar_url'] as String?;
@@ -212,7 +217,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Chủ sở hữu',
+                      loc.owner,
                       style: TextStyle(
                         fontSize: 12,
                         color: context.textSecondary,
@@ -242,7 +247,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                 if (userCreatedAt != null) ...[
                   const SizedBox(height: 4),
                   Text(
-                    'Tham gia: ${_formatDate(userCreatedAt)}',
+                    '${loc.joinedDate}: ${_formatDate(userCreatedAt)}',
                     style: TextStyle(
                       fontSize: 12,
                       color: context.textSecondary,
@@ -258,6 +263,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
   }
 
   Widget _buildPlantCard() {
+    final loc = AppLocalizations.of(context)!;
     final level = _plant!['level'] as int? ?? 1;
     final experience = _plant!['experience'] as int? ?? 0;
     final plantType = _plant!['plant_type'] as String? ?? 'sprout';
@@ -315,7 +321,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
           const SizedBox(height: 16),
           // Plant name
           Text(
-            _getPlantName(level),
+            _getPlantName(context, level),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -324,7 +330,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'Loại cây: ${_getPlantTypeName(plantType)}',
+            '${loc.plantType}: ${_getPlantTypeName(context, plantType)}',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.white70,
@@ -339,7 +345,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              'Cấp độ $level • $experience EXP',
+              loc.levelWithExp(level, experience),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -356,7 +362,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                 const Icon(Icons.spa, color: Colors.white70, size: 16),
                 const SizedBox(width: 6),
                 Text(
-                  'Gieo: $plantingDate',
+                  '${loc.planted}: $plantingDate',
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.white70,
@@ -376,7 +382,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                 const Icon(Icons.water_drop, color: Colors.white70, size: 16),
                 const SizedBox(width: 6),
                 Text(
-                  'Tưới: ${_formatDate(lastWatered)}',
+                  '${loc.watered}: ${_formatDate(lastWatered)}',
                   style: const TextStyle(
                     fontSize: 13,
                     color: Colors.white70,
@@ -390,22 +396,24 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
     );
   }
 
-  String _getPlantTypeName(String type) {
+  String _getPlantTypeName(BuildContext context, String type) {
+    final loc = AppLocalizations.of(context)!;
     switch (type) {
       case 'sprout':
-        return 'Cây mầm';
+        return loc.plantTypeSprout;
       case 'cactus':
-        return 'Xương rồng';
+        return loc.plantTypeCactus;
       case 'sunflower':
-        return 'Hướng dương';
+        return loc.plantTypeSunflower;
       case 'flower':
-        return 'Hoa';
+        return loc.plantTypeFlower;
       default:
         return type;
     }
   }
 
   Widget _buildStatsCard() {
+    final loc = AppLocalizations.of(context)!;
     final currentStreak = _streak?['current'] ?? 0;
     final totalHabits = _stats?['total_habits'] ?? 0;
     final daysCompleted = _stats?['days_completed'] ?? 0;
@@ -432,7 +440,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Thống kê',
+                loc.statistics,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -447,7 +455,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
               Expanded(
                 child: _buildStatItem(
                   icon: Icons.local_fire_department,
-                  label: 'Chuỗi ngày',
+                  label: loc.streakDays,
                   value: '$currentStreak',
                   color: Colors.orange,
                 ),
@@ -456,7 +464,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
               Expanded(
                 child: _buildStatItem(
                   icon: Icons.check_circle,
-                  label: 'Thói quen',
+                  label: loc.habitsLabel,
                   value: '$totalHabits',
                   color: AppColors.primary,
                 ),
@@ -465,7 +473,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
               Expanded(
                 child: _buildStatItem(
                   icon: Icons.calendar_month,
-                  label: 'Ngày hoàn thành',
+                  label: loc.daysCompleted,
                   value: '$daysCompleted',
                   color: Colors.blue,
                 ),
@@ -516,6 +524,8 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
   }
 
   Widget _buildHistorySection() {
+    final loc = AppLocalizations.of(context)!;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -524,7 +534,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
             const Icon(Icons.history, color: AppColors.primary, size: 24),
             const SizedBox(width: 8),
             Text(
-              'Lịch sử nhận điểm',
+              loc.expHistory,
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -535,7 +545,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Mỗi thói quen hoàn thành = +1 EXP',
+          loc.expPerHabit,
           style: TextStyle(
             fontSize: 13,
             color: context.textSecondary,
@@ -555,7 +565,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                   Icon(Icons.event_busy, size: 48, color: context.textSecondary),
                   const SizedBox(height: 12),
                   Text(
-                    'Chưa có lịch sử nhận điểm',
+                    loc.noExpHistory,
                     style: TextStyle(
                       fontSize: 15,
                       color: context.textSecondary,
@@ -572,6 +582,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
   }
 
   Widget _buildHistoryItem(Map<String, dynamic> entry) {
+    final loc = AppLocalizations.of(context)!;
     final date = entry['date'] as String;
     final habitsCompleted = entry['habits_completed'] as int? ?? 0;
     final expGained = entry['exp_gained'] as int? ?? 0;
@@ -619,7 +630,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '+$expGained EXP',
+                  '+$expGained ${loc.exp}',
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -631,7 +642,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '$habitsCompleted thói quen hoàn thành:',
+            loc.habitsCompletedCount(habitsCompleted),
             style: TextStyle(
               fontSize: 13,
               color: context.textSecondary,
@@ -668,14 +679,16 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
   }
 
   String _formatDate(String dateStr) {
+    final loc = AppLocalizations.of(context)!;
+    
     try {
       final date = DateTime.parse(dateStr);
       final now = DateTime.now();
       final diff = now.difference(date).inDays;
 
-      if (diff == 0) return 'Hôm nay';
-      if (diff == 1) return 'Hôm qua';
-      if (diff < 7) return '$diff ngày trước';
+      if (diff == 0) return loc.today;
+      if (diff == 1) return loc.yesterday;
+      if (diff < 7) return loc.daysAgoCount(diff);
 
       return '${date.day}/${date.month}/${date.year}';
     } catch (e) {

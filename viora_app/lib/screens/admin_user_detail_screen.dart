@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
+import '../l10n/app_localizations.dart';
 
 class AdminUserDetailScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -10,9 +11,11 @@ class AdminUserDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chi tiết người dùng'),
+        title: Text(l10n.userDetails),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -56,9 +59,9 @@ class AdminUserDetailScreen extends StatelessWidget {
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Text(
-                        'ADMIN',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      child: Text(
+                        l10n.admin.toUpperCase(),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
                 ],
@@ -67,27 +70,27 @@ class AdminUserDetailScreen extends StatelessWidget {
             const SizedBox(height: 32),
             
             // Personal Info
-            _buildSection('Thông tin cá nhân', [
-              _buildInfoRow('Giới tính', _getGenderText(user['gender'])),
-              _buildInfoRow('Năm sinh', user['birth_year']?.toString() ?? 'Chưa cập nhật'),
-              _buildInfoRow('Chiều cao', user['height'] != null ? '${user['height']} cm' : 'Chưa cập nhật'),
-              _buildInfoRow('Cân nặng', user['weight'] != null ? '${user['weight']} kg' : 'Chưa cập nhật'),
+            _buildSection(context, l10n.personalInfo, [
+              _buildInfoRow(context, l10n.gender, _getGenderText(user['gender'], l10n)),
+              _buildInfoRow(context, l10n.birthYear, user['birth_year']?.toString() ?? l10n.notUpdated),
+              _buildInfoRow(context, l10n.height, user['height'] != null ? '${user['height']} cm' : l10n.notUpdated),
+              _buildInfoRow(context, l10n.weight, user['weight'] != null ? '${user['weight']} kg' : l10n.notUpdated),
             ]),
             
             const SizedBox(height: 24),
             
             // Goals
-            _buildSection('Mục tiêu', [
-              _buildGoalsWidget(user['goals']),
+            _buildSection(context, l10n.goals, [
+              _buildGoalsWidget(context, user['goals'], l10n),
             ]),
             
             const SizedBox(height: 24),
             
             // Statistics
-            _buildSection('Thống kê', [
-              _buildInfoRow('Số thói quen', user['habit_count']?.toString() ?? '0'),
-              _buildInfoRow('Số bài viết', user['post_count']?.toString() ?? '0'),
-              _buildInfoRow('Ngày tham gia', _formatDate(user['created_at'])),
+            _buildSection(context, l10n.stats, [
+              _buildInfoRow(context, l10n.habitCount, user['habit_count']?.toString() ?? '0'),
+              _buildInfoRow(context, l10n.postCount, user['post_count']?.toString() ?? '0'),
+              _buildInfoRow(context, l10n.joinedDate, _formatDate(user['created_at'], l10n)),
             ]),
           ],
         ),
@@ -95,79 +98,73 @@ class AdminUserDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
-    return Builder(
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: context.isDark 
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.grey.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+  Widget _buildSection(BuildContext context, String title, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: context.isDark 
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: context.textPrimary,
             ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(color: context.textSecondary, fontSize: 14),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
                 color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 16),
-            ...children,
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Builder(
-      builder: (context) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 120,
-              child: Text(
-                label,
-                style: TextStyle(color: context.textSecondary, fontSize: 14),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: context.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGoalsWidget(dynamic goals) {
+  Widget _buildGoalsWidget(BuildContext context, dynamic goals, AppLocalizations l10n) {
     if (goals == null) {
-      return Builder(
-        builder: (context) => Text(
-          'Chưa thiết lập mục tiêu',
-          style: TextStyle(color: context.textSecondary),
-        ),
+      return Text(
+        l10n.noGoalsSet,
+        style: TextStyle(color: context.textSecondary),
       );
     }
 
@@ -178,28 +175,22 @@ class AdminUserDetailScreen extends StatelessWidget {
       } else if (goals is List) {
         goalsList = goals;
       } else {
-        return Builder(
-          builder: (context) => Text(
-            'Chưa thiết lập mục tiêu',
-            style: TextStyle(color: context.textSecondary),
-          ),
+        return Text(
+          l10n.noGoalsSet,
+          style: TextStyle(color: context.textSecondary),
         );
       }
     } catch (e) {
-      return Builder(
-        builder: (context) => Text(
-          'Chưa thiết lập mục tiêu',
-          style: TextStyle(color: context.textSecondary),
-        ),
+      return Text(
+        l10n.noGoalsSet,
+        style: TextStyle(color: context.textSecondary),
       );
     }
 
     if (goalsList.isEmpty) {
-      return Builder(
-        builder: (context) => Text(
-          'Chưa thiết lập mục tiêu',
-          style: TextStyle(color: context.textSecondary),
-        ),
+      return Text(
+        l10n.noGoalsSet,
+        style: TextStyle(color: context.textSecondary),
       );
     }
 
@@ -207,22 +198,20 @@ class AdminUserDetailScreen extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: goalsList.map((goal) {
-        return Builder(
-          builder: (context) => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: context.isDark ? Colors.blue[900]!.withValues(alpha: 0.3) : Colors.blue[50],
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: context.isDark ? Colors.blue[700]! : Colors.blue[200]!,
-              ),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: context.isDark ? Colors.blue[900]!.withValues(alpha: 0.3) : Colors.blue[50],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: context.isDark ? Colors.blue[700]! : Colors.blue[200]!,
             ),
-            child: Text(
-              _getGoalText(goal.toString()),
-              style: TextStyle(
-                color: context.isDark ? Colors.blue[300] : Colors.blue[700],
-                fontSize: 12,
-              ),
+          ),
+          child: Text(
+            _getGoalText(goal.toString(), l10n),
+            style: TextStyle(
+              color: context.isDark ? Colors.blue[300] : Colors.blue[700],
+              fontSize: 12,
             ),
           ),
         );
@@ -230,28 +219,28 @@ class AdminUserDetailScreen extends StatelessWidget {
     );
   }
 
-  String _getGenderText(dynamic gender) {
-    if (gender == null) return 'Chưa cập nhật';
+  String _getGenderText(dynamic gender, AppLocalizations l10n) {
+    if (gender == null) return l10n.notUpdated;
     switch (gender.toString().toLowerCase()) {
       case 'male':
-        return 'Nam';
+        return l10n.male;
       case 'female':
-        return 'Nữ';
+        return l10n.female;
       case 'other':
-        return 'Khác';
+        return l10n.other;
       default:
-        return 'Chưa cập nhật';
+        return l10n.notUpdated;
     }
   }
 
-  String _getGoalText(String goal) {
+  String _getGoalText(String goal, AppLocalizations l10n) {
     final goalMap = {
-      'exercise': 'Tập thể dục',
-      'eat_healthy': 'Ăn uống lành mạnh',
-      'sleep': 'Ngủ đủ giấc',
-      'hydration': 'Uống đủ nước',
-      'weight': 'Quản lý cân nặng',
-      'mental': 'Sức khỏe tinh thần',
+      'exercise': l10n.goalExercise,
+      'eat_healthy': l10n.goalEatHealthy,
+      'sleep': l10n.goalSleep,
+      'hydration': l10n.goalHydration,
+      'weight': l10n.goalWeight,
+      'mental': l10n.goalMental,
     };
 
     if (goal.startsWith('other:')) {
@@ -261,13 +250,13 @@ class AdminUserDetailScreen extends StatelessWidget {
     return goalMap[goal] ?? goal;
   }
 
-  String _formatDate(dynamic date) {
-    if (date == null) return 'Chưa có';
+  String _formatDate(dynamic date, AppLocalizations l10n) {
+    if (date == null) return l10n.noDate;
     try {
       final dateTime = DateTime.parse(date.toString());
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     } catch (e) {
-      return 'Chưa có';
+      return l10n.noDate;
     }
   }
 }
