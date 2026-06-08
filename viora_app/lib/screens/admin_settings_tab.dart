@@ -6,6 +6,7 @@ import '../theme/theme_extensions.dart';
 import '../screens/login_screen.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../l10n/app_localizations.dart';
 
 class AdminSettingsTab extends StatefulWidget {
   const AdminSettingsTab({super.key});
@@ -17,8 +18,6 @@ class AdminSettingsTab extends StatefulWidget {
 class _AdminSettingsTabState extends State<AdminSettingsTab> {
   TimeOfDay _morningTime = const TimeOfDay(hour: 8, minute: 0);
   TimeOfDay _eveningTime = const TimeOfDay(hour: 20, minute: 0);
-  String _currentLanguage = 'vi';
-  bool _isDarkMode = false;
   bool _isAutoReminderEnabled = false;
   bool _sendMorning = true;
   bool _sendEvening = true;
@@ -26,10 +25,11 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
   bool _isLoadingMessages = true;
   String _token = '';
 
+  bool get _isVietnamese => LocaleProvider.global.locale.languageCode == 'vi';
+
   @override
   void initState() {
     super.initState();
-    _loadSettings();
     _loadReminderData();
   }
 
@@ -105,16 +105,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     );
   }
 
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _currentLanguage = prefs.getString('language_code') ?? 'vi';
-      _isDarkMode = prefs.getBool('dark_mode') ?? false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -122,9 +116,13 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Thông báo tự động',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              _isVietnamese ? 'Thông báo tự động' : 'Auto Reminder',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
             ),
             Switch(
               value: _isAutoReminderEnabled,
@@ -140,8 +138,12 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         const SizedBox(height: 8),
         Text(
           _isAutoReminderEnabled 
-              ? '✅ Đang bật - Tự động gửi nhắc nhở đến user chưa hoàn thành thói quen'
-              : '⚠️ Đang tắt - Không gửi thông báo tự động',
+              ? (_isVietnamese 
+                  ? '✅ Đang bật - Tự động gửi nhắc nhở đến user chưa hoàn thành thói quen'
+                  : '✅ Enabled - Automatically send reminders to users who haven\'t completed habits')
+              : (_isVietnamese
+                  ? '⚠️ Đang tắt - Không gửi thông báo tự động'
+                  : '⚠️ Disabled - No automatic reminders'),
           style: TextStyle(
             fontSize: 13,
             color: _isAutoReminderEnabled ? Colors.green : Colors.orange,
@@ -152,6 +154,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         
         // Time settings
         Card(
+          color: context.cardColor,
           child: Column(
             children: [
               CheckboxListTile(
@@ -160,8 +163,14 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                   setState(() => _sendMorning = value ?? true);
                   _saveReminderSettings();
                 },
-                title: const Text('Gửi buổi sáng'),
-                subtitle: Text('Lúc ${_morningTime.format(context)}'),
+                title: Text(
+                  _isVietnamese ? 'Gửi buổi sáng' : 'Send Morning',
+                  style: TextStyle(color: context.textPrimary),
+                ),
+                subtitle: Text(
+                  '${_isVietnamese ? 'Lúc' : 'At'} ${_morningTime.format(context)}',
+                  style: TextStyle(color: context.textSecondary),
+                ),
                 secondary: const Icon(Icons.wb_sunny, color: Colors.orange),
                 activeColor: AppColors.primary,
               ),
@@ -171,7 +180,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                   child: ElevatedButton.icon(
                     onPressed: () => _selectTime(context, true),
                     icon: const Icon(Icons.access_time, size: 18),
-                    label: const Text('Chọn giờ'),
+                    label: Text(_isVietnamese ? 'Chọn giờ' : 'Select Time'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -185,8 +194,14 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                   setState(() => _sendEvening = value ?? true);
                   _saveReminderSettings();
                 },
-                title: const Text('Gửi buổi tối'),
-                subtitle: Text('Lúc ${_eveningTime.format(context)}'),
+                title: Text(
+                  _isVietnamese ? 'Gửi buổi tối' : 'Send Evening',
+                  style: TextStyle(color: context.textPrimary),
+                ),
+                subtitle: Text(
+                  '${_isVietnamese ? 'Lúc' : 'At'} ${_eveningTime.format(context)}',
+                  style: TextStyle(color: context.textSecondary),
+                ),
                 secondary: const Icon(Icons.nightlight_round, color: Colors.indigo),
                 activeColor: AppColors.primary,
               ),
@@ -196,7 +211,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                   child: ElevatedButton.icon(
                     onPressed: () => _selectTime(context, false),
                     icon: const Icon(Icons.access_time, size: 18),
-                    label: const Text('Chọn giờ'),
+                    label: Text(_isVietnamese ? 'Chọn giờ' : 'Select Time'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -213,9 +228,13 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Thông điệp nhắc nhở',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              _isVietnamese ? 'Thông điệp nhắc nhở' : 'Reminder Messages',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.add_circle, color: AppColors.primary, size: 28),
@@ -224,9 +243,11 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
           ],
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Hệ thống sẽ chọn ngẫu nhiên 1 thông điệp mỗi ngày để gửi',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
+        Text(
+          _isVietnamese
+              ? 'Hệ thống sẽ chọn ngẫu nhiên 1 thông điệp mỗi ngày để gửi'
+              : 'System will randomly select 1 message each day to send',
+          style: TextStyle(fontSize: 12, color: context.textSecondary),
         ),
         const SizedBox(height: 12),
         
@@ -239,17 +260,20 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               )
             : _reminderMessages.isEmpty
                 ? Card(
+                    color: context.cardColor,
                     child: Padding(
                       padding: const EdgeInsets.all(32),
                       child: Center(
                         child: Column(
                           children: [
                             Icon(Icons.message_outlined, 
-                                size: 48, color: Colors.grey[400]),
+                                size: 48, color: context.textSecondary.withValues(alpha: 0.5)),
                             const SizedBox(height: 12),
                             Text(
-                              'Chưa có thông điệp nào',
-                              style: TextStyle(color: Colors.grey[600]),
+                              _isVietnamese 
+                                  ? 'Chưa có thông điệp nào' 
+                                  : 'No messages yet',
+                              style: TextStyle(color: context.textSecondary),
                             ),
                           ],
                         ),
@@ -260,6 +284,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                     children: _reminderMessages.map((msg) {
                       final isActive = (msg['is_active'] as int? ?? 1) == 1;
                       return Card(
+                        color: context.cardColor,
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           leading: Icon(
@@ -270,11 +295,13 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                             msg['message'] ?? '',
                             style: TextStyle(
                               fontSize: 14,
-                              color: isActive ? null : Colors.grey,
+                              color: isActive ? context.textPrimary : context.textSecondary,
                             ),
                           ),
                           subtitle: Text(
-                            isActive ? 'Đang hoạt động' : 'Đã tắt',
+                            isActive 
+                                ? (_isVietnamese ? 'Đang hoạt động' : 'Active')
+                                : (_isVietnamese ? 'Đã tắt' : 'Inactive'),
                             style: TextStyle(
                               fontSize: 12,
                               color: isActive ? Colors.green : Colors.grey,
@@ -290,27 +317,32 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
-                                    Text(isActive ? 'Tắt' : 'Bật'),
+                                    Text(isActive 
+                                        ? (_isVietnamese ? 'Tắt' : 'Disable')
+                                        : (_isVietnamese ? 'Bật' : 'Enable')),
                                   ],
                                 ),
                                 onTap: () => _toggleMessageActive(msg),
                               ),
                               PopupMenuItem(
-                                child: const Row(
+                                child: Row(
                                   children: [
-                                    Icon(Icons.edit, size: 20),
-                                    SizedBox(width: 8),
-                                    Text('Sửa'),
+                                    const Icon(Icons.edit, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(_isVietnamese ? 'Sửa' : 'Edit'),
                                   ],
                                 ),
                                 onTap: () => _showEditMessageDialog(msg),
                               ),
                               PopupMenuItem(
-                                child: const Row(
+                                child: Row(
                                   children: [
-                                    Icon(Icons.delete, size: 20, color: Colors.red),
-                                    SizedBox(width: 8),
-                                    Text('Xóa', style: TextStyle(color: Colors.red)),
+                                    const Icon(Icons.delete, size: 20, color: Colors.red),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _isVietnamese ? 'Xóa' : 'Delete',
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
                                   ],
                                 ),
                                 onTap: () => _deleteMessage(msg),
@@ -323,57 +355,62 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                   ),
         
         const SizedBox(height: 30),
-        const Text(
-          'Cài đặt ứng dụng',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        
+        // Appearance Section
+        Text(
+          l10n.appearance,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: context.textPrimary,
+          ),
         ),
         const SizedBox(height: 16),
         
         Card(
-          child: ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Ngôn ngữ'),
-            subtitle: Text(_currentLanguage == 'vi' ? 'Tiếng Việt' : 'English'),
-            trailing: Switch(
-              value: _currentLanguage == 'en',
-              onChanged: (value) => _changeLanguage(value ? 'en' : 'vi'),
-              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
-              activeThumbColor: AppColors.primary,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        
-        Card(
-          child: ListTile(
-            leading: Icon(_isDarkMode ? Icons.dark_mode : Icons.light_mode),
-            title: const Text('Chế độ tối'),
-            subtitle: Text(_isDarkMode ? 'Đang bật' : 'Đang tắt'),
-            trailing: Switch(
-              value: _isDarkMode,
-              onChanged: _toggleDarkMode,
-              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
-              activeThumbColor: AppColors.primary,
-            ),
+          color: context.cardColor,
+          child: Column(
+            children: [
+              _buildThemeToggleTile(),
+              const Divider(height: 1),
+              _buildLanguageTile(),
+            ],
           ),
         ),
         
         const SizedBox(height: 30),
-        const Text(
-          'Quản lý dữ liệu',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Text(
+          _isVietnamese ? 'Quản lý dữ liệu' : 'Data Management',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: context.textPrimary,
+          ),
         ),
         const SizedBox(height: 16),
         
         Card(
+          color: context.cardColor,
           child: ListTile(
             leading: const Icon(Icons.backup),
-            title: const Text('Sao lưu dữ liệu'),
-            subtitle: const Text('Backup database'),
-            trailing: const Icon(Icons.chevron_right),
+            title: Text(
+              _isVietnamese ? 'Sao lưu dữ liệu' : 'Backup Data',
+              style: TextStyle(color: context.textPrimary),
+            ),
+            subtitle: Text(
+              _isVietnamese ? 'Backup database' : 'Backup database',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            trailing: Icon(Icons.chevron_right, color: context.textSecondary),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng đang phát triển')),
+                SnackBar(
+                  content: Text(
+                    _isVietnamese 
+                        ? 'Tính năng đang phát triển' 
+                        : 'Feature in development',
+                  ),
+                ),
               );
             },
           ),
@@ -381,14 +418,27 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
         const SizedBox(height: 12),
         
         Card(
+          color: context.cardColor,
           child: ListTile(
             leading: const Icon(Icons.analytics),
-            title: const Text('Báo cáo chi tiết'),
-            subtitle: const Text('Xem báo cáo và phân tích'),
-            trailing: const Icon(Icons.chevron_right),
+            title: Text(
+              _isVietnamese ? 'Báo cáo chi tiết' : 'Detailed Reports',
+              style: TextStyle(color: context.textPrimary),
+            ),
+            subtitle: Text(
+              _isVietnamese ? 'Xem báo cáo và phân tích' : 'View reports and analytics',
+              style: TextStyle(color: context.textSecondary),
+            ),
+            trailing: Icon(Icons.chevron_right, color: context.textSecondary),
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng đang phát triển')),
+                SnackBar(
+                  content: Text(
+                    _isVietnamese 
+                        ? 'Tính năng đang phát triển' 
+                        : 'Feature in development',
+                  ),
+                ),
               );
             },
           ),
@@ -429,7 +479,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Đăng xuất',
+                    l10n.logout,
                     style: TextStyle(
                       color: context.isDark 
                           ? Colors.red.shade400
@@ -449,23 +499,25 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
   }
 
   void _handleLogout() async {
+    final l10n = AppLocalizations.of(context)!;
+    
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
+        title: Text(l10n.logout),
+        content: Text(l10n.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Không'),
+            child: Text(l10n.no),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(
               foregroundColor: Colors.red,
             ),
-            child: const Text('Có'),
+            child: Text(l10n.yes),
           ),
         ],
       ),
@@ -480,6 +532,244 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+
+  Widget _buildThemeToggleTile() {
+    final l10n = AppLocalizations.of(context)!;
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, _) {
+        final isDark = mode == ThemeMode.dark;
+        return ListTile(
+          leading: Icon(
+            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+            color: AppColors.primary,
+            size: 22,
+          ),
+          title: Text(
+            isDark ? l10n.darkMode : l10n.lightMode,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: context.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            isDark ? l10n.usingDarkMode : l10n.usingLightMode,
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
+          ),
+          trailing: Switch(
+            value: isDark,
+            onChanged: (val) {
+              themeNotifier.value = val ? ThemeMode.dark : ThemeMode.light;
+            },
+            activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+            activeThumbColor: AppColors.primary,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLanguageTile() {
+    final localeProvider = LocaleProvider.global;
+    
+    return ListenableBuilder(
+      listenable: localeProvider,
+      builder: (context, _) {
+        final l10n = AppLocalizations.of(context)!;
+        final languageCode = localeProvider.locale.languageCode;
+        final isVietnamese = languageCode == 'vi';
+        
+        return ListTile(
+          leading: const Icon(
+            Icons.language_rounded,
+            color: AppColors.primary,
+            size: 22,
+          ),
+          title: Text(
+            l10n.language,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: context.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            isVietnamese ? l10n.vietnamese : l10n.english,
+            style: TextStyle(fontSize: 13, color: context.textSecondary),
+          ),
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  isVietnamese ? "🇻🇳 VI" : "🇬🇧 EN",
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.arrow_drop_down,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+          onTap: () => _showLanguageSheet(languageCode),
+        );
+      },
+    );
+  }
+
+  void _showLanguageSheet(String currentLanguageCode) {
+    final l10n = AppLocalizations.of(context)!;
+    final localeProvider = LocaleProvider.global;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardTheme.color ?? Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.selectLanguage,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Vietnamese option
+            _buildLanguageOption(
+              context: ctx,
+              flag: "🇻🇳",
+              language: l10n.vietnamese,
+              code: "Vietnamese",
+              isSelected: currentLanguageCode == 'vi',
+              onTap: () async {
+                await localeProvider.setLocale(const Locale('vi'));
+                if (!mounted) return;
+                Navigator.pop(ctx);
+                AppSnackbar.showSuccess(context, l10n.languageChanged);
+              },
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // English option
+            _buildLanguageOption(
+              context: ctx,
+              flag: "🇬🇧",
+              language: l10n.english,
+              code: "English",
+              isSelected: currentLanguageCode == 'en',
+              onTap: () async {
+                await localeProvider.setLocale(const Locale('en'));
+                if (!mounted) return;
+                Navigator.pop(ctx);
+                AppSnackbar.showSuccess(context, l10n.languageChangedEn);
+              },
+            ),
+            
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required BuildContext context,
+    required String flag,
+    required String language,
+    required String code,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppColors.primary.withValues(alpha: 0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primary
+                  : Colors.grey.withValues(alpha: 0.2),
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Text(
+                flag,
+                style: const TextStyle(fontSize: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      language,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? AppColors.primary
+                            : this.context.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      code,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: this.context.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -507,19 +797,21 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Thêm thông điệp mới'),
+        title: Text(_isVietnamese ? 'Thêm thông điệp mới' : 'Add New Message'),
         content: TextField(
           controller: controller,
           maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Nhập nội dung thông điệp nhắc nhở...',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: _isVietnamese 
+                ? 'Nhập nội dung thông điệp nhắc nhở...'
+                : 'Enter reminder message content...',
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hủy'),
+            child: Text(_isVietnamese ? 'Hủy' : 'Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -530,17 +822,23 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               if (!mounted) return;
               
               if (res['message']?.contains('success') ?? false) {
-                AppSnackbar.showSuccess(context, 'Đã thêm thông điệp mới');
+                AppSnackbar.showSuccess(
+                  context,
+                  _isVietnamese ? 'Đã thêm thông điệp mới' : 'Message added',
+                );
                 _loadReminderData();
               } else {
-                AppSnackbar.showError(context, res['message'] ?? 'Thêm thất bại');
+                AppSnackbar.showError(
+                  context,
+                  res['message'] ?? (_isVietnamese ? 'Thêm thất bại' : 'Failed to add'),
+                );
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Thêm'),
+            child: Text(_isVietnamese ? 'Thêm' : 'Add'),
           ),
         ],
       ),
@@ -554,19 +852,21 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Sửa thông điệp'),
+          title: Text(_isVietnamese ? 'Sửa thông điệp' : 'Edit Message'),
           content: TextField(
             controller: controller,
             maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Nhập nội dung thông điệp nhắc nhở...',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: _isVietnamese 
+                  ? 'Nhập nội dung thông điệp nhắc nhở...'
+                  : 'Enter reminder message content...',
+              border: const OutlineInputBorder(),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Hủy'),
+              child: Text(_isVietnamese ? 'Hủy' : 'Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -582,17 +882,23 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 if (!mounted) return;
                 
                 if (res['message']?.contains('success') ?? false) {
-                  AppSnackbar.showSuccess(context, 'Đã cập nhật thông điệp');
+                  AppSnackbar.showSuccess(
+                    context,
+                    _isVietnamese ? 'Đã cập nhật thông điệp' : 'Message updated',
+                  );
                   _loadReminderData();
                 } else {
-                  AppSnackbar.showError(context, res['message'] ?? 'Cập nhật thất bại');
+                  AppSnackbar.showError(
+                    context,
+                    res['message'] ?? (_isVietnamese ? 'Cập nhật thất bại' : 'Failed to update'),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Lưu'),
+              child: Text(_isVietnamese ? 'Lưu' : 'Save'),
             ),
           ],
         ),
@@ -615,11 +921,16 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       if (res['message']?.contains('success') ?? false) {
         AppSnackbar.showSuccess(
           context, 
-          isActive ? 'Đã tắt thông điệp' : 'Đã bật thông điệp'
+          isActive 
+              ? (_isVietnamese ? 'Đã tắt thông điệp' : 'Message disabled')
+              : (_isVietnamese ? 'Đã bật thông điệp' : 'Message enabled'),
         );
         _loadReminderData();
       } else {
-        AppSnackbar.showError(context, res['message'] ?? 'Thao tác thất bại');
+        AppSnackbar.showError(
+          context,
+          res['message'] ?? (_isVietnamese ? 'Thao tác thất bại' : 'Operation failed'),
+        );
       }
     });
   }
@@ -630,17 +941,19 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Xóa thông điệp'),
-          content: const Text('Bạn có chắc chắn muốn xóa thông điệp này?'),
+          title: Text(_isVietnamese ? 'Xóa thông điệp' : 'Delete Message'),
+          content: Text(_isVietnamese 
+              ? 'Bạn có chắc chắn muốn xóa thông điệp này?'
+              : 'Are you sure you want to delete this message?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Hủy'),
+              child: Text(_isVietnamese ? 'Hủy' : 'Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Xóa'),
+              child: Text(_isVietnamese ? 'Xóa' : 'Delete'),
             ),
           ],
         ),
@@ -652,55 +965,19 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       if (!mounted) return;
       
       if (res['message']?.contains('success') ?? false) {
-        AppSnackbar.showSuccess(context, 'Đã xóa thông điệp');
+        AppSnackbar.showSuccess(
+          context,
+          _isVietnamese ? 'Đã xóa thông điệp' : 'Message deleted',
+        );
         _loadReminderData();
       } else {
-        AppSnackbar.showError(context, res['message'] ?? 'Xóa thất bại');
-      }
-    });
-  }
-
-  Future<void> _changeLanguage(String languageCode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language_code', languageCode);
-    
-    setState(() {
-      _currentLanguage = languageCode;
-    });
-    
-    if (context.mounted) {
-      final localeProvider = LocaleProvider.global;
-      await localeProvider.setLocale(Locale(languageCode));
-      
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              languageCode == 'vi' ? 'Đã chuyển sang Tiếng Việt' : 'Changed to English',
-            ),
-          ),
+        AppSnackbar.showError(
+          context,
+          res['message'] ?? (_isVietnamese ? 'Xóa thất bại' : 'Failed to delete'),
         );
       }
-    }
+    });
   }
 
-  Future<void> _toggleDarkMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('dark_mode', value);
-    
-    setState(() {
-      _isDarkMode = value;
-    });
-    
-    // TODO: Implement dark mode theme switching
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            value ? 'Chế độ tối đang phát triển' : 'Chế độ sáng',
-          ),
-        ),
-      );
-    }
-  }
 }
+
