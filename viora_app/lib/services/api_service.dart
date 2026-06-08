@@ -1200,4 +1200,127 @@ class ApiService {
       return {"message": "Network error", "plant": null, "history": []};
     }
   }
+
+  // Get auto reminder settings (admin)
+  static Future<Map<String, dynamic>> getAutoReminderSettings(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/auto-reminder/settings"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Update auto reminder settings (admin)
+  static Future<Map<String, dynamic>> updateAutoReminderSettings(
+    String token,
+    bool isEnabled,
+    String morningTime,
+    String eveningTime,
+    bool sendMorning,
+    bool sendEvening,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/auto-reminder/settings"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "is_enabled": isEnabled,
+          "morning_time": morningTime,
+          "evening_time": eveningTime,
+          "send_morning": sendMorning,
+          "send_evening": sendEvening,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Get reminder messages (admin)
+  static Future<Map<String, dynamic>> getReminderMessages(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/auto-reminder/messages"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "messages": []};
+    } catch (e) {
+      return {"message": "Network error", "messages": []};
+    }
+  }
+
+  // Add reminder message (admin)
+  static Future<Map<String, dynamic>> addReminderMessage(String token, String message) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/admin/auto-reminder/messages"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"message": message}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Update reminder message (admin)
+  static Future<Map<String, dynamic>> updateReminderMessage(
+    String token,
+    String id,
+    String message,
+    bool isActive,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/auto-reminder/messages/$id"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "message": message,
+          "is_active": isActive,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Delete reminder message (admin)
+  static Future<Map<String, dynamic>> deleteReminderMessage(String token, String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/admin/auto-reminder/messages/$id"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
 }

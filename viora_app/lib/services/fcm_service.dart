@@ -10,6 +10,45 @@ class FcmService {
 
   static Future<void> init() async {
     try {
+      // Initialize local notifications plugin
+      const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const ios = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      );
+
+      await _localNotif.initialize(
+        const InitializationSettings(android: android, iOS: ios),
+        onDidReceiveNotificationResponse: (response) {
+          final tab = response.payload;
+          if (tab != null) {
+            final index = int.tryParse(tab.toString());
+            if (index != null) AppNavigation.switchToTab(index);
+          } else {
+            AppNavigation.openHabits();
+          }
+        },
+      );
+
+      // Create notification channel for FCM
+      final androidPlugin = _localNotif
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'viora_fcm',
+            'FCM Notifications',
+            description: 'Thông báo nhắc nhở từ Viora',
+            importance: Importance.max,
+            playSound: true,
+            enableVibration: true,
+            showBadge: true,
+          ),
+        );
+      }
+
       // Xin quyền FCM
       await _messaging.requestPermission(
         alert: true,
@@ -66,12 +105,17 @@ class FcmService {
         android: AndroidNotificationDetails(
           'viora_fcm',
           'FCM Notifications',
+          channelDescription: 'Thông báo nhắc nhở từ Viora',
           importance: Importance.max,
           priority: Priority.max,
+          playSound: true,
+          enableVibration: true,
+          showWhen: true,
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,
           presentSound: true,
+          presentBadge: true,
         ),
       ),
     );

@@ -2,6 +2,7 @@ import cron from "node-cron";
 import pool from "../config/db";
 import { sendMorningReminder, sendEveningReminder } from "./email_service";
 import { sendPushNotification } from "./fcm_push_service";
+import { sendAutoReminders } from "./autoReminderService";
 
 export function startCronJobs() {
   // Chạy mỗi phút — check user nào đến giờ nhắc
@@ -21,7 +22,51 @@ export function startCronJobs() {
     await sendEveningEmails();
   }, { timezone: "Asia/Ho_Chi_Minh" });
 
+  // Auto reminder - check every minute for dynamic scheduling
+  cron.schedule("* * * * *", async () => {
+    await checkAndSendAutoReminders();
+  }, { timezone: "Asia/Ho_Chi_Minh" });
+
   console.log("[Cron] Jobs scheduled");
+}
+
+// Check if it's time to send auto reminders based on admin settings
+async function checkAndSendAutoReminders() {
+  try {
+    // Get settings
+    const [settings]: any = await pool.query(
+      "SELECT * FROM auto_reminder_settings WHERE id = 1"
+    );
+
+    if (settings.length === 0 || settings[0].is_enabled === 0) {
+      return; // Auto reminder disabled
+    }
+
+    const setting = settings[0];
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    // Parse morning time
+    if (setting.send_morning === 1 && setting.morning_time) {
+      const [mHour, mMinute] = setting.morning_time.split(':').map((n: string) => parseInt(n));
+      if (currentHour === mHour && currentMinute === mMinute) {
+        console.log('[Cron] Triggering morning auto reminder');
+        await sendAutoReminders('morning');
+      }
+    }
+
+    // Parse evening time
+    if (setting.send_evening === 1 && setting.evening_time) {
+      const [eHour, eMinute] = setting.evening_time.split(':').map((n: string) => parseInt(n));
+      if (currentHour === eHour && currentMinute === eMinute) {
+        console.log('[Cron] Triggering evening auto reminder');
+        await sendAutoReminders('evening');
+      }
+    }
+  } catch (error) {
+    console.error('[Cron] Auto reminder check error:', error);
+  }
 }
 
 // Kiểm tra từng user xem có đến giờ nhắc không → gửi FCM push

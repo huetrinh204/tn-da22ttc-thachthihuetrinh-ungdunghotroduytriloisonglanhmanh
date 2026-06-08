@@ -628,4 +628,123 @@ router.get("/plants/:userId/history", authMiddleware, adminMiddleware, async (re
   }
 });
 
+// ================= AUTO REMINDER MANAGEMENT =================
+
+// Get auto reminder settings
+router.get("/auto-reminder/settings", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const [settings]: any = await pool.query(
+      "SELECT * FROM auto_reminder_settings WHERE id = 1"
+    );
+
+    if (settings.length === 0) {
+      // Create default settings if not exists
+      await pool.query(
+        "INSERT INTO auto_reminder_settings (id, is_enabled, morning_time, evening_time) VALUES (1, 0, '08:00:00', '20:00:00')"
+      );
+      return res.json({
+        is_enabled: false,
+        morning_time: '08:00:00',
+        evening_time: '20:00:00',
+        send_morning: true,
+        send_evening: true
+      });
+    }
+
+    res.json(settings[0]);
+  } catch (error) {
+    console.error("Get auto reminder settings error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update auto reminder settings
+router.put("/auto-reminder/settings", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { is_enabled, morning_time, evening_time, send_morning, send_evening } = req.body;
+
+    await pool.query(
+      `UPDATE auto_reminder_settings 
+       SET is_enabled = ?, morning_time = ?, evening_time = ?, send_morning = ?, send_evening = ?
+       WHERE id = 1`,
+      [is_enabled ? 1 : 0, morning_time, evening_time, send_morning ? 1 : 0, send_evening ? 1 : 0]
+    );
+
+    res.json({ message: "Settings updated successfully" });
+  } catch (error) {
+    console.error("Update auto reminder settings error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get all reminder messages
+router.get("/auto-reminder/messages", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const [messages]: any = await pool.query(
+      "SELECT * FROM auto_reminder_messages ORDER BY created_at DESC"
+    );
+
+    res.json({ messages });
+  } catch (error) {
+    console.error("Get reminder messages error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Add reminder message
+router.post("/auto-reminder/messages", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { message } = req.body;
+
+    if (!message || message.trim().length === 0) {
+      return res.status(400).json({ message: "Message is required" });
+    }
+
+    const [result]: any = await pool.query(
+      "INSERT INTO auto_reminder_messages (message, is_active) VALUES (?, 1)",
+      [message.trim()]
+    );
+
+    res.json({ 
+      message: "Reminder message added successfully",
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error("Add reminder message error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update reminder message
+router.put("/auto-reminder/messages/:id", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { message, is_active } = req.body;
+
+    await pool.query(
+      "UPDATE auto_reminder_messages SET message = ?, is_active = ? WHERE id = ?",
+      [message, is_active ? 1 : 0, id]
+    );
+
+    res.json({ message: "Reminder message updated successfully" });
+  } catch (error) {
+    console.error("Update reminder message error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Delete reminder message
+router.delete("/auto-reminder/messages/:id", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    await pool.query("DELETE FROM auto_reminder_messages WHERE id = ?", [id]);
+
+    res.json({ message: "Reminder message deleted successfully" });
+  } catch (error) {
+    console.error("Delete reminder message error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;
