@@ -1170,4 +1170,34 @@ class ApiService {
       return {"message": "Network error"};
     }
   }
+
+  // Get all plants for admin
+  static Future<Map<String, dynamic>> getAdminPlants(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/plants"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "plants": []};
+    } catch (e) {
+      return {"message": "Network error", "plants": []};
+    }
+  }
+
+  // Get plant history for specific user (admin)
+  static Future<Map<String, dynamic>> getPlantHistory(String token, String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/plants/$userId/history"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "plant": null, "history": []};
+    } catch (e) {
+      return {"message": "Network error", "plant": null, "history": []};
+    }
+  }
 }

@@ -512,4 +512,120 @@ router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Res
   }
 });
 
+// ================= PLANT MANAGEMENT =================
+
+// Get all plants with user info
+router.get("/plants", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const [plants]: any = await pool.query(`
+      SELECT 
+        p.id, p.user_id, p.plant_type, p.level, p.experience, p.last_watered,
+        u.name as user_name, u.email as user_email, u.avatar_url as user_avatar
+      FROM plants p
+      JOIN users u ON p.user_id = u.id
+      ORDER BY p.experience DESC, p.level DESC
+    `);
+
+    res.json({ plants });
+  } catch (error) {
+    console.error("Get admin plants error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get plant history (experience gain events)
+router.get("/plants/:userId/history", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    // Get plant info
+    const [plants]: any = await pool.query(
+      "SELECT * FROM plants WHERE user_id = ?",
+      [userId]
+    );
+
+    if (plants.length === 0) {
+      return res.json({ plant: null, history: [], user: null, stats: null });
+    }
+
+    const plant = plants[0];
+
+    // Get user info
+    const [users]: any = await pool.query(
+      "SELECT id, name, email, avatar_url, created_at FROM users WHERE id = ?",
+      [userId]
+    );
+    const user = users.length > 0 ? users[0] : null;
+
+    // Get current streak
+    const [streaks]: any = await pool.query(
+      "SELECT current_streak, longest_streak FROM streaks WHERE user_id = ?",
+      [userId]
+    );
+    const streak = streaks.length > 0 ? streaks[0] : { current_streak: 0, longest_streak: 0 };
+
+    // Get total habits completed
+    const [habitCount]: any = await pool.query(
+      "SELECT COUNT(DISTINCT DATE(log_date)) as days_completed, COUNT(*) as total_habits FROM habit_logs WHERE user_id = ?",
+      [userId]
+    );
+    const stats = habitCount.length > 0 ? habitCount[0] : { days_completed: 0, total_habits: 0 };
+
+    // Get habit completion history (which gives experience)
+    const [history]: any = await pool.query(`
+      SELECT 
+        hl.log_date,
+        hl.habit_id,
+        h.name as habit_name,
+        h.icon as habit_icon,
+        DATE(hl.log_date) as date
+      FROM habit_logs hl
+      JOIN habits h ON hl.habit_id = h.id
+      WHERE hl.user_id = ?
+      ORDER BY hl.log_date DESC
+      LIMIT 100
+    `, [userId]);
+
+    // Group by date and count habits completed
+    const historyMap = new Map();
+    for (const row of history) {
+      const dateStr = row.date.toISOString().split('T')[0];
+      if (!historyMap.has(dateStr)) {
+        historyMap.set(dateStr, {
+          date: dateStr,
+          habits_completed: 0,
+          exp_gained: 0,
+          habits: []
+        });
+      }
+      const entry = historyMap.get(dateStr);
+      entry.habits_completed += 1;
+      entry.exp_gained += 1; // 1 exp per habit completion
+      entry.habits.push({
+        name: row.habit_name,
+        icon: row.habit_icon
+      });
+    }
+
+    const formattedHistory = Array.from(historyMap.values());
+
+    res.json({ 
+      plant,
+      user,
+      streak: {
+        current: streak.current_streak || 0,
+        longest: streak.longest_streak || 0
+      },
+      stats: {
+        days_completed: stats.days_completed || 0,
+        total_habits: stats.total_habits || 0
+      },
+      history: formattedHistory
+    });
+  } catch (error) {
+    console.error("Get plant history error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;
