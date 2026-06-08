@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../services/api_service.dart';
+import '../theme/theme_extensions.dart';
 
 class AdminUserDetailScreen extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -36,12 +37,16 @@ class AdminUserDetailScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     user['name'] ?? 'Unknown',
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: context.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     user['email'] ?? '',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 16, color: context.textSecondary),
                   ),
                   const SizedBox(height: 8),
                   if (user['role'] == 'admin')
@@ -91,60 +96,79 @@ class AdminUserDetailScreen extends StatelessWidget {
   }
 
   Widget _buildSection(String title, List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          ...children,
-        ],
+    return Builder(
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: context.cardColor,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: context.isDark 
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : Colors.grey.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+    return Builder(
+      builder: (context) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 120,
+              child: Text(
+                label,
+                style: TextStyle(color: context.textSecondary, fontSize: 14),
+              ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: context.textPrimary,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildGoalsWidget(dynamic goals) {
     if (goals == null) {
-      return const Text('Chưa thiết lập mục tiêu');
+      return Builder(
+        builder: (context) => Text(
+          'Chưa thiết lập mục tiêu',
+          style: TextStyle(color: context.textSecondary),
+        ),
+      );
     }
 
     List<dynamic> goalsList;
@@ -154,30 +178,52 @@ class AdminUserDetailScreen extends StatelessWidget {
       } else if (goals is List) {
         goalsList = goals;
       } else {
-        return const Text('Chưa thiết lập mục tiêu');
+        return Builder(
+          builder: (context) => Text(
+            'Chưa thiết lập mục tiêu',
+            style: TextStyle(color: context.textSecondary),
+          ),
+        );
       }
     } catch (e) {
-      return const Text('Chưa thiết lập mục tiêu');
+      return Builder(
+        builder: (context) => Text(
+          'Chưa thiết lập mục tiêu',
+          style: TextStyle(color: context.textSecondary),
+        ),
+      );
     }
 
     if (goalsList.isEmpty) {
-      return const Text('Chưa thiết lập mục tiêu');
+      return Builder(
+        builder: (context) => Text(
+          'Chưa thiết lập mục tiêu',
+          style: TextStyle(color: context.textSecondary),
+        ),
+      );
     }
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: goalsList.map((goal) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.blue[50],
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.blue[200]!),
-          ),
-          child: Text(
-            _getGoalText(goal.toString()),
-            style: TextStyle(color: Colors.blue[700], fontSize: 12),
+        return Builder(
+          builder: (context) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: context.isDark ? Colors.blue[900]!.withValues(alpha: 0.3) : Colors.blue[50],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: context.isDark ? Colors.blue[700]! : Colors.blue[200]!,
+              ),
+            ),
+            child: Text(
+              _getGoalText(goal.toString()),
+              style: TextStyle(
+                color: context.isDark ? Colors.blue[300] : Colors.blue[700],
+                fontSize: 12,
+              ),
+            ),
           ),
         );
       }).toList(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'admin_user_detail_screen.dart';
+import '../theme/theme_extensions.dart';
 
 class AdminUsersTab extends StatefulWidget {
   const AdminUsersTab({super.key});
@@ -98,12 +99,14 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
             child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Tìm kiếm theo tên hoặc email...',
-                prefixIcon: const Icon(Icons.search),
+                hintStyle: TextStyle(color: context.textSecondary),
+                prefixIcon: Icon(Icons.search, color: context.textSecondary),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: Icon(Icons.clear, color: context.textSecondary),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchChanged('');
@@ -112,9 +115,18 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                     : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.infoBoxBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.infoBoxBorder),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: context.isDark ? Colors.white54 : Colors.grey[400]!),
                 ),
                 filled: true,
-                fillColor: Colors.grey[100],
+                fillColor: context.cardColor,
               ),
             ),
           ),
@@ -131,7 +143,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                               _searchController.text.isNotEmpty
                                   ? 'Không tìm thấy người dùng'
                                   : 'Chưa có người dùng',
-                              style: const TextStyle(fontSize: 16, color: Colors.grey),
+                              style: TextStyle(fontSize: 16, color: context.textSecondary),
                             ),
                           )
                         : ListView.builder(

@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import 'package:intl/intl.dart';
 import 'post_detail_screen.dart';
 import '../models/post.dart';
+import '../theme/theme_extensions.dart';
 
 class AdminPostsTab extends StatefulWidget {
   const AdminPostsTab({super.key});
@@ -73,19 +74,21 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
         // Search and filter bar
         Container(
           padding: const EdgeInsets.all(16),
-          color: Colors.grey[50],
+          color: context.cardColor,
           child: Column(
             children: [
               // Search bar
               TextField(
                 controller: _searchController,
                 onChanged: _onSearchChanged,
+                style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm bài viết hoặc tác giả...',
-                  prefixIcon: const Icon(Icons.search),
+                  hintStyle: TextStyle(color: context.textSecondary),
+                  prefixIcon: Icon(Icons.search, color: context.textSecondary),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: Icon(Icons.clear, color: context.textSecondary),
                           onPressed: () {
                             _searchController.clear();
                             _loadPosts();
@@ -94,9 +97,18 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                       : null,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: context.infoBoxBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: context.infoBoxBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: context.isDark ? Colors.white54 : Colors.grey[400]!),
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: context.isDark ? Colors.grey[850] : Colors.white,
                 ),
               ),
               const SizedBox(height: 12),

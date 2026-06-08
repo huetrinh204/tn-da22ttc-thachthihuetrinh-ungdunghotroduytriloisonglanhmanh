@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../theme/theme_extensions.dart';
 
 class AdminDashboardTab extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -134,9 +135,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Tổng quan',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
             ),
             const SizedBox(height: 20),
             
@@ -187,9 +192,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             const SizedBox(height: 30),
             
             // Line Charts section
-            const Text(
+            Text(
               'Biểu đồ tăng trưởng',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
             ),
             const SizedBox(height: 16),
             
@@ -198,9 +207,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             const SizedBox(height: 30),
             
             // Pie Chart section  
-            const Text(
+            Text(
               'Phân bổ dữ liệu',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
             ),
             const SizedBox(height: 16),
             
@@ -224,11 +237,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: context.isDark 
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -260,7 +275,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   title,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: context.textSecondary,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -269,7 +284,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[500],
+                      color: context.textSecondary.withValues(alpha: 0.7),
                     ),
                   ),
               ],
@@ -289,11 +304,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: context.isDark 
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -302,24 +319,47 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Tăng trưởng người dùng (30 ngày qua)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: context.textPrimary,
+                ),
               ),
               const SizedBox(height: 20),
               Expanded(
                 child: _userGrowthData.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'Chưa có dữ liệu tăng trưởng',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: context.textSecondary),
                         ),
                       )
                     : LineChart(
                         LineChartData(
                           minY: 0,
                           maxY: _calculateMaxY(_userGrowthData),
-                          gridData: const FlGridData(show: true),
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: true,
+                            getDrawingHorizontalLine: (value) {
+                              return FlLine(
+                                color: context.isDark 
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.3),
+                                strokeWidth: 1,
+                              );
+                            },
+                            getDrawingVerticalLine: (value) {
+                              return FlLine(
+                                color: context.isDark 
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.3),
+                                strokeWidth: 1,
+                              );
+                            },
+                          ),
                           titlesData: FlTitlesData(
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
@@ -329,7 +369,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                                 getTitlesWidget: (value, meta) {
                                   return Text(
                                     value.toInt().toString(),
-                                    style: const TextStyle(fontSize: 10),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: context.textSecondary,
+                                    ),
                                   );
                                 },
                               ),
@@ -348,7 +391,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                                         final parts = date.split('-');
                                         return Text(
                                           '${parts[2]}/${parts[1]}',
-                                          style: const TextStyle(fontSize: 8),
+                                          style: TextStyle(
+                                            fontSize: 8,
+                                            color: context.textSecondary,
+                                          ),
                                         );
                                       }
                                     } else {
@@ -356,7 +402,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                                       final parts = date.split('-');
                                       return Text(
                                         '${parts[2]}/${parts[1]}',
-                                        style: const TextStyle(fontSize: 8),
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          color: context.textSecondary,
+                                        ),
                                       );
                                     }
                                   }
@@ -367,7 +416,14 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                             topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                             rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                           ),
-                          borderData: FlBorderData(show: true),
+                          borderData: FlBorderData(
+                            show: true,
+                            border: Border.all(
+                              color: context.isDark 
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
                           lineBarsData: [
                             LineChartBarData(
                               spots: _userGrowthData.asMap().entries.map((entry) {
@@ -407,11 +463,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           height: 300,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: context.isDark 
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -420,24 +478,47 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Tăng trưởng bài viết (30 ngày qua)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: context.textPrimary,
+                ),
               ),
               const SizedBox(height: 20),
               Expanded(
                 child: _postGrowthData.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           'Chưa có dữ liệu tăng trưởng',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: context.textSecondary),
                         ),
                       )
                     : LineChart(
                         LineChartData(
                           minY: 0,
                           maxY: _calculateMaxY(_postGrowthData),
-                          gridData: const FlGridData(show: true),
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: true,
+                            getDrawingHorizontalLine: (value) {
+                              return FlLine(
+                                color: context.isDark 
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.3),
+                                strokeWidth: 1,
+                              );
+                            },
+                            getDrawingVerticalLine: (value) {
+                              return FlLine(
+                                color: context.isDark 
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.3),
+                                strokeWidth: 1,
+                              );
+                            },
+                          ),
                           titlesData: FlTitlesData(
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
@@ -447,7 +528,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                                 getTitlesWidget: (value, meta) {
                                   return Text(
                                     value.toInt().toString(),
-                                    style: const TextStyle(fontSize: 10),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: context.textSecondary,
+                                    ),
                                   );
                                 },
                               ),
@@ -466,7 +550,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                                         final parts = date.split('-');
                                         return Text(
                                           '${parts[2]}/${parts[1]}',
-                                          style: const TextStyle(fontSize: 8),
+                                          style: TextStyle(
+                                            fontSize: 8,
+                                            color: context.textSecondary,
+                                          ),
                                         );
                                       }
                                     } else {
@@ -474,7 +561,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                                       final parts = date.split('-');
                                       return Text(
                                         '${parts[2]}/${parts[1]}',
-                                        style: const TextStyle(fontSize: 8),
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          color: context.textSecondary,
+                                        ),
                                       );
                                     }
                                   }
@@ -485,7 +575,14 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                             topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                             rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                           ),
-                          borderData: FlBorderData(show: true),
+                          borderData: FlBorderData(
+                            show: true,
+                            border: Border.all(
+                              color: context.isDark 
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
                           lineBarsData: [
                             LineChartBarData(
                               spots: _postGrowthData.asMap().entries.map((entry) {
@@ -528,11 +625,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
       height: 300,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: context.isDark 
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -540,9 +639,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             'Phân bổ dữ liệu',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: context.textPrimary,
+            ),
           ),
           const SizedBox(height: 20),
           Expanded(
