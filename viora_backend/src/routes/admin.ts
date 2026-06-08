@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import pool from "../config/db";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
@@ -243,6 +244,95 @@ router.delete("/posts/:postId", authMiddleware, adminMiddleware, async (req: any
     res.json({ message: "Post deleted successfully" });
   } catch (error) {
     console.error("Delete post error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Report post violation (admin warning)
+router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ message: "Reason is required" });
+    }
+
+    // Get post and user info
+    const [posts]: any = await pool.query(
+      "SELECT p.*, u.name, u.email FROM community_posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
+      [postId]
+    );
+
+    if (posts.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const post = posts[0];
+
+    // Create in-app notification using user_notifications table
+    await pool.query(
+      `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        post.user_id,
+        'warning',
+        'Cảnh báo vi phạm nội dung',
+        `Bài viết của bạn vi phạm quy định cộng đồng: ${reason}`,
+        '⚠️',
+        JSON.stringify({ post_id: postId, reason: reason }),
+        0
+      ]
+    );
+
+    // Send email notification
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD
+      }
+    });
+
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: post.email,
+      subject: 'Cảnh báo vi phạm - Viora',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #ff9800;">⚠️ Cảnh báo vi phạm nội dung</h2>
+          <p>Xin chào <strong>${post.name}</strong>,</p>
+          <p>Bài viết của bạn đã vi phạm quy định cộng đồng Viora.</p>
+          <div style="background-color: #fff3e0; padding: 15px; border-left: 4px solid #ff9800; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Lý do:</strong> ${reason}</p>
+          </div>
+          <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Nội dung bài viết:</strong></p>
+            <p style="margin: 10px 0 0 0;">${post.content || '(Không có nội dung văn bản)'}</p>
+          </div>
+          <p>Vui lòng tuân thủ các quy định cộng đồng để tránh bị khóa tài khoản.</p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
+          <p style="color: #666; font-size: 14px;">Trân trọng,<br>Đội ngũ Viora</p>
+        </div>
+      `
+    };
+
+    let emailSent = false;
+    try {
+      await transporter.sendMail(mailOptions);
+      emailSent = true;
+    } catch (emailError) {
+      console.error("Email send error:", emailError);
+      // Continue even if email fails
+    }
+
+    res.json({ 
+      message: "Warning sent successfully",
+      notification_sent: true,
+      email_sent: emailSent
+    });
+  } catch (error) {
+    console.error("Report post error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

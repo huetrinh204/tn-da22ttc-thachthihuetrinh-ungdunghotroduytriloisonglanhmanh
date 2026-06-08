@@ -1118,6 +1118,29 @@ class ApiService {
     }
   }
 
+  // Report post violation (admin warning)
+  static Future<Map<String, dynamic>> reportPostViolation(
+    String token,
+    String postId,
+    String reason,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/admin/posts/$postId/report"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"reason": reason}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      throw Exception(data["message"] ?? "Failed to report post");
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Get all comments for admin
   static Future<Map<String, dynamic>> getAdminComments(String token) async {
     try {

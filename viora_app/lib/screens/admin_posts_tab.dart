@@ -157,12 +157,19 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
+                                        icon: const Icon(Icons.flag, color: Colors.orange),
+                                        onPressed: () => _reportViolation(post['id'], post['user_id'], post['content']),
+                                        tooltip: 'Cảnh báo vi phạm',
+                                      ),
+                                      IconButton(
                                         icon: const Icon(Icons.visibility, color: Colors.blue),
                                         onPressed: () => _viewPostDetails(post),
+                                        tooltip: 'Xem chi tiết',
                                       ),
                                       IconButton(
                                         icon: const Icon(Icons.delete, color: Colors.red),
                                         onPressed: () => _deletePost(post['id'], post['content']),
+                                        tooltip: 'Xóa bài viết',
                                       ),
                                     ],
                                   ),
@@ -316,6 +323,106 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đã xóa bài viết')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _reportViolation(int postId, dynamic userId, String? content) async {
+    final customReasonController = TextEditingController();
+    String? selectedReason;
+
+    final reasons = [
+      'Nội dung bạo lực hoặc gây shock',
+      'Nội dung spam hoặc lừa đảo',
+      'Ngôn từ thù địch hoặc phân biệt đối xử',
+      'Thông tin sai sự thật',
+      'Nội dung khiêu dâm',
+      'Vi phạm quyền sở hữu trí tuệ',
+      'Lý do khác',
+    ];
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Cảnh báo vi phạm'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Nội dung: "${content ?? ''}"',
+                  style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(height: 16),
+                const Text('Chọn lý do vi phạm:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                ...reasons.map((reason) => RadioListTile<String>(
+                      title: Text(reason, style: const TextStyle(fontSize: 14)),
+                      value: reason,
+                      groupValue: selectedReason,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: (value) {
+                        setState(() => selectedReason = value);
+                      },
+                    )),
+                if (selectedReason == 'Lý do khác') ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: customReasonController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nhập lý do',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () {
+                String? finalReason;
+                if (selectedReason == 'Lý do khác') {
+                  finalReason = customReasonController.text.trim();
+                } else {
+                  finalReason = selectedReason;
+                }
+                Navigator.pop(context, finalReason);
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.orange),
+              child: const Text('Gửi cảnh báo'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result == null || result.isEmpty || !mounted) return;
+
+    try {
+      await ApiService.reportPostViolation(_token, postId.toString(), result);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đã gửi cảnh báo đến người dùng (in-app + email)'),
+            backgroundColor: Colors.orange,
+          ),
         );
       }
     } catch (e) {
