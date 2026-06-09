@@ -747,4 +747,67 @@ router.delete("/auto-reminder/messages/:id", authMiddleware, adminMiddleware, as
   }
 });
 
+// ================= APP SETTINGS =================
+
+// Get app settings
+router.get("/app-settings", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const [settings]: any = await pool.query(
+      "SELECT * FROM app_settings WHERE setting_key IN ('app_name', 'app_logo_url')"
+    );
+
+    const settingsObj: any = {};
+    settings.forEach((row: any) => {
+      settingsObj[row.setting_key] = row.setting_value;
+    });
+
+    res.json(settingsObj);
+  } catch (error) {
+    console.error("Get app settings error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update app name
+router.put("/app-settings/name", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { appName } = req.body;
+
+    if (!appName || appName.trim().length === 0) {
+      return res.status(400).json({ message: "App name is required" });
+    }
+
+    await pool.query(
+      `INSERT INTO app_settings (setting_key, setting_value) 
+       VALUES ('app_name', ?) 
+       ON DUPLICATE KEY UPDATE setting_value = ?`,
+      [appName.trim(), appName.trim()]
+    );
+
+    res.json({ message: "App name updated successfully" });
+  } catch (error) {
+    console.error("Update app name error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update app logo
+router.put("/app-settings/logo", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { logoUrl } = req.body;
+
+    await pool.query(
+      `INSERT INTO app_settings (setting_key, setting_value) 
+       VALUES ('app_logo_url', ?) 
+       ON DUPLICATE KEY UPDATE setting_value = ?`,
+      [logoUrl || null, logoUrl || null]
+    );
+
+    res.json({ message: "App logo updated successfully" });
+  } catch (error) {
+    console.error("Update app logo error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;

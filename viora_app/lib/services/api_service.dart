@@ -1323,4 +1323,59 @@ class ApiService {
       return {"message": "Network error"};
     }
   }
+
+  // ================= APP SETTINGS (ADMIN) =================
+
+  // Get app settings (admin)
+  static Future<Map<String, dynamic>> getAppSettings(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/app-settings"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Update app name (admin)
+  static Future<Map<String, dynamic>> updateAppName(String token, String appName) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/app-settings/name"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"appName": appName}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Update app logo (admin)
+  static Future<Map<String, dynamic>> updateAppLogo(String token, String logoUrl) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/app-settings/logo"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"logoUrl": logoUrl}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
 }
