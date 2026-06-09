@@ -1512,6 +1512,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get postGrowth30Days => 'Tăng trưởng bài viết (30 ngày qua)';
 
   @override
+  String get userGrowth7Days => 'Tăng trưởng người dùng (7 ngày qua)';
+
+  @override
+  String get postGrowth7Days => 'Tăng trưởng bài viết (7 ngày qua)';
+
+  @override
+  String get weekly => 'Tuần';
+
+  @override
+  String get monthly => 'Tháng';
+
+  @override
   String get noGrowthData => 'Chưa có dữ liệu tăng trưởng';
 
   @override

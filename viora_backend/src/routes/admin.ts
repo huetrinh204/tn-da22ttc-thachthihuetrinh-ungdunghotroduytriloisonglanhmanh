@@ -400,29 +400,32 @@ router.get("/stats", authMiddleware, adminMiddleware, async (req: any, res: Resp
 // Get growth data for charts
 router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
   try {
-    // Get daily user counts for last 30 days
+    const period = (req.query.period as string) || 'monthly'; // 'weekly' or 'monthly'
+    const days = period === 'weekly' ? 7 : 30;
+    
+    // Get daily user counts
     const [userGrowth]: any = await pool.query(`
       SELECT 
         DATE(created_at) as date,
         COUNT(*) as daily_count
       FROM users
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
       GROUP BY DATE(created_at)
       ORDER BY DATE(created_at) ASC
-    `);
+    `, [days]);
 
-    // Get daily post counts for last 30 days
+    // Get daily post counts
     const [postGrowth]: any = await pool.query(`
       SELECT 
         DATE(created_at) as date,
         COUNT(*) as daily_count
       FROM community_posts
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
       GROUP BY DATE(created_at)
       ORDER BY DATE(created_at) ASC
-    `);
+    `, [days]);
 
-    // If no data in last 30 days, get all-time data
+    // If no data in period, get all-time data
     let finalUserGrowth = userGrowth;
     let finalPostGrowth = postGrowth;
     
@@ -434,8 +437,8 @@ router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Res
         FROM users
         GROUP BY DATE(created_at)
         ORDER BY DATE(created_at) ASC
-        LIMIT 30
-      `);
+        LIMIT ?
+      `, [days]);
       finalUserGrowth = allTimeUsers;
     }
     
@@ -447,13 +450,13 @@ router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Res
         FROM community_posts
         GROUP BY DATE(created_at)
         ORDER BY DATE(created_at) ASC
-        LIMIT 30
-      `);
+        LIMIT ?
+      `, [days]);
       finalPostGrowth = allTimePosts;
     }
 
     // Helper function to fill missing dates
-    const fillMissingDates = (data: any[], days: number = 30) => {
+    const fillMissingDates = (data: any[], daysCount: number = days) => {
       const result: any[] = [];
       const today = new Date();
       const dataMap = new Map();
@@ -465,7 +468,7 @@ router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Res
       });
       
       // Fill all dates in range
-      for (let i = days - 1; i >= 0; i--) {
+      for (let i = daysCount - 1; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().split('T')[0];
@@ -480,8 +483,8 @@ router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Res
     };
 
     // Fill missing dates for both datasets
-    const filledUserGrowth = fillMissingDates(finalUserGrowth);
-    const filledPostGrowth = fillMissingDates(finalPostGrowth);
+    const filledUserGrowth = fillMissingDates(finalUserGrowth, days);
+    const filledPostGrowth = fillMissingDates(finalPostGrowth, days);
 
     // Calculate cumulative counts in JavaScript
     let cumulativeUserCount = 0;

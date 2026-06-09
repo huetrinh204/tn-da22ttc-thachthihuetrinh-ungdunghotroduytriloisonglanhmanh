@@ -1512,6 +1512,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get postGrowth30Days => 'Post Growth (Last 30 Days)';
 
   @override
+  String get userGrowth7Days => 'User Growth (Last 7 Days)';
+
+  @override
+  String get postGrowth7Days => 'Post Growth (Last 7 Days)';
+
+  @override
+  String get weekly => 'Week';
+
+  @override
+  String get monthly => 'Month';
+
+  @override
   String get noGrowthData => 'No growth data yet';
 
   @override

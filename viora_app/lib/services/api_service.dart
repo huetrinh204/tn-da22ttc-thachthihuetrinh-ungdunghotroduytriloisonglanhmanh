@@ -957,10 +957,10 @@ class ApiService {
   }
 
   // Get growth data for charts
-  static Future<Map<String, dynamic>> getAdminGrowthData(String token) async {
+  static Future<Map<String, dynamic>> getAdminGrowthData(String token, {String period = 'monthly'}) async {
     try {
       final response = await http.get(
-        Uri.parse("$baseUrl/admin/growth"),
+        Uri.parse("$baseUrl/admin/growth?period=$period"),
         headers: {"Authorization": "Bearer $token"},
       );
       final data = jsonDecode(response.body);

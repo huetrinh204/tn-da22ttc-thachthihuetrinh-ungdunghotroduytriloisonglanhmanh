@@ -2972,6 +2972,30 @@ abstract class AppLocalizations {
   /// **'Tăng trưởng bài viết (30 ngày qua)'**
   String get postGrowth30Days;
 
+  /// No description provided for @userGrowth7Days.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng trưởng người dùng (7 ngày qua)'**
+  String get userGrowth7Days;
+
+  /// No description provided for @postGrowth7Days.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tăng trưởng bài viết (7 ngày qua)'**
+  String get postGrowth7Days;
+
+  /// No description provided for @weekly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuần'**
+  String get weekly;
+
+  /// No description provided for @monthly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tháng'**
+  String get monthly;
+
   /// No description provided for @noGrowthData.
   ///
   /// In vi, this message translates to:

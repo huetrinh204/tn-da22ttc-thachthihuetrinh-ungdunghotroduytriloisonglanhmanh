@@ -27,6 +27,9 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
   
   List<Map<String, dynamic>> _userGrowthData = [];
   List<Map<String, dynamic>> _postGrowthData = [];
+  
+  // Growth chart filter: 'weekly' or 'monthly'
+  String _growthFilter = 'monthly';
 
   @override
   void initState() {
@@ -69,7 +72,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
 
   Future<void> _loadGrowthData() async {
     try {
-      final growthRes = await ApiService.getAdminGrowthData(_token);
+      final growthRes = await ApiService.getAdminGrowthData(_token, period: _growthFilter);
       if (!mounted) return;
       setState(() {
         _userGrowthData = List<Map<String, dynamic>>.from(growthRes['userGrowth'] ?? []);
@@ -301,6 +304,31 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
   Widget _buildLineCharts(AppLocalizations l10n) {
     return Column(
       children: [
+        // Filter buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildFilterButton(
+              label: l10n.weekly,
+              isSelected: _growthFilter == 'weekly',
+              onTap: () {
+                setState(() => _growthFilter = 'weekly');
+                _loadGrowthData();
+              },
+            ),
+            const SizedBox(width: 12),
+            _buildFilterButton(
+              label: l10n.monthly,
+              isSelected: _growthFilter == 'monthly',
+              onTap: () {
+                setState(() => _growthFilter = 'monthly');
+                _loadGrowthData();
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
         // Users growth chart
         Container(
           height: 300,
@@ -323,7 +351,9 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.userGrowth30Days,
+                _growthFilter == 'weekly' 
+                    ? l10n.userGrowth7Days
+                    : l10n.userGrowth30Days,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -482,7 +512,9 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.postGrowth30Days,
+                _growthFilter == 'weekly'
+                    ? l10n.postGrowth7Days
+                    : l10n.postGrowth30Days,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -620,6 +652,53 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           ),
         ),
       ],
+    );
+  }
+  
+  Widget _buildFilterButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? const Color(0xFF4CAF50)
+              : context.cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected 
+                ? const Color(0xFF4CAF50)
+                : context.isDark 
+                    ? Colors.grey.withValues(alpha: 0.3)
+                    : Colors.grey.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected 
+                ? Colors.white
+                : context.textPrimary,
+          ),
+        ),
+      ),
     );
   }
 
