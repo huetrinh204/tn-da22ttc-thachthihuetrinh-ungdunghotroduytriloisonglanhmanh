@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import '../l10n/app_localizations.dart';
 
 class LevelUpAnimation extends StatefulWidget {
   final String plantType;
@@ -32,7 +31,6 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
   void initState() {
     super.initState();
 
-    // Fade in animation
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -41,7 +39,6 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
     );
 
-    // Scale animation (subtle bounce)
     _scaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -50,7 +47,6 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
     );
 
-    // Confetti animation
     _confettiController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
@@ -62,11 +58,9 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
   Future<void> _startAnimation() async {
     _fadeController.forward();
     _scaleController.forward();
-    _confettiController.forward();
+    _confettiController.repeat();
 
-    // Display for longer duration (3.5 seconds total)
-    await Future.delayed(const Duration(milliseconds: 3500));
-    widget.onComplete();
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
   @override
@@ -79,28 +73,13 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    
     return Container(
-      color: Colors.black.withValues(alpha: 0.7), // Dark overlay
+      color: Colors.black.withValues(alpha: 0.5),
       child: Center(
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Confetti particles
-            AnimatedBuilder(
-              animation: _confettiController,
-              builder: (context, child) {
-                return CustomPaint(
-                  size: MediaQuery.of(context).size,
-                  painter: ConfettiPainter(
-                    progress: _confettiController.value,
-                  ),
-                );
-              },
-            ),
-
-            // Main card
+            // Main card (behind confetti)
             AnimatedBuilder(
               animation: Listenable.merge([_fadeAnimation, _scaleAnimation]),
               builder: (context, child) {
@@ -129,38 +108,41 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Title with emoji
+                    // Title with party popper emoji
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text('🎉', style: TextStyle(fontSize: 28)),
                         const SizedBox(width: 8),
                         Text(
-                          l10n.congratulations.toUpperCase().replaceAll('!', ''),
+                          'CHÚC MỪNG!',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 28,
                             fontWeight: FontWeight.w900,
-                            color: Colors.brown.shade700,
+                            color: Colors.orange.shade800,
                             letterSpacing: 1.2,
+                            decoration: TextDecoration.none,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Text('🎉', style: TextStyle(fontSize: 28)),
                       ],
                     ),
                     
                     const SizedBox(height: 24),
                     
-                    // Plant image in circle
+                    // Plant image in rounded square with border
                     Container(
-                      width: 140,
-                      height: 140,
+                      width: 200,
+                      height: 200,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.grey.shade100,
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.blue.shade300,
+                          width: 3,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
                             blurRadius: 20,
                             spreadRadius: 5,
                           ),
@@ -173,14 +155,14 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                     
                     const SizedBox(height: 24),
                     
-                    // Level badge
+                    // Level badge with arrow
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       decoration: BoxDecoration(
                         color: Colors.amber.shade100,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: Colors.amber.shade300,
+                          color: Colors.amber.shade200,
                           width: 2,
                         ),
                       ),
@@ -188,54 +170,106 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            l10n.level(widget.oldLevel),
+                            'Cấp ${widget.oldLevel}',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.brown.shade700,
+                              decoration: TextDecoration.none,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward, size: 18, color: Color(0xFF4CAF50)),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 12),
+                          Icon(Icons.arrow_forward, 
+                              size: 20, 
+                              color: Colors.brown.shade700),
+                          const SizedBox(width: 12),
                           Text(
-                            l10n.level(widget.newLevel),
+                            'Cấp ${widget.newLevel}',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: Colors.brown.shade700,
+                              color: Colors.orange.shade800,
+                              decoration: TextDecoration.none,
                             ),
                           ),
                         ],
                       ),
                     ),
                     
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     
-                    // Message
+                    // Main message
                     Text(
-                      l10n.plantLeveledUp,
+                      'Cây của bạn đã lớn thêm\nmột chút rồi.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF2E7D32),
+                        color: Colors.teal.shade800,
+                        height: 1.4,
+                        decoration: TextDecoration.none,
                       ),
                     ),
                     
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     
+                    // Sub message
                     Text(
-                      l10n.keepGrowing.replaceAll('✨', ''),
+                      'Tiếp tục chăm sóc để nhận thêm\nhiều hạt giống mới nhé!',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
+                        height: 1.5,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 28),
+                    
+                    // Continue button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: widget.onComplete,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange.shade600,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text(
+                          'Tiếp tục',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+            ),
+
+            // Confetti particles (in front of card)
+            AnimatedBuilder(
+              animation: _confettiController,
+              builder: (context, child) {
+                return IgnorePointer(
+                  child: CustomPaint(
+                    size: MediaQuery.of(context).size,
+                    painter: ConfettiPainter(
+                      progress: _confettiController.value,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -249,13 +283,13 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
 
     return Image.asset(
       imagePath,
-      width: 100,
-      height: 100,
+      width: 140,
+      height: 140,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
         return const Text(
-          '🌳',
-          style: TextStyle(fontSize: 80),
+          '🌱',
+          style: TextStyle(fontSize: 100),
         );
       },
     );
@@ -289,24 +323,23 @@ class ConfettiPainter extends CustomPainter {
 
   ConfettiPainter({required this.progress})
       : particles = List.generate(
-          40,
+          30,
           (index) {
             final random = math.Random(index);
             return ConfettiParticle(
               x: random.nextDouble(),
               startY: -0.1 - random.nextDouble() * 0.2,
               speed: 0.3 + random.nextDouble() * 0.4,
-              size: 8.0 + random.nextDouble() * 8.0,
+              size: 6.0 + random.nextDouble() * 6.0,
               rotation: random.nextDouble() * 2 * math.pi,
               rotationSpeed: -math.pi + random.nextDouble() * 2 * math.pi,
               color: [
                 const Color(0xFFFFD700), // Gold
+                const Color(0xFFFFA500), // Orange
                 const Color(0xFF4CAF50), // Green
-                const Color(0xFFFF9800), // Orange
-                const Color(0xFF2196F3), // Blue
-                const Color(0xFFE91E63), // Pink
-                const Color(0xFF9C27B0), // Purple
-              ][random.nextInt(6)],
+                const Color(0xFF00BCD4), // Cyan
+                const Color(0xFFFF9800), // Deep Orange
+              ][random.nextInt(5)],
             );
           },
         );
@@ -315,7 +348,7 @@ class ConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final particle in particles) {
       final y = particle.startY + (progress * particle.speed * 1.5);
-      if (y > 1.1) continue; // Don't draw if off screen
+      if (y > 1.1) continue;
 
       final x = particle.x * size.width;
       final yPos = y * size.height;
@@ -329,7 +362,6 @@ class ConfettiPainter extends CustomPainter {
       canvas.translate(x, yPos);
       canvas.rotate(rotation);
       
-      // Draw square confetti
       final rect = Rect.fromCenter(
         center: Offset.zero,
         width: particle.size,

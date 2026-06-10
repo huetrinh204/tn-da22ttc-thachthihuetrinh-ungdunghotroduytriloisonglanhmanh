@@ -134,6 +134,9 @@ router.delete("/:id", authMiddleware, async (req: any, res) => {
       [req.params.id, req.user.id]
     );
 
+    // Recalculate plant experience based on remaining habits
+    await recalculatePlantExperience(req.user.id);
+
     res.json({ message: "Habit deleted" });
   } catch (error) {
     console.log(error);
@@ -512,4 +515,107 @@ async function updatePlant(userId: number, today: string): Promise<number> {
   console.log(`[Plant] Updated plant: exp=${plant.experience} -> ${newExp}, level=${plant.level} -> ${newLevel}`);
   
   return points;
+}
+
+// Helper: Recalculate plant experience from scratch based on all habit logs
+async function recalculatePlantExperience(userId: number) {
+  try {
+    console.log(`[Recalculate] Starting for userId=${userId}`);
+
+    // Check if user has any active habits
+    const [activeHabits]: any = await pool.query(
+      `SELECT COUNT(*) as count FROM habits WHERE user_id = ? AND is_active = 1`,
+      [userId]
+    );
+
+    if (activeHabits[0].count === 0) {
+      // No active habits, reset plant to initial state
+      await pool.query(
+        `UPDATE plants SET experience = 0, level = 1, last_watered = NULL WHERE user_id = ?`,
+        [userId]
+      );
+      console.log(`[Recalculate] No active habits, reset plant to level 1 with 0 exp`);
+      return;
+    }
+
+    // Get all unique dates where user checked in habits
+    const [logDates]: any = await pool.query(
+      `SELECT DISTINCT log_date FROM habit_logs WHERE user_id = ? ORDER BY log_date ASC`,
+      [userId]
+    );
+
+    if (logDates.length === 0) {
+      // No logs, reset plant to initial state
+      await pool.query(
+        `UPDATE plants SET experience = 0, level = 1, last_watered = NULL WHERE user_id = ?`,
+        [userId]
+      );
+      console.log(`[Recalculate] No logs found, reset plant to level 1`);
+      return;
+    }
+
+    let totalExp = 0;
+
+    // For each date, calculate points based on completion ratio
+    for (const row of logDates) {
+      const date = row.log_date instanceof Date
+        ? row.log_date.toISOString().split("T")[0]
+        : String(row.log_date).split("T")[0];
+
+      // Count total active habits that existed on that date (currently active habits only)
+      const [habitRows]: any = await pool.query(
+        `SELECT COUNT(*) as total FROM habits 
+         WHERE user_id = ? AND is_active = 1 AND created_at <= ?`,
+        [userId, date + ' 23:59:59']
+      );
+      const totalHabits = habitRows[0].total;
+
+      if (totalHabits === 0) continue;
+
+      // Count completed habits on that date (only count logs for currently active habits)
+      const [doneRows]: any = await pool.query(
+        `SELECT COUNT(*) as done FROM habit_logs hl
+         INNER JOIN habits h ON hl.habit_id = h.id
+         WHERE hl.user_id = ? AND hl.log_date = ? AND h.is_active = 1`,
+        [userId, date]
+      );
+      const doneToday = doneRows[0].done;
+
+      // Calculate points based on ratio
+      const ratio = doneToday / totalHabits;
+      let points = 0;
+      if (ratio >= 1.0) points = 3;
+      else if (ratio >= 0.5) points = 2;
+      else if (ratio > 0) points = 1;
+
+      totalExp += points;
+      console.log(`[Recalculate] Date=${date}, done=${doneToday}/${totalHabits}, points=${points}, totalExp=${totalExp}`);
+    }
+
+    // Calculate new level
+    const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+    let newLevel = 1;
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (totalExp >= thresholds[i]) {
+        newLevel = i + 1;
+        break;
+      }
+    }
+
+    // Get last watered date
+    const lastDate = logDates[logDates.length - 1].log_date;
+    const lastWatered = lastDate instanceof Date
+      ? lastDate.toISOString().split("T")[0]
+      : String(lastDate).split("T")[0];
+
+    // Update plant
+    await pool.query(
+      `UPDATE plants SET experience = ?, level = ?, last_watered = ? WHERE user_id = ?`,
+      [totalExp, newLevel, lastWatered, userId]
+    );
+
+    console.log(`[Recalculate] Complete: totalExp=${totalExp}, newLevel=${newLevel}`);
+  } catch (error) {
+    console.error("[Recalculate] Error:", error);
+  }
 }

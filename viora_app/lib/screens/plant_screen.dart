@@ -93,10 +93,13 @@ class _PlantScreenState extends State<PlantScreen>
     if (plant != null) {
       final exp = plant["experience"] ?? 0;
       final newLevel = _calculateLevel(exp);
-      final lastSeenLevel = prefs.getInt(_lastSeenPlantLevelKey) ?? 1;
+      final lastSeenLevel = prefs.getInt(_lastSeenPlantLevelKey);
       
-      // Determine if level up happened
-      final hasLeveledUp = lastSeenLevel < newLevel;
+      // Only show animation if:
+      // 1. We have a previous level recorded
+      // 2. Level increased by exactly 1 (to avoid showing animation after long absence)
+      final shouldShowAnimation = lastSeenLevel != null && 
+                                   newLevel == lastSeenLevel + 1;
       
       // Update state
       setState(() {
@@ -107,15 +110,15 @@ class _PlantScreenState extends State<PlantScreen>
         plantLevel = newLevel;
         isLoading = false;
         
-        // Show animation if level increased
-        if (hasLeveledUp) {
+        // Show animation only if level increased by 1
+        if (shouldShowAnimation) {
           showLevelUpAnimation = true;
           levelUpFromLevel = lastSeenLevel.clamp(1, 15);
         }
       });
       
       // Show treasure reward after level up animation (every 3 levels)
-      if (hasLeveledUp && newLevel % 3 == 0) {
+      if (shouldShowAnimation && newLevel % 3 == 0) {
         Future.delayed(const Duration(milliseconds: 3800), () {
           if (mounted) {
             _showTreasureReward();
