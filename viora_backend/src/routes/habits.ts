@@ -503,9 +503,13 @@ async function updatePlant(userId: number, today: string): Promise<number> {
   }
 
   console.log(`[Plant] newExp=${newExp} newLevel=${newLevel} oldLevel=${plant.level}`);
-  return points;
+  
   await pool.query(
     `UPDATE plants SET experience = ?, level = ?, last_watered = ? WHERE user_id = ?`,
     [newExp, newLevel, today, userId]
   );
+
+  console.log(`[Plant] Updated plant: exp=${plant.experience} -> ${newExp}, level=${plant.level} -> ${newLevel}`);
+  
+  return points;
 }
