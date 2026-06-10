@@ -26,6 +26,7 @@ class _PlantScreenState extends State<PlantScreen>
   int plantLevel = 1;
   int plantExp = 0;
   bool plantWilted = false;
+  int daysWithoutCheckin = 0; // Add days without check-in counter
   bool isLoading = true;
   bool showLevelUpAnimation = false;
   int? previousLevel;
@@ -92,56 +93,39 @@ class _PlantScreenState extends State<PlantScreen>
     if (plant != null) {
       final exp = plant["experience"] ?? 0;
       final newLevel = _calculateLevel(exp);
-      final lastSeenLevel = prefs.getInt(_lastSeenPlantLevelKey);
-      final oldLevel = previousLevel ?? lastSeenLevel ?? newLevel;
+      final lastSeenLevel = prefs.getInt(_lastSeenPlantLevelKey) ?? 1;
       
-      // Update state first
+      // Determine if level up happened
+      final hasLeveledUp = lastSeenLevel < newLevel;
+      
+      // Update state
       setState(() {
         plantType = plant["plant_type"] ?? "sprout";
         plantExp = exp;
         plantWilted = plant["is_wilted"] == true;
+        daysWithoutCheckin = plant["days_without_checkin"] ?? 0;
+        plantLevel = newLevel;
         isLoading = false;
+        
+        // Show animation if level increased
+        if (hasLeveledUp) {
+          showLevelUpAnimation = true;
+          levelUpFromLevel = lastSeenLevel.clamp(1, 15);
+        }
       });
       
-      // Check if level up happened (only if we have a previous level and it's different)
-      if (previousLevel != null && oldLevel < newLevel) {
-        setState(() {
-          plantLevel = newLevel;
-          levelUpFromLevel = oldLevel.clamp(1, 15);
-          showLevelUpAnimation = true;
+      // Show treasure reward after level up animation (every 3 levels)
+      if (hasLeveledUp && newLevel % 3 == 0) {
+        Future.delayed(const Duration(milliseconds: 3800), () {
+          if (mounted) {
+            _showTreasureReward();
+          }
         });
-        
-        // Check if reached treasure milestone (every 3 levels)
-        if (newLevel % 3 == 0 && newLevel > oldLevel) {
-          // Show treasure reward after level up animation
-          Future.delayed(const Duration(milliseconds: 2500), () {
-            if (mounted) {
-              _showTreasureReward();
-            }
-          });
-        }
-      } else {
-        // First load or no level change
-        final hasLeveledUpSinceLastSeen = oldLevel < newLevel;
-        setState(() {
-          plantLevel = newLevel;
-          showLevelUpAnimation = hasLeveledUpSinceLastSeen;
-          levelUpFromLevel =
-              hasLeveledUpSinceLastSeen ? oldLevel.clamp(1, 15) : null;
-        });
-
-        if (hasLeveledUpSinceLastSeen && newLevel % 3 == 0) {
-          Future.delayed(const Duration(milliseconds: 2500), () {
-            if (mounted) {
-              _showTreasureReward();
-            }
-          });
-        }
       }
       
-      // Update previous level for next comparison
-      previousLevel = newLevel;
+      // Update last seen level
       await prefs.setInt(_lastSeenPlantLevelKey, newLevel);
+      previousLevel = newLevel;
     } else {
       setState(() {
         isLoading = false;
@@ -159,6 +143,48 @@ class _PlantScreenState extends State<PlantScreen>
       }
     }
     return 1;
+  }
+
+  // Get progressive warning message based on days without check-in
+  String _getWarningMessage(int days, AppLocalizations l10n) {
+    switch (days) {
+      case 0:
+        return '';
+      case 1:
+        return l10n.plantWarningDay1;
+      case 2:
+        return l10n.plantWarningDay2;
+      case 3:
+        return l10n.plantWarningDay3;
+      default:
+        return l10n.plantWarningDay3Plus;
+    }
+  }
+
+  Color _getWarningColor(int days) {
+    switch (days) {
+      case 0:
+        return Colors.green;
+      case 1:
+        return Colors.orange;
+      case 2:
+        return Colors.deepOrange;
+      default:
+        return Colors.red;
+    }
+  }
+
+  IconData _getWarningIcon(int days) {
+    switch (days) {
+      case 0:
+        return Icons.check_circle;
+      case 1:
+        return Icons.warning_amber_rounded;
+      case 2:
+        return Icons.error_outline;
+      default:
+        return Icons.dangerous;
+    }
   }
 
   @override
@@ -236,24 +262,37 @@ class _PlantScreenState extends State<PlantScreen>
                               color: Colors.grey.shade600,
                               fontStyle: FontStyle.italic),
                         ),
-                        if (plantWilted) ...[
+                        // Progressive warning based on days without check-in
+                        if (daysWithoutCheckin > 0) ...[
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade50,
+                              color: _getWarningColor(daysWithoutCheckin).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _getWarningColor(daysWithoutCheckin).withValues(alpha: 0.3),
+                                width: 1.5,
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.warning_amber_rounded,
-                                    color: Colors.red, size: 18),
+                                Icon(
+                                  _getWarningIcon(daysWithoutCheckin),
+                                  color: _getWarningColor(daysWithoutCheckin),
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  l10n.plantWiltedWarning,
-                                  style: const TextStyle(
-                                      color: Colors.red, fontSize: 13),
+                                Expanded(
+                                  child: Text(
+                                    _getWarningMessage(daysWithoutCheckin, l10n),
+                                    style: TextStyle(
+                                      color: _getWarningColor(daysWithoutCheckin),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

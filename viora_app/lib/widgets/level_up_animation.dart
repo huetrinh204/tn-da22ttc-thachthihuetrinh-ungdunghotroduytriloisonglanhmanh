@@ -22,170 +22,215 @@ class LevelUpAnimation extends StatefulWidget {
 
 class _LevelUpAnimationState extends State<LevelUpAnimation>
     with TickerProviderStateMixin {
+  late AnimationController _fadeController;
   late AnimationController _scaleController;
-  late AnimationController _glowController;
-  late AnimationController _particleController;
+  late AnimationController _confettiController;
+  late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _glowAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Scale animation (grow effect)
+    // Fade in animation
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
+    );
+
+    // Scale animation (subtle bounce)
     _scaleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 600),
     );
-    _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.0, end: 1.3)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 40,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.3, end: 1.0)
-            .chain(CurveTween(curve: Curves.elasticOut)),
-        weight: 60,
-      ),
-    ]).animate(_scaleController);
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
-    // Glow animation
-    _glowController = AnimationController(
+    // Confetti animation
+    _confettiController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
+      duration: const Duration(milliseconds: 3000),
     );
 
-    // Particle animation
-    _particleController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-
-    // Start animations
     _startAnimation();
   }
 
   Future<void> _startAnimation() async {
-    // Start glow and particles
-    _glowController.forward();
-    _particleController.forward();
+    _fadeController.forward();
+    _scaleController.forward();
+    _confettiController.forward();
 
-    // Wait a bit then start scale
-    await Future.delayed(const Duration(milliseconds: 300));
-    await _scaleController.forward();
-
-    // Wait longer for user to read the message
-    await Future.delayed(const Duration(milliseconds: 1500));
+    // Display for longer duration (3.5 seconds total)
+    await Future.delayed(const Duration(milliseconds: 3500));
     widget.onComplete();
   }
 
   @override
   void dispose() {
+    _fadeController.dispose();
     _scaleController.dispose();
-    _glowController.dispose();
-    _particleController.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Container(
-      color: Colors.black54,
+      color: Colors.black.withValues(alpha: 0.7), // Dark overlay
       child: Center(
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Particles
+            // Confetti particles
             AnimatedBuilder(
-              animation: _particleController,
+              animation: _confettiController,
               builder: (context, child) {
                 return CustomPaint(
-                  size: const Size(300, 300),
-                  painter: ParticlePainter(
-                    progress: _particleController.value,
+                  size: MediaQuery.of(context).size,
+                  painter: ConfettiPainter(
+                    progress: _confettiController.value,
                   ),
                 );
               },
             ),
 
-            // Glow effect
+            // Main card
             AnimatedBuilder(
-              animation: _glowAnimation,
+              animation: Listenable.merge([_fadeAnimation, _scaleAnimation]),
               builder: (context, child) {
-                return Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4CAF50)
-                            .withValues(alpha: _glowAnimation.value * 0.5),
-                        blurRadius: 60 * _glowAnimation.value,
-                        spreadRadius: 20 * _glowAnimation.value,
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-
-            // Plant image with scale animation
-            AnimatedBuilder(
-              animation: _scaleAnimation,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: child,
-                );
-              },
-              child: _buildPlantImage(),
-            ),
-
-            // Level up text
-            Positioned(
-              bottom: 100,
-              child: AnimatedBuilder(
-                animation: _scaleController,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _scaleController.value,
+                return Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: Transform.scale(
+                    scale: _scaleAnimation.value,
                     child: child,
-                  );
-                },
-                child: Column(
-                  children: [
-                    _buildOutlinedGoldenText(
-                      AppLocalizations.of(context)!.congratulations,
-                      fontSize: 36,
-                      strokeWidth: 2.5,
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 32),
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      AppLocalizations.of(context)!.plantLeveledUp,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Title with emoji
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('🎉', style: TextStyle(fontSize: 28)),
+                        const SizedBox(width: 8),
+                        Text(
+                          l10n.congratulations.toUpperCase().replaceAll('!', ''),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.brown.shade700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('🎉', style: TextStyle(fontSize: 28)),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Plant image in circle
+                    Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey.shade100,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: _buildPlantImage(),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    _buildOutlinedGoldenText(
-                      AppLocalizations.of(context)!.levelRange(widget.oldLevel, widget.newLevel),
-                      fontSize: 24,
-                      strokeWidth: 2,
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Level badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.amber.shade300,
+                          width: 2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            l10n.level(widget.oldLevel),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.brown.shade700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 18, color: Color(0xFF4CAF50)),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.level(widget.newLevel),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.brown.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    
+                    const SizedBox(height: 20),
+                    
+                    // Message
                     Text(
-                      AppLocalizations.of(context)!.keepGrowing,
-                      style: const TextStyle(
+                      l10n.plantLeveledUp,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
                         fontSize: 18,
-                        color: Colors.white70,
-                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF2E7D32),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    Text(
+                      l10n.keepGrowing.replaceAll('✨', ''),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],
@@ -198,54 +243,19 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
     );
   }
 
-  Widget _buildOutlinedGoldenText(
-    String text, {
-    required double fontSize,
-    required double strokeWidth,
-  }) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            foreground: Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = strokeWidth
-              ..color = const Color(0xFF7A4D00),
-          ),
-        ),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: const Color(0xFFFFD54F),
-            shadows: const [
-              Shadow(color: Color(0xFFB26A00), blurRadius: 10),
-              Shadow(color: Colors.black45, offset: Offset(0, 1), blurRadius: 3),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildPlantImage() {
     final stages = _getPlantStages();
     final imagePath = stages[(widget.newLevel - 1).clamp(0, stages.length - 1)];
 
     return Image.asset(
       imagePath,
-      width: 150,
-      height: 150,
+      width: 100,
+      height: 100,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
         return const Text(
           '🌳',
-          style: TextStyle(fontSize: 150),
+          style: TextStyle(fontSize: 80),
         );
       },
     );
@@ -272,56 +282,87 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
   }
 }
 
-class ParticlePainter extends CustomPainter {
+// Confetti painter with colorful squares falling
+class ConfettiPainter extends CustomPainter {
   final double progress;
-  final List<Particle> particles;
+  final List<ConfettiParticle> particles;
 
-  ParticlePainter({required this.progress})
+  ConfettiPainter({required this.progress})
       : particles = List.generate(
-          30,
-          (index) => Particle(
-            angle: (index / 30) * 2 * math.pi,
-            speed: 1.0 + (index % 3) * 0.5,
-            size: 4.0 + (index % 4) * 2.0,
-          ),
+          40,
+          (index) {
+            final random = math.Random(index);
+            return ConfettiParticle(
+              x: random.nextDouble(),
+              startY: -0.1 - random.nextDouble() * 0.2,
+              speed: 0.3 + random.nextDouble() * 0.4,
+              size: 8.0 + random.nextDouble() * 8.0,
+              rotation: random.nextDouble() * 2 * math.pi,
+              rotationSpeed: -math.pi + random.nextDouble() * 2 * math.pi,
+              color: [
+                const Color(0xFFFFD700), // Gold
+                const Color(0xFF4CAF50), // Green
+                const Color(0xFFFF9800), // Orange
+                const Color(0xFF2196F3), // Blue
+                const Color(0xFFE91E63), // Pink
+                const Color(0xFF9C27B0), // Purple
+              ][random.nextInt(6)],
+            );
+          },
         );
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final paint = Paint()
-      ..color = const Color(0xFF4CAF50)
-      ..style = PaintingStyle.fill;
-
     for (final particle in particles) {
-      final distance = progress * 150 * particle.speed;
-      final x = center.dx + math.cos(particle.angle) * distance;
-      final y = center.dy + math.sin(particle.angle) * distance;
-      final opacity = (1.0 - progress).clamp(0.0, 1.0);
+      final y = particle.startY + (progress * particle.speed * 1.5);
+      if (y > 1.1) continue; // Don't draw if off screen
 
-      paint.color = Color(0xFF4CAF50).withValues(alpha: opacity);
-      canvas.drawCircle(
-        Offset(x, y),
-        particle.size * (1.0 - progress * 0.5),
-        paint,
+      final x = particle.x * size.width;
+      final yPos = y * size.height;
+      final rotation = particle.rotation + (progress * particle.rotationSpeed * 3);
+
+      final paint = Paint()
+        ..color = particle.color.withValues(alpha: (1.0 - progress * 0.3))
+        ..style = PaintingStyle.fill;
+
+      canvas.save();
+      canvas.translate(x, yPos);
+      canvas.rotate(rotation);
+      
+      // Draw square confetti
+      final rect = Rect.fromCenter(
+        center: Offset.zero,
+        width: particle.size,
+        height: particle.size,
       );
+      canvas.drawRect(rect, paint);
+      
+      canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(ParticlePainter oldDelegate) {
+  bool shouldRepaint(ConfettiPainter oldDelegate) {
     return oldDelegate.progress != progress;
   }
 }
 
-class Particle {
-  final double angle;
+class ConfettiParticle {
+  final double x;
+  final double startY;
   final double speed;
   final double size;
+  final double rotation;
+  final double rotationSpeed;
+  final Color color;
 
-  Particle({
-    required this.angle,
+  ConfettiParticle({
+    required this.x,
+    required this.startY,
     required this.speed,
     required this.size,
+    required this.rotation,
+    required this.rotationSpeed,
+    required this.color,
   });
 }

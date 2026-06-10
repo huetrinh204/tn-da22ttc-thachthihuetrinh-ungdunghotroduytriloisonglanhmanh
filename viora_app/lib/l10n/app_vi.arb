@@ -136,6 +136,10 @@
   
   "plantWiltedWarning": "Cây đang héo! Hãy check-in ngay 💧",
   "plantWiltingStatus": "Cây đang héo...",
+  "plantWarningDay1": "⚠️ Chưa check-in hôm qua. Hãy quay lại nhé!",
+  "plantWarningDay2": "⚠️ Cây cần được chăm sóc! Sẽ bị héo và mất 3 điểm nếu không check-in trong 24h!",
+  "plantWarningDay3": "🍂 Cây đã bị héo và mất 3 điểm! Hãy check-in để cây hồi phục!",
+  "plantWarningDay3Plus": "🍂 Cây đang héo nặng! Check-in ngay để cứu cây!",
   
   "monday": "Thứ 2",
   "tuesday": "Thứ 3",

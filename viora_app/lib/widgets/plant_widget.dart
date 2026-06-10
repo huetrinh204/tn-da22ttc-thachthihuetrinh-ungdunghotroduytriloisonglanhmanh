@@ -286,7 +286,7 @@ class PlantProgressBar extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: context.textSecondary),
             ),
             Text(
-              '$experience / $nextThreshold ${l10n.points(nextThreshold)}',
+              '$experience / $nextThreshold',
               style: TextStyle(
                   fontSize: 12,
                   color: context.textGreenLight,

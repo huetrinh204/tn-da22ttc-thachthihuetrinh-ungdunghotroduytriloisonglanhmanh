@@ -518,6 +518,30 @@ abstract class AppLocalizations {
   /// **'Cây đang héo...'**
   String get plantWiltingStatus;
 
+  /// No description provided for @plantWarningDay1.
+  ///
+  /// In vi, this message translates to:
+  /// **'⚠️ Chưa check-in hôm qua. Hãy quay lại nhé!'**
+  String get plantWarningDay1;
+
+  /// No description provided for @plantWarningDay2.
+  ///
+  /// In vi, this message translates to:
+  /// **'⚠️ Cây cần được chăm sóc! Sẽ bị héo và mất 3 điểm nếu không check-in trong 24h!'**
+  String get plantWarningDay2;
+
+  /// No description provided for @plantWarningDay3.
+  ///
+  /// In vi, this message translates to:
+  /// **'🍂 Cây đã bị héo và mất 3 điểm! Hãy check-in để cây hồi phục!'**
+  String get plantWarningDay3;
+
+  /// No description provided for @plantWarningDay3Plus.
+  ///
+  /// In vi, this message translates to:
+  /// **'🍂 Cây đang héo nặng! Check-in ngay để cứu cây!'**
+  String get plantWarningDay3Plus;
+
   /// No description provided for @monday.
   ///
   /// In vi, this message translates to:

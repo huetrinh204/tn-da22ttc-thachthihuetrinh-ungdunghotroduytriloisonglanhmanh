@@ -27,6 +27,12 @@ export function startCronJobs() {
     await checkAndSendAutoReminders();
   }, { timezone: "Asia/Ho_Chi_Minh" });
 
+  // Progressive wilting check - runs at midnight every day
+  cron.schedule("0 0 * * *", async () => {
+    console.log("[Cron] Running progressive wilting check...");
+    await checkProgressiveWilting();
+  }, { timezone: "Asia/Ho_Chi_Minh" });
+
   console.log("[Cron] Jobs scheduled");
 }
 
@@ -196,5 +202,112 @@ async function sendEveningEmails() {
     console.log(`[Cron] Evening sent to ${sentCount}/${users.length} users`);
   } catch (error) {
     console.error("[Cron] Evening error:", error);
+  }
+}
+
+
+/**
+ * Progressive Wilting System
+ * - Day 1: No penalty, warning only
+ * - Day 2: Light warning, plant starts to look sad
+ * - Day 3: Plant wilts, -3 EXP penalty
+ * - Day 4+: Continue -3 EXP per day until user checks in
+ */
+async function checkProgressiveWilting() {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    // Get all users with their plants
+    const [users]: any = await pool.query(`
+      SELECT u.id as user_id, u.name, u.email, u.fcm_token,
+             p.id as plant_id, p.experience, p.days_without_checkin, 
+             p.is_wilted, p.last_penalty_date
+      FROM users u
+      LEFT JOIN plants p ON u.id = p.user_id
+      WHERE p.id IS NOT NULL
+    `);
+
+    for (const user of users) {
+      // Check if user completed any habit yesterday
+      const [logs]: any = await pool.query(
+        `SELECT COUNT(*) as count 
+         FROM habit_logs 
+         WHERE user_id = ? AND log_date = ?`,
+        [user.user_id, yesterday]
+      );
+
+      const completedYesterday = logs[0].count > 0;
+
+      if (completedYesterday) {
+        // User was active yesterday - reset counter
+        if (user.days_without_checkin > 0) {
+          await pool.query(
+            `UPDATE plants 
+             SET days_without_checkin = 0, 
+                 is_wilted = 0,
+                 last_penalty_date = NULL
+             WHERE id = ?`,
+            [user.plant_id]
+          );
+          console.log(`[Wilting] User ${user.name} (${user.user_id}) recovered - reset to 0 days`);
+        }
+      } else {
+        // User didn't complete any habit yesterday - increment counter
+        const newDays = user.days_without_checkin + 1;
+        
+        // Update days without check-in
+        await pool.query(
+          `UPDATE plants SET days_without_checkin = ? WHERE id = ?`,
+          [newDays, user.plant_id]
+        );
+
+        console.log(`[Wilting] User ${user.name} (${user.user_id}) - ${newDays} days without check-in`);
+
+        // Apply penalties based on days
+        if (newDays >= 3) {
+          // Plant wilts and loses EXP
+          const shouldApplyPenalty = !user.last_penalty_date || user.last_penalty_date !== today;
+          
+          if (shouldApplyPenalty) {
+            const penalty = 3;
+            const newExp = Math.max(0, user.experience - penalty);
+            
+            await pool.query(
+              `UPDATE plants 
+               SET is_wilted = 1, 
+                   experience = ?,
+                   last_penalty_date = ?
+               WHERE id = ?`,
+              [newExp, today, user.plant_id]
+            );
+
+            console.log(`[Wilting] User ${user.name} - Plant wilted! Applied -${penalty} EXP penalty (${user.experience} -> ${newExp})`);
+
+            // Send notification
+            if (user.fcm_token) {
+              await sendPushNotification(
+                user.fcm_token,
+                "🍂 Cây của bạn đang héo!",
+                `Cây đã bị mất ${penalty} điểm vì không check-in ${newDays} ngày. Hãy quay lại ngay! 💧`
+              );
+            }
+          }
+        } else if (newDays === 2) {
+          // Warning only - no penalty yet
+          if (user.fcm_token) {
+            await sendPushNotification(
+              user.fcm_token,
+              "⚠️ Cây cần được chăm sóc!",
+              "Cây sẽ bị héo và mất điểm nếu bạn không check-in trong 24 giờ tới!"
+            );
+          }
+        }
+      }
+    }
+
+    console.log(`[Wilting] Processed ${users.length} users`);
+  } catch (error) {
+    console.error("[Cron] Progressive wilting error:", error);
   }
 }

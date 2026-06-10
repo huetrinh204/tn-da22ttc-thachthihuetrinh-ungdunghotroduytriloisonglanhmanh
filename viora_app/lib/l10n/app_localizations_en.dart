@@ -231,6 +231,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plantWiltingStatus => '😢 Plant is wilting...';
 
   @override
+  String get plantWarningDay1 => '⚠️ No check-in yesterday. Come back soon!';
+
+  @override
+  String get plantWarningDay2 =>
+      '⚠️ Plant needs care! Will wilt and lose 3 EXP if no check-in within 24h!';
+
+  @override
+  String get plantWarningDay3 =>
+      '🍂 Plant wilted and lost 3 EXP! Check-in to revive it!';
+
+  @override
+  String get plantWarningDay3Plus =>
+      '🍂 Plant is severely wilted! Check-in now to save it!';
+
+  @override
   String get monday => 'Monday';
 
   @override

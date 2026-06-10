@@ -136,6 +136,10 @@
   
   "plantWiltedWarning": "Plant is wilting! Check-in now 💧",
   "plantWiltingStatus": "😢 Plant is wilting...",
+  "plantWarningDay1": "⚠️ No check-in yesterday. Come back soon!",
+  "plantWarningDay2": "⚠️ Plant needs care! Will wilt and lose 3 EXP if no check-in within 24h!",
+  "plantWarningDay3": "🍂 Plant wilted and lost 3 EXP! Check-in to revive it!",
+  "plantWarningDay3Plus": "🍂 Plant is severely wilted! Check-in now to save it!",
   
   "monday": "Monday",
   "tuesday": "Tuesday",

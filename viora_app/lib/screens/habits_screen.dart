@@ -7,6 +7,7 @@ import '../navigation/app_navigation.dart';
 import '../widgets/achievement_popup.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/points_fly_animation.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
@@ -35,6 +36,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
   bool isLoading = true;
   String token = "";
   int? _highlightHabitId;
+  final List<Widget> _flyingAnimations = [];
+  final GlobalKey _treeIconKey = GlobalKey();
 
   List<Map<String, dynamic>> get categories {
     final l10n = AppLocalizations.of(context)!;
@@ -92,6 +95,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     if (result == null || result["confirmed"] != true) return;
 
+    // Get habit card position for animation start
+    final RenderBox? habitBox = context.findRenderObject() as RenderBox?;
+    final habitPosition = habitBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+
     // Optimistic update
     setState(() {
       final idx = habits.indexWhere((h) => h["id"] == habitId);
@@ -107,6 +114,12 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
+
+    // Show flying points animation if points earned
+    final pointsEarned = res["points_earned"] as int?;
+    if (pointsEarned != null && pointsEarned > 0) {
+      _showPointsFlyAnimation(habitPosition, pointsEarned);
+    }
 
     final newAchievements = res["new_achievements"] as List?;
     if (newAchievements != null && newAchievements.isNotEmpty) {
@@ -155,6 +168,38 @@ class _HabitsScreenState extends State<HabitsScreen> {
     if (wasFirst) {
       await _showAfterFirstHabitDialog(habitId);
     }
+  }
+
+  void _showPointsFlyAnimation(Offset startPosition, int points) {
+    // Get tree icon position
+    final RenderBox? treeBox =
+        _treeIconKey.currentContext?.findRenderObject() as RenderBox?;
+    if (treeBox == null) return;
+
+    final treePosition = treeBox.localToGlobal(Offset.zero);
+    final treeCenter = Offset(
+      treePosition.dx + treeBox.size.width / 2,
+      treePosition.dy + treeBox.size.height / 2,
+    );
+
+    // Create animation widget
+    final animationWidget = PointsFlyAnimation(
+      points: points,
+      startPosition: Offset(
+        startPosition.dx + 40, // Adjust to start from habit card center
+        startPosition.dy + 40,
+      ),
+      endPosition: treeCenter,
+      onComplete: () {
+        setState(() {
+          _flyingAnimations.removeAt(0);
+        });
+      },
+    );
+
+    setState(() {
+      _flyingAnimations.add(animationWidget);
+    });
   }
 
   Future<void> _showAfterFirstHabitDialog(int habitId) async {
@@ -769,38 +814,52 @@ class _HabitsScreenState extends State<HabitsScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: VioraAppBar(
-        title: l10n.habitsToday,
-        actions: [
-          IconButton(
-            key: widget.statsCoachKey,
-            icon: const Icon(Icons.bar_chart_rounded,
-                color: AppColors.primary, size: 24),
-            tooltip: l10n.statsTitle,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const StatsScreen()),
-            ),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: VioraAppBar(
+            title: l10n.habitsToday,
+            actions: [
+              // Leaf icon - navigate to Plant tab
+              IconButton(
+                key: _treeIconKey,
+                icon: const Icon(Icons.eco_rounded,
+                    color: AppColors.primary, size: 26),
+                tooltip: l10n.myPlant,
+                onPressed: () => AppNavigation.openPlant(),
+              ),
+              IconButton(
+                key: widget.statsCoachKey,
+                icon: const Icon(Icons.bar_chart_rounded,
+                    color: AppColors.primary, size: 24),
+                tooltip: l10n.statsTitle,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StatsScreen()),
+                ),
+              ),
+              IconButton(
+                key: widget.addCoachKey,
+                icon: const Icon(Icons.add_circle_outline_rounded,
+                    color: AppColors.primary, size: 26),
+                onPressed: showAddHabitSheet,
+              ),
+              const SizedBox(width: 4),
+            ],
           ),
-          IconButton(
-            key: widget.addCoachKey,
-            icon: const Icon(Icons.add_circle_outline_rounded,
-                color: AppColors.primary, size: 26),
-            onPressed: showAddHabitSheet,
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: body,
-      floatingActionButton: habits.isNotEmpty
-          ? FloatingActionButton(
-              onPressed: showAddHabitSheet,
-              backgroundColor: const Color(0xFF4CAF50),
-              child: const Icon(Icons.add, color: Colors.white),
-            )
-          : null,
+          body: body,
+          floatingActionButton: habits.isNotEmpty
+              ? FloatingActionButton(
+                  onPressed: showAddHabitSheet,
+                  backgroundColor: const Color(0xFF4CAF50),
+                  child: const Icon(Icons.add, color: Colors.white),
+                )
+              : null,
+        ),
+        // Flying animations overlay
+        ..._flyingAnimations,
+      ],
     );
   }
 

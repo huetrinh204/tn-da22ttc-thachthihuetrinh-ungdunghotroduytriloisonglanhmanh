@@ -180,13 +180,18 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
     // cập nhật streak riêng của habit này
     await updateHabitStreak(req.params.id, today);
 
-    // cập nhật plant
-    await updatePlant(req.user.id, today);
+    // cập nhật plant và lấy số điểm được cộng
+    const pointsEarned = await updatePlant(req.user.id, today);
 
     // kiểm tra và unlock achievements
     const newAchievements = await checkAchievements(req.user.id);
 
-    res.json({ message: "Checked in", is_completed: true, new_achievements: newAchievements });
+    res.json({ 
+      message: "Checked in", 
+      is_completed: true, 
+      points_earned: pointsEarned,
+      new_achievements: newAchievements 
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -401,28 +406,21 @@ router.get("/plant", authMiddleware, async (req: any, res) => {
           level: 1,
           experience: 0,
           is_wilted: false,
+          days_without_checkin: 0,
         },
       });
     }
 
     const plant = rows[0];
 
-    // check héo: không check-in 3 ngày liên tiếp
-    const [lastLog]: any = await pool.query(
-      `SELECT MAX(log_date) as last_date FROM habit_logs WHERE user_id = ?`,
-      [req.user.id]
-    );
-
-    const lastDate = lastLog[0]?.last_date;
-    let isWilted = false;
-    if (lastDate) {
-      const diffDays = Math.floor(
-        (new Date().getTime() - new Date(lastDate).getTime()) / (1000 * 60 * 60 * 24)
-      );
-      isWilted = diffDays >= 3;
-    }
-
-    res.json({ plant: { ...plant, is_wilted: isWilted } });
+    // Return plant data with days_without_checkin
+    res.json({ 
+      plant: { 
+        ...plant, 
+        is_wilted: plant.is_wilted === 1,
+        days_without_checkin: plant.days_without_checkin || 0,
+      } 
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -430,7 +428,7 @@ router.get("/plant", authMiddleware, async (req: any, res) => {
 });
 
 // helper: cập nhật plant experience và level
-async function updatePlant(userId: number, today: string) {
+async function updatePlant(userId: number, today: string): Promise<number> {
   // Đếm tổng habits active
   const [habitRows]: any = await pool.query(
     "SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_active = 1",
@@ -438,7 +436,7 @@ async function updatePlant(userId: number, today: string) {
   );
   const totalHabits = habitRows[0].total;
   console.log(`[Plant] userId=${userId} totalHabits=${totalHabits}`);
-  if (totalHabits === 0) return;
+  if (totalHabits === 0) return 0;
 
   // Đếm habits đã check-in hôm nay
   const [doneRows]: any = await pool.query(
@@ -457,7 +455,7 @@ async function updatePlant(userId: number, today: string) {
   else if (ratio > 0) points = 1;
 
   console.log(`[Plant] ratio=${ratio} points=${points}`);
-  if (points === 0) return;
+  if (points === 0) return 0;
 
   // Lấy hoặc tạo plant
   const [plantRows]: any = await pool.query(
@@ -472,7 +470,7 @@ async function updatePlant(userId: number, today: string) {
        VALUES (?, 'sprout', 1, ?, ?)`,
       [userId, points, today]
     );
-    return;
+    return points;
   }
 
   const plant = plantRows[0];
@@ -488,7 +486,7 @@ async function updatePlant(userId: number, today: string) {
 
   if (lastWatered === today) {
     console.log(`[Plant] Already watered today, skip`);
-    return;
+    return 0;
   }
 
   const newExp = plant.experience + points;
@@ -505,7 +503,7 @@ async function updatePlant(userId: number, today: string) {
   }
 
   console.log(`[Plant] newExp=${newExp} newLevel=${newLevel} oldLevel=${plant.level}`);
-
+  return points;
   await pool.query(
     `UPDATE plants SET experience = ?, level = ?, last_watered = ? WHERE user_id = ?`,
     [newExp, newLevel, today, userId]

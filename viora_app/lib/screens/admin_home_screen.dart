@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
@@ -8,7 +7,6 @@ import 'admin_users_tab.dart';
 import 'admin_posts_tab.dart';
 import 'admin_plants_tab.dart';
 import 'admin_settings_tab.dart';
-import 'login_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -45,12 +43,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return Scaffold(
       appBar: VioraAppBar(
         title: _getTitle(l10n),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
-          ),
-        ],
       ),
       body: _tabsWithCallback[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -99,42 +91,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         return l10n.adminSettings;
       default:
         return l10n.admin;
-    }
-  }
-
-  Future<void> _logout(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-    
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.logout),
-        content: Text(l10n.logoutConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.logout),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && context.mounted) {
-      // Clear token from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('token');
-      
-      if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false,
-        );
-      }
     }
   }
 }

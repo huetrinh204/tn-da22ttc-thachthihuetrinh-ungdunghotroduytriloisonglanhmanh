@@ -231,6 +231,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get plantWiltingStatus => 'Cây đang héo...';
 
   @override
+  String get plantWarningDay1 => '⚠️ Chưa check-in hôm qua. Hãy quay lại nhé!';
+
+  @override
+  String get plantWarningDay2 =>
+      '⚠️ Cây cần được chăm sóc! Sẽ bị héo và mất 3 điểm nếu không check-in trong 24h!';
+
+  @override
+  String get plantWarningDay3 =>
+      '🍂 Cây đã bị héo và mất 3 điểm! Hãy check-in để cây hồi phục!';
+
+  @override
+  String get plantWarningDay3Plus =>
+      '🍂 Cây đang héo nặng! Check-in ngay để cứu cây!';
+
+  @override
   String get monday => 'Thứ 2';
 
   @override
