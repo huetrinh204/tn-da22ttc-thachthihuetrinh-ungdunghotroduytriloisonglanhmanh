@@ -41,14 +41,14 @@ class PlantType {
   }
 
   /// Available plant types
-  static const PlantType seedling = PlantType(
-    id: 'sprout',
-    nameKey: 'plantSprout',
-    descriptionKey: 'plantDescSprout',
-    emoji: '🌱',
-    assetFolder: 'assets/images/tree/',
+  static const PlantType bamboo = PlantType(
+    id: 'bamboo',
+    nameKey: 'plantBamboo',
+    descriptionKey: 'plantDescBamboo',
+    emoji: '🎋',
+    assetFolder: 'assets/images/tree/tre/',
     maxStages: 15,
-    useNumberedFiles: false, // Seedling uses named files
+    useNumberedFiles: true, // Bamboo uses numbered files like other plants
   );
 
   static const PlantType cactus = PlantType(
@@ -81,9 +81,34 @@ class PlantType {
     useNumberedFiles: true,
   );
 
+  /// Get stage name localization key for this plant type
+  /// Returns key like "bamboLevel1", "cactusLevel1", etc.
+  String getStageNameKey(int stage) {
+    final clampedStage = stage.clamp(1, maxStages);
+    // Convert plant ID to prefix: bamboo → bambo, cactus → cactus, flower → sakura, sunflower → sunflower
+    String prefix;
+    switch (id) {
+      case 'bamboo':
+        prefix = 'bamboo';
+        break;
+      case 'cactus':
+        prefix = 'cactus';
+        break;
+      case 'flower':
+        prefix = 'sakura';
+        break;
+      case 'sunflower':
+        prefix = 'sunflower';
+        break;
+      default:
+        prefix = id;
+    }
+    return '${prefix}Level$clampedStage';
+  }
+
   /// Get all available plant types (4 types only)
   static const List<PlantType> all = [
-    seedling,
+    bamboo,
     cactus,
     sakura,
     sunflower,
@@ -98,9 +123,9 @@ class PlantType {
     }
   }
 
-  /// Get plant type or fallback to seedling
+  /// Get plant type or fallback to bamboo
   static PlantType fromIdOrDefault(String? id) {
-    if (id == null) return seedling;
-    return fromId(id) ?? seedling;
+    if (id == null) return bamboo;
+    return fromId(id) ?? bamboo;
   }
 }

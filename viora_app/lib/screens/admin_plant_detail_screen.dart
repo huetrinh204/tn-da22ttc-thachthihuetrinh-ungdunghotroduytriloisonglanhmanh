@@ -266,7 +266,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
     final loc = AppLocalizations.of(context)!;
     final level = _plant!['level'] as int? ?? 1;
     final experience = _plant!['experience'] as int? ?? 0;
-    final plantType = _plant!['plant_type'] as String? ?? 'sprout';
+    final plantType = _plant!['plant_type'] as String? ?? 'bamboo';
     final lastWatered = _plant!['last_watered'] as String?;
 
     // Calculate planting date (from user created_at or estimate)
@@ -399,8 +399,8 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
   String _getPlantTypeName(BuildContext context, String type) {
     final loc = AppLocalizations.of(context)!;
     switch (type) {
-      case 'sprout':
-        return loc.plantTypeSprout;
+      case 'bamboo':
+        return loc.plantTypeBamboo;
       case 'cactus':
         return loc.plantTypeCactus;
       case 'sunflower':

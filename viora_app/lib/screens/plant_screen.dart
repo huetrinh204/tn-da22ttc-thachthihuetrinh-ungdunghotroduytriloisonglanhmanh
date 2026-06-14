@@ -23,7 +23,7 @@ class PlantScreen extends StatefulWidget {
 class _PlantScreenState extends State<PlantScreen>
     with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   static const String _lastSeenPlantLevelKey = "last_seen_plant_level";
-  String plantType = "sprout";
+  String plantType = "bamboo";
   int plantLevel = 1;
   int plantExp = 0;
   bool plantWilted = false;
@@ -104,7 +104,7 @@ class _PlantScreenState extends State<PlantScreen>
       
       // Update state
       setState(() {
-        plantType = plant["plant_type"] ?? "sprout";
+        plantType = plant["plant_type"] ?? "bamboo";
         plantExp = exp;
         plantWilted = plant["is_wilted"] == true;
         daysWithoutCheckin = plant["days_without_checkin"] ?? 0;
@@ -191,18 +191,93 @@ class _PlantScreenState extends State<PlantScreen>
     }
   }
 
+  /// Get localized stage name based on plant type and level
+  String _getStageName(int level, AppLocalizations l10n) {
+    final plantTypeModel = PlantType.fromIdOrDefault(plantType);
+    final stageKey = plantTypeModel.getStageNameKey(level);
+    
+    // Use reflection-like approach to get the localized string
+    // Map stage keys to l10n getter calls
+    switch (stageKey) {
+      // Bamboo stages
+      case 'bambooLevel1': return l10n.bambooLevel1;
+      case 'bambooLevel2': return l10n.bambooLevel2;
+      case 'bambooLevel3': return l10n.bambooLevel3;
+      case 'bambooLevel4': return l10n.bambooLevel4;
+      case 'bambooLevel5': return l10n.bambooLevel5;
+      case 'bambooLevel6': return l10n.bambooLevel6;
+      case 'bambooLevel7': return l10n.bambooLevel7;
+      case 'bambooLevel8': return l10n.bambooLevel8;
+      case 'bambooLevel9': return l10n.bambooLevel9;
+      case 'bambooLevel10': return l10n.bambooLevel10;
+      case 'bambooLevel11': return l10n.bambooLevel11;
+      case 'bambooLevel12': return l10n.bambooLevel12;
+      case 'bambooLevel13': return l10n.bambooLevel13;
+      case 'bambooLevel14': return l10n.bambooLevel14;
+      case 'bambooLevel15': return l10n.bambooLevel15;
+      
+      // Cactus stages
+      case 'cactusLevel1': return l10n.cactusLevel1;
+      case 'cactusLevel2': return l10n.cactusLevel2;
+      case 'cactusLevel3': return l10n.cactusLevel3;
+      case 'cactusLevel4': return l10n.cactusLevel4;
+      case 'cactusLevel5': return l10n.cactusLevel5;
+      case 'cactusLevel6': return l10n.cactusLevel6;
+      case 'cactusLevel7': return l10n.cactusLevel7;
+      case 'cactusLevel8': return l10n.cactusLevel8;
+      case 'cactusLevel9': return l10n.cactusLevel9;
+      case 'cactusLevel10': return l10n.cactusLevel10;
+      case 'cactusLevel11': return l10n.cactusLevel11;
+      case 'cactusLevel12': return l10n.cactusLevel12;
+      case 'cactusLevel13': return l10n.cactusLevel13;
+      
+      // Sakura stages
+      case 'sakuraLevel1': return l10n.sakuraLevel1;
+      case 'sakuraLevel2': return l10n.sakuraLevel2;
+      case 'sakuraLevel3': return l10n.sakuraLevel3;
+      case 'sakuraLevel4': return l10n.sakuraLevel4;
+      case 'sakuraLevel5': return l10n.sakuraLevel5;
+      case 'sakuraLevel6': return l10n.sakuraLevel6;
+      case 'sakuraLevel7': return l10n.sakuraLevel7;
+      case 'sakuraLevel8': return l10n.sakuraLevel8;
+      case 'sakuraLevel9': return l10n.sakuraLevel9;
+      case 'sakuraLevel10': return l10n.sakuraLevel10;
+      case 'sakuraLevel11': return l10n.sakuraLevel11;
+      case 'sakuraLevel12': return l10n.sakuraLevel12;
+      case 'sakuraLevel13': return l10n.sakuraLevel13;
+      case 'sakuraLevel14': return l10n.sakuraLevel14;
+      
+      // Sunflower stages
+      case 'sunflowerLevel1': return l10n.sunflowerLevel1;
+      case 'sunflowerLevel2': return l10n.sunflowerLevel2;
+      case 'sunflowerLevel3': return l10n.sunflowerLevel3;
+      case 'sunflowerLevel4': return l10n.sunflowerLevel4;
+      case 'sunflowerLevel5': return l10n.sunflowerLevel5;
+      case 'sunflowerLevel6': return l10n.sunflowerLevel6;
+      case 'sunflowerLevel7': return l10n.sunflowerLevel7;
+      case 'sunflowerLevel8': return l10n.sunflowerLevel8;
+      case 'sunflowerLevel9': return l10n.sunflowerLevel9;
+      case 'sunflowerLevel10': return l10n.sunflowerLevel10;
+      case 'sunflowerLevel11': return l10n.sunflowerLevel11;
+      case 'sunflowerLevel12': return l10n.sunflowerLevel12;
+      case 'sunflowerLevel13': return l10n.sunflowerLevel13;
+      case 'sunflowerLevel14': return l10n.sunflowerLevel14;
+      case 'sunflowerLevel15': return l10n.sunflowerLevel15;
+      case 'sunflowerLevel16': return l10n.sunflowerLevel16;
+      
+      default:
+        // Fallback to generic level names
+        return l10n.level(level);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     final l10n = AppLocalizations.of(context)!;
     final level = plantLevel.clamp(1, 15);
-    final levelNames = [
-      l10n.plantLevel1, l10n.plantLevel2, l10n.plantLevel3, l10n.plantLevel4, l10n.plantLevel5,
-      l10n.plantLevel6, l10n.plantLevel7, l10n.plantLevel8, l10n.plantLevel9, l10n.plantLevel10,
-      l10n.plantLevel11, l10n.plantLevel12, l10n.plantLevel13, l10n.plantLevel14, l10n.plantLevel15,
-    ];
     final info = {
-      "name": levelNames[level - 1],
+      "name": _getStageName(level, l10n),
       "desc": _getLevelDescription(level, l10n),
       "color": _getLevelColor(level),
     };
@@ -455,27 +530,22 @@ class _PlantScreenState extends State<PlantScreen>
 
   List<Widget> _buildRoadmap(int currentLevel) {
     final l10n = AppLocalizations.of(context)!;
-    final levelNames = [
-      l10n.plantLevel1, l10n.plantLevel2, l10n.plantLevel3, l10n.plantLevel4, l10n.plantLevel5,
-      l10n.plantLevel6, l10n.plantLevel7, l10n.plantLevel8, l10n.plantLevel9, l10n.plantLevel10,
-      l10n.plantLevel11, l10n.plantLevel12, l10n.plantLevel13, l10n.plantLevel14, l10n.plantLevel15,
-    ];
     final stages = [
-      {"level": 1, "name": levelNames[0], "exp": 0},
-      {"level": 2, "name": levelNames[1], "exp": 5},
-      {"level": 3, "name": levelNames[2], "exp": 15},
-      {"level": 4, "name": levelNames[3], "exp": 30},
-      {"level": 5, "name": levelNames[4], "exp": 50},
-      {"level": 6, "name": levelNames[5], "exp": 75},
-      {"level": 7, "name": levelNames[6], "exp": 105},
-      {"level": 8, "name": levelNames[7], "exp": 140},
-      {"level": 9, "name": levelNames[8], "exp": 180},
-      {"level": 10, "name": levelNames[9], "exp": 225},
-      {"level": 11, "name": levelNames[10], "exp": 275},
-      {"level": 12, "name": levelNames[11], "exp": 330},
-      {"level": 13, "name": levelNames[12], "exp": 390},
-      {"level": 14, "name": levelNames[13], "exp": 455},
-      {"level": 15, "name": levelNames[14], "exp": 525},
+      {"level": 1, "name": _getStageName(1, l10n), "exp": 0},
+      {"level": 2, "name": _getStageName(2, l10n), "exp": 5},
+      {"level": 3, "name": _getStageName(3, l10n), "exp": 15},
+      {"level": 4, "name": _getStageName(4, l10n), "exp": 30},
+      {"level": 5, "name": _getStageName(5, l10n), "exp": 50},
+      {"level": 6, "name": _getStageName(6, l10n), "exp": 75},
+      {"level": 7, "name": _getStageName(7, l10n), "exp": 105},
+      {"level": 8, "name": _getStageName(8, l10n), "exp": 140},
+      {"level": 9, "name": _getStageName(9, l10n), "exp": 180},
+      {"level": 10, "name": _getStageName(10, l10n), "exp": 225},
+      {"level": 11, "name": _getStageName(11, l10n), "exp": 275},
+      {"level": 12, "name": _getStageName(12, l10n), "exp": 330},
+      {"level": 13, "name": _getStageName(13, l10n), "exp": 390},
+      {"level": 14, "name": _getStageName(14, l10n), "exp": 455},
+      {"level": 15, "name": _getStageName(15, l10n), "exp": 525},
     ];
 
     final List<Widget> roadmapWidgets = [];
@@ -650,9 +720,9 @@ class _PlantScreenState extends State<PlantScreen>
       // Show plant image for completed levels
       icon = Container(
         padding: const EdgeInsets.all(4),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white,
+          color: const Color.fromARGB(255, 30, 181, 35), // Medium green background (Green 200)
         ),
         child: ClipOval(
           child: Image.asset(
@@ -661,7 +731,7 @@ class _PlantScreenState extends State<PlantScreen>
             height: 58,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.check, color: Color(0xFF4CAF50), size: 28);
+              return const Icon(Icons.check, color: Color.fromARGB(255, 22, 160, 27), size: 28);
             },
           ),
         ),
@@ -671,9 +741,9 @@ class _PlantScreenState extends State<PlantScreen>
       // Show plant image for current level
       icon = Container(
         padding: const EdgeInsets.all(4),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white,
+          color: const Color.fromARGB(255, 44, 198, 49), // Medium green background (Green 200)
         ),
         child: ClipOval(
           child: Image.asset(

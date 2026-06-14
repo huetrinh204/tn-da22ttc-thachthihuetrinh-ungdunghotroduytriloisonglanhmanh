@@ -1782,7 +1782,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get plantTypeSprout => 'Sprout';
+  String get plantTypeBamboo => 'Bamboo';
 
   @override
   String get plantTypeCactus => 'Cactus';
@@ -1816,4 +1816,178 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateFailed => 'Update failed';
+
+  @override
+  String get bambooLevel1 => 'Bamboo shoot';
+
+  @override
+  String get bambooLevel2 => 'Growing shoot';
+
+  @override
+  String get bambooLevel3 => 'Small bamboo';
+
+  @override
+  String get bambooLevel4 => 'Straight bamboo';
+
+  @override
+  String get bambooLevel5 => 'Healthy bamboo';
+
+  @override
+  String get bambooLevel6 => 'Sturdy bamboo';
+
+  @override
+  String get bambooLevel7 => 'Tall bamboo';
+
+  @override
+  String get bambooLevel8 => 'Leafy bamboo';
+
+  @override
+  String get bambooLevel9 => 'Lush bamboo';
+
+  @override
+  String get bambooLevel10 => 'Thriving bamboo';
+
+  @override
+  String get bambooLevel11 => 'Mature bamboo';
+
+  @override
+  String get bambooLevel12 => 'Flourishing bamboo';
+
+  @override
+  String get bambooLevel13 => 'Dense bamboo';
+
+  @override
+  String get bambooLevel14 => 'Magnificent bamboo';
+
+  @override
+  String get bambooLevel15 => 'Perfect bamboo';
+
+  @override
+  String get cactusLevel1 => 'Cactus seed';
+
+  @override
+  String get cactusLevel2 => 'Cactus sprout';
+
+  @override
+  String get cactusLevel3 => 'Tiny cactus';
+
+  @override
+  String get cactusLevel4 => 'Young cactus';
+
+  @override
+  String get cactusLevel5 => 'Growing cactus';
+
+  @override
+  String get cactusLevel6 => 'Sturdy cactus';
+
+  @override
+  String get cactusLevel7 => 'Plump cactus';
+
+  @override
+  String get cactusLevel8 => 'Tall cactus';
+
+  @override
+  String get cactusLevel9 => 'Spiky cactus';
+
+  @override
+  String get cactusLevel10 => 'Blooming cactus';
+
+  @override
+  String get cactusLevel11 => 'Beautiful cactus';
+
+  @override
+  String get cactusLevel12 => 'Resilient cactus';
+
+  @override
+  String get cactusLevel13 => 'Perfect cactus';
+
+  @override
+  String get sakuraLevel1 => 'Sakura seed';
+
+  @override
+  String get sakuraLevel2 => 'Sakura sprout';
+
+  @override
+  String get sakuraLevel3 => 'Small sakura';
+
+  @override
+  String get sakuraLevel4 => 'Young sakura';
+
+  @override
+  String get sakuraLevel5 => 'Growing sakura';
+
+  @override
+  String get sakuraLevel6 => 'Budding sakura';
+
+  @override
+  String get sakuraLevel7 => 'Green sakura';
+
+  @override
+  String get sakuraLevel8 => 'Blossoming sakura';
+
+  @override
+  String get sakuraLevel9 => 'Flowering sakura';
+
+  @override
+  String get sakuraLevel10 => 'Full bloom sakura';
+
+  @override
+  String get sakuraLevel11 => 'Beautiful bloom';
+
+  @override
+  String get sakuraLevel12 => 'Radiant sakura';
+
+  @override
+  String get sakuraLevel13 => 'Magnificent sakura';
+
+  @override
+  String get sakuraLevel14 => 'Perfect sakura';
+
+  @override
+  String get sunflowerLevel1 => 'Sunflower seed';
+
+  @override
+  String get sunflowerLevel2 => 'Germinating seed';
+
+  @override
+  String get sunflowerLevel3 => 'Sunflower sprout';
+
+  @override
+  String get sunflowerLevel4 => 'Small sunflower';
+
+  @override
+  String get sunflowerLevel5 => 'Growing sunflower';
+
+  @override
+  String get sunflowerLevel6 => 'Green sunflower';
+
+  @override
+  String get sunflowerLevel7 => 'Tall sunflower';
+
+  @override
+  String get sunflowerLevel8 => 'Budding sunflower';
+
+  @override
+  String get sunflowerLevel9 => 'Blooming sunflower';
+
+  @override
+  String get sunflowerLevel10 => 'Golden sunflower';
+
+  @override
+  String get sunflowerLevel11 => 'Large sunflower';
+
+  @override
+  String get sunflowerLevel12 => 'Radiant sunflower';
+
+  @override
+  String get sunflowerLevel13 => 'Beautiful sunflower';
+
+  @override
+  String get sunflowerLevel14 => 'Ripe sunflower';
+
+  @override
+  String get sunflowerLevel15 => 'Golden glory';
+
+  @override
+  String get sunflowerLevel16 => 'Perfect sunflower';
 }

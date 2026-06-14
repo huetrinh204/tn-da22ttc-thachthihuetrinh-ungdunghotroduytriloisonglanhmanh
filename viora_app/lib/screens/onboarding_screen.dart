@@ -54,11 +54,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   final Set<String> _selectedStarterIds = {};
 
   // Step 6 - Plant
-  String selectedPlant = "sprout";
+  String selectedPlant = "bamboo";
   List<Map<String, dynamic>> get plantOptions {
     final l10n = AppLocalizations.of(context)!;
     return [
-      {"id": "sprout",  "emoji": "🌱", "name": l10n.plantSprout,   "desc": l10n.plantDescSprout},
+      {"id": "bamboo",  "emoji": "🎋", "name": l10n.plantBamboo,   "desc": l10n.plantDescBamboo},
       {"id": "cactus",  "emoji": "🌵", "name": l10n.plantCactus,  "desc": l10n.plantDescCactus},
       {"id": "flower",  "emoji": "🌸", "name": l10n.plantFlower, "desc": l10n.plantDescFlower},
       {"id": "sunflower","emoji": "🌻","name": l10n.plantSunflower, "desc": l10n.plantDescSunflower},

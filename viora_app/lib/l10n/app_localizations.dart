@@ -3470,11 +3470,11 @@ abstract class AppLocalizations {
   /// **'{count} ngày trước'**
   String daysAgoCount(int count);
 
-  /// No description provided for @plantTypeSprout.
+  /// No description provided for @plantTypeBamboo.
   ///
   /// In vi, this message translates to:
-  /// **'Cây mầm'**
-  String get plantTypeSprout;
+  /// **'Tre xanh'**
+  String get plantTypeBamboo;
 
   /// No description provided for @plantTypeCactus.
   ///
@@ -3541,6 +3541,354 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cập nhật thất bại'**
   String get updateFailed;
+
+  /// No description provided for @bambooLevel1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Măng tre non'**
+  String get bambooLevel1;
+
+  /// No description provided for @bambooLevel2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Măng vươn lên'**
+  String get bambooLevel2;
+
+  /// No description provided for @bambooLevel3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre nhỏ'**
+  String get bambooLevel3;
+
+  /// No description provided for @bambooLevel4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre thẳng'**
+  String get bambooLevel4;
+
+  /// No description provided for @bambooLevel5.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre xanh tốt'**
+  String get bambooLevel5;
+
+  /// No description provided for @bambooLevel6.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre vững chãi'**
+  String get bambooLevel6;
+
+  /// No description provided for @bambooLevel7.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre cao'**
+  String get bambooLevel7;
+
+  /// No description provided for @bambooLevel8.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre đơm lá'**
+  String get bambooLevel8;
+
+  /// No description provided for @bambooLevel9.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre xanh mướt'**
+  String get bambooLevel9;
+
+  /// No description provided for @bambooLevel10.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre sum suê'**
+  String get bambooLevel10;
+
+  /// No description provided for @bambooLevel11.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre trưởng thành'**
+  String get bambooLevel11;
+
+  /// No description provided for @bambooLevel12.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre tươi tốt'**
+  String get bambooLevel12;
+
+  /// No description provided for @bambooLevel13.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre rậm rạp'**
+  String get bambooLevel13;
+
+  /// No description provided for @bambooLevel14.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre xanh tốt tuyệt vời'**
+  String get bambooLevel14;
+
+  /// No description provided for @bambooLevel15.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây tre hoàn hảo'**
+  String get bambooLevel15;
+
+  /// No description provided for @cactusLevel1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt xương rồng'**
+  String get cactusLevel1;
+
+  /// No description provided for @cactusLevel2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mầm xương rồng'**
+  String get cactusLevel2;
+
+  /// No description provided for @cactusLevel3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng nhỏ'**
+  String get cactusLevel3;
+
+  /// No description provided for @cactusLevel4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng non'**
+  String get cactusLevel4;
+
+  /// No description provided for @cactusLevel5.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng lớn dần'**
+  String get cactusLevel5;
+
+  /// No description provided for @cactusLevel6.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng vững'**
+  String get cactusLevel6;
+
+  /// No description provided for @cactusLevel7.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng mập'**
+  String get cactusLevel7;
+
+  /// No description provided for @cactusLevel8.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng cao'**
+  String get cactusLevel8;
+
+  /// No description provided for @cactusLevel9.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng đâm gai'**
+  String get cactusLevel9;
+
+  /// No description provided for @cactusLevel10.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng nở hoa'**
+  String get cactusLevel10;
+
+  /// No description provided for @cactusLevel11.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng hoa đẹp'**
+  String get cactusLevel11;
+
+  /// No description provided for @cactusLevel12.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng kiên cường'**
+  String get cactusLevel12;
+
+  /// No description provided for @cactusLevel13.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng hoàn hảo'**
+  String get cactusLevel13;
+
+  /// No description provided for @sakuraLevel1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt anh đào'**
+  String get sakuraLevel1;
+
+  /// No description provided for @sakuraLevel2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mầm anh đào'**
+  String get sakuraLevel2;
+
+  /// No description provided for @sakuraLevel3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào nhỏ'**
+  String get sakuraLevel3;
+
+  /// No description provided for @sakuraLevel4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào non'**
+  String get sakuraLevel4;
+
+  /// No description provided for @sakuraLevel5.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào lớn'**
+  String get sakuraLevel5;
+
+  /// No description provided for @sakuraLevel6.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào nảy lộc'**
+  String get sakuraLevel6;
+
+  /// No description provided for @sakuraLevel7.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào xanh tốt'**
+  String get sakuraLevel7;
+
+  /// No description provided for @sakuraLevel8.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào nở nụ'**
+  String get sakuraLevel8;
+
+  /// No description provided for @sakuraLevel9.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào nở hoa'**
+  String get sakuraLevel9;
+
+  /// No description provided for @sakuraLevel10.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào hoa rộ'**
+  String get sakuraLevel10;
+
+  /// No description provided for @sakuraLevel11.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào hoa tuyệt đẹp'**
+  String get sakuraLevel11;
+
+  /// No description provided for @sakuraLevel12.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào hoa rực rỡ'**
+  String get sakuraLevel12;
+
+  /// No description provided for @sakuraLevel13.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào hoa đầy cành'**
+  String get sakuraLevel13;
+
+  /// No description provided for @sakuraLevel14.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào hoàn hảo'**
+  String get sakuraLevel14;
+
+  /// No description provided for @sunflowerLevel1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt hướng dương'**
+  String get sunflowerLevel1;
+
+  /// No description provided for @sunflowerLevel2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt nảy mầm'**
+  String get sunflowerLevel2;
+
+  /// No description provided for @sunflowerLevel3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mầm hướng dương'**
+  String get sunflowerLevel3;
+
+  /// No description provided for @sunflowerLevel4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương nhỏ'**
+  String get sunflowerLevel4;
+
+  /// No description provided for @sunflowerLevel5.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương lớn'**
+  String get sunflowerLevel5;
+
+  /// No description provided for @sunflowerLevel6.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương xanh'**
+  String get sunflowerLevel6;
+
+  /// No description provided for @sunflowerLevel7.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương cao'**
+  String get sunflowerLevel7;
+
+  /// No description provided for @sunflowerLevel8.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương nở nụ'**
+  String get sunflowerLevel8;
+
+  /// No description provided for @sunflowerLevel9.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương nở hoa'**
+  String get sunflowerLevel9;
+
+  /// No description provided for @sunflowerLevel10.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương hoa vàng'**
+  String get sunflowerLevel10;
+
+  /// No description provided for @sunflowerLevel11.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương hoa to'**
+  String get sunflowerLevel11;
+
+  /// No description provided for @sunflowerLevel12.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương rực rỡ'**
+  String get sunflowerLevel12;
+
+  /// No description provided for @sunflowerLevel13.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương hoa đẹp'**
+  String get sunflowerLevel13;
+
+  /// No description provided for @sunflowerLevel14.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương chín hạt'**
+  String get sunflowerLevel14;
+
+  /// No description provided for @sunflowerLevel15.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương vàng óng'**
+  String get sunflowerLevel15;
+
+  /// No description provided for @sunflowerLevel16.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây hướng dương hoàn hảo'**
+  String get sunflowerLevel16;
 }
 
 class _AppLocalizationsDelegate

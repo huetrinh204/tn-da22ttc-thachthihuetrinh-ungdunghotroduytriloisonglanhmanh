@@ -1782,7 +1782,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get plantTypeSprout => 'Cây mầm';
+  String get plantTypeBamboo => 'Tre xanh';
 
   @override
   String get plantTypeCactus => 'Xương rồng';
@@ -1816,4 +1816,178 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get updateFailed => 'Cập nhật thất bại';
+
+  @override
+  String get bambooLevel1 => 'Măng tre non';
+
+  @override
+  String get bambooLevel2 => 'Măng vươn lên';
+
+  @override
+  String get bambooLevel3 => 'Cây tre nhỏ';
+
+  @override
+  String get bambooLevel4 => 'Cây tre thẳng';
+
+  @override
+  String get bambooLevel5 => 'Cây tre xanh tốt';
+
+  @override
+  String get bambooLevel6 => 'Cây tre vững chãi';
+
+  @override
+  String get bambooLevel7 => 'Cây tre cao';
+
+  @override
+  String get bambooLevel8 => 'Cây tre đơm lá';
+
+  @override
+  String get bambooLevel9 => 'Cây tre xanh mướt';
+
+  @override
+  String get bambooLevel10 => 'Cây tre sum suê';
+
+  @override
+  String get bambooLevel11 => 'Cây tre trưởng thành';
+
+  @override
+  String get bambooLevel12 => 'Cây tre tươi tốt';
+
+  @override
+  String get bambooLevel13 => 'Cây tre rậm rạp';
+
+  @override
+  String get bambooLevel14 => 'Cây tre xanh tốt tuyệt vời';
+
+  @override
+  String get bambooLevel15 => 'Cây tre hoàn hảo';
+
+  @override
+  String get cactusLevel1 => 'Hạt xương rồng';
+
+  @override
+  String get cactusLevel2 => 'Mầm xương rồng';
+
+  @override
+  String get cactusLevel3 => 'Xương rồng nhỏ';
+
+  @override
+  String get cactusLevel4 => 'Xương rồng non';
+
+  @override
+  String get cactusLevel5 => 'Xương rồng lớn dần';
+
+  @override
+  String get cactusLevel6 => 'Xương rồng vững';
+
+  @override
+  String get cactusLevel7 => 'Xương rồng mập';
+
+  @override
+  String get cactusLevel8 => 'Xương rồng cao';
+
+  @override
+  String get cactusLevel9 => 'Xương rồng đâm gai';
+
+  @override
+  String get cactusLevel10 => 'Xương rồng nở hoa';
+
+  @override
+  String get cactusLevel11 => 'Xương rồng hoa đẹp';
+
+  @override
+  String get cactusLevel12 => 'Xương rồng kiên cường';
+
+  @override
+  String get cactusLevel13 => 'Xương rồng hoàn hảo';
+
+  @override
+  String get sakuraLevel1 => 'Hạt anh đào';
+
+  @override
+  String get sakuraLevel2 => 'Mầm anh đào';
+
+  @override
+  String get sakuraLevel3 => 'Cây anh đào nhỏ';
+
+  @override
+  String get sakuraLevel4 => 'Cây anh đào non';
+
+  @override
+  String get sakuraLevel5 => 'Cây anh đào lớn';
+
+  @override
+  String get sakuraLevel6 => 'Cây anh đào nảy lộc';
+
+  @override
+  String get sakuraLevel7 => 'Cây anh đào xanh tốt';
+
+  @override
+  String get sakuraLevel8 => 'Cây anh đào nở nụ';
+
+  @override
+  String get sakuraLevel9 => 'Cây anh đào nở hoa';
+
+  @override
+  String get sakuraLevel10 => 'Cây anh đào hoa rộ';
+
+  @override
+  String get sakuraLevel11 => 'Cây anh đào hoa tuyệt đẹp';
+
+  @override
+  String get sakuraLevel12 => 'Cây anh đào hoa rực rỡ';
+
+  @override
+  String get sakuraLevel13 => 'Cây anh đào hoa đầy cành';
+
+  @override
+  String get sakuraLevel14 => 'Cây anh đào hoàn hảo';
+
+  @override
+  String get sunflowerLevel1 => 'Hạt hướng dương';
+
+  @override
+  String get sunflowerLevel2 => 'Hạt nảy mầm';
+
+  @override
+  String get sunflowerLevel3 => 'Mầm hướng dương';
+
+  @override
+  String get sunflowerLevel4 => 'Cây hướng dương nhỏ';
+
+  @override
+  String get sunflowerLevel5 => 'Cây hướng dương lớn';
+
+  @override
+  String get sunflowerLevel6 => 'Cây hướng dương xanh';
+
+  @override
+  String get sunflowerLevel7 => 'Cây hướng dương cao';
+
+  @override
+  String get sunflowerLevel8 => 'Cây hướng dương nở nụ';
+
+  @override
+  String get sunflowerLevel9 => 'Cây hướng dương nở hoa';
+
+  @override
+  String get sunflowerLevel10 => 'Cây hướng dương hoa vàng';
+
+  @override
+  String get sunflowerLevel11 => 'Cây hướng dương hoa to';
+
+  @override
+  String get sunflowerLevel12 => 'Cây hướng dương rực rỡ';
+
+  @override
+  String get sunflowerLevel13 => 'Cây hướng dương hoa đẹp';
+
+  @override
+  String get sunflowerLevel14 => 'Cây hướng dương chín hạt';
+
+  @override
+  String get sunflowerLevel15 => 'Cây hướng dương vàng óng';
+
+  @override
+  String get sunflowerLevel16 => 'Cây hướng dương hoàn hảo';
 }

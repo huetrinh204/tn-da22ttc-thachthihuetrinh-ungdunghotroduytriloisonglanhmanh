@@ -64,7 +64,7 @@ class _PlantWidgetState extends State<PlantWidget>
     final plantType = PlantType.fromIdOrDefault(widget.plantType);
     final l10n = AppLocalizations.of(context)!;
     final plantNames = {
-      'sprout':    l10n.plantSprout,
+      'bamboo':    l10n.plantBamboo,
       'cactus':    l10n.plantCactus,
       'flower':    l10n.plantFlower,
       'sunflower': l10n.plantSunflower,

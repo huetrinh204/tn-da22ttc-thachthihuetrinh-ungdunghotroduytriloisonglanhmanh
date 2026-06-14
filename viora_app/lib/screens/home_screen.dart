@@ -34,7 +34,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _showGlobalLevelUpAnimation = false;
   int? _levelUpFromLevel;
   int? _levelUpToLevel;
-  String _globalPlantType = "sprout";
+  String _globalPlantType = "bamboo";
 
   @override
   void initState() {
@@ -99,7 +99,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (newLevel <= lastSeenLevel) return;
 
       setState(() {
-        _globalPlantType = (plant["plant_type"] ?? "sprout").toString();
+        _globalPlantType = (plant["plant_type"] ?? "bamboo").toString();
         _levelUpFromLevel = lastSeenLevel.clamp(1, 15);
         _levelUpToLevel = newLevel.clamp(1, 15);
         _showGlobalLevelUpAnimation = true;
@@ -266,7 +266,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   int unreadNotificationsCount = 0;
 
   // Plant data
-  String plantType = "sprout";
+  String plantType = "bamboo";
   int plantLevel = 1;
   int plantExp = 0;
   bool plantWilted = false;
@@ -325,7 +325,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       // Plant
       final plant = plantRes["plant"];
       if (plant != null) {
-        plantType = plant["plant_type"] ?? "sprout";
+        plantType = plant["plant_type"] ?? "bamboo";
         plantExp = plant["experience"] ?? 0;
         plantLevel = _calculateLevel(plantExp);
         plantWilted = plant["is_wilted"] == true;
