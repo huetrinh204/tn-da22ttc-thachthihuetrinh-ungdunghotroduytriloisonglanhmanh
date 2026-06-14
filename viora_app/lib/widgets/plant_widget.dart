@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import '../models/plant_type.dart';
 
 class PlantWidget extends StatefulWidget {
   final String plantType;
@@ -43,122 +44,9 @@ class _PlantWidgetState extends State<PlantWidget>
     super.dispose();
   }
 
-  static const Map<String, List<String>> _plantStages = {
-    'sprout': [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ],
-    'cactus': [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ],
-    'bonsai': [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ],
-    'flower': [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ],
-    'bamboo': [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ],
-    'sunflower': [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ],
-  };
-
-
-
-  String get _emoji {
-    if (widget.isWilted) return '🥀';
-    final stages = _plantStages[widget.plantType] ?? _plantStages['sprout']!;
-    final idx = (widget.level - 1).clamp(0, stages.length - 1);
-    return stages[idx];
-  }
-  
-  bool get _isImagePath {
-    return _emoji.endsWith('.png') || _emoji.endsWith('.jpg');
+  String get _assetPath {
+    final plantType = PlantType.fromIdOrDefault(widget.plantType);
+    return plantType.getAssetPath(widget.level);
   }
 
   String _getLevelName(BuildContext context) {
@@ -173,16 +61,15 @@ class _PlantWidgetState extends State<PlantWidget>
   }
   
   String _getPlantName(BuildContext context) {
+    final plantType = PlantType.fromIdOrDefault(widget.plantType);
     final l10n = AppLocalizations.of(context)!;
     final plantNames = {
       'sprout':    l10n.plantSprout,
       'cactus':    l10n.plantCactus,
-      'bonsai':    l10n.plantBonsai,
       'flower':    l10n.plantFlower,
-      'bamboo':    l10n.plantBamboo,
       'sunflower': l10n.plantSunflower,
     };
-    return plantNames[widget.plantType] ?? l10n.plantSprout;
+    return plantNames[plantType.id] ?? l10n.plantSprout;
   }
   
   String _getWiltedStatus(BuildContext context) {
@@ -201,24 +88,20 @@ class _PlantWidgetState extends State<PlantWidget>
             angle: widget.isWilted ? 0.3 : _sway.value,
             child: child,
           ),
-          child: _isImagePath
-              ? Image.asset(
-                  _emoji,
-                  width: widget.size * 1.5,
-                  height: widget.size * 1.5,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback to emoji if image fails to load
-                    return Text(
-                      '🌰',
-                      style: TextStyle(fontSize: widget.size),
-                    );
-                  },
-                )
-              : Text(
-                  _emoji,
-                  style: TextStyle(fontSize: widget.size),
-                ),
+          child: Image.asset(
+            _assetPath,
+            width: widget.size * 1.5,
+            height: widget.size * 1.5,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback to emoji if image fails to load
+              final plantType = PlantType.fromIdOrDefault(widget.plantType);
+              return Text(
+                plantType.emoji,
+                style: TextStyle(fontSize: widget.size),
+              );
+            },
+          ),
         ),
         const SizedBox(height: 6),
         Text(

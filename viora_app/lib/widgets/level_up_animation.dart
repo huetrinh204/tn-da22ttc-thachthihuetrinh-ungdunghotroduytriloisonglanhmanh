@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../models/plant_type.dart';
 
 class LevelUpAnimation extends StatefulWidget {
   final String plantType;
@@ -278,8 +279,8 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
   }
 
   Widget _buildPlantImage() {
-    final stages = _getPlantStages();
-    final imagePath = stages[(widget.newLevel - 1).clamp(0, stages.length - 1)];
+    final plantType = PlantType.fromIdOrDefault(widget.plantType);
+    final imagePath = plantType.getAssetPath(widget.newLevel);
 
     return Image.asset(
       imagePath,
@@ -287,32 +288,12 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
       height: 140,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return const Text(
-          '🌱',
-          style: TextStyle(fontSize: 100),
+        return Text(
+          plantType.emoji,
+          style: const TextStyle(fontSize: 100),
         );
       },
     );
-  }
-
-  List<String> _getPlantStages() {
-    return [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ];
   }
 }
 

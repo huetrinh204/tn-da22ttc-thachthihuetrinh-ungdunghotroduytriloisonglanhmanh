@@ -60,9 +60,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     return [
       {"id": "sprout",  "emoji": "🌱", "name": l10n.plantSprout,   "desc": l10n.plantDescSprout},
       {"id": "cactus",  "emoji": "🌵", "name": l10n.plantCactus,  "desc": l10n.plantDescCactus},
-      {"id": "bonsai",  "emoji": "🌳", "name": l10n.plantBonsai,      "desc": l10n.plantDescBonsai},
       {"id": "flower",  "emoji": "🌸", "name": l10n.plantFlower, "desc": l10n.plantDescFlower},
-      {"id": "bamboo",  "emoji": "🎋", "name": l10n.plantBamboo,    "desc": l10n.plantDescBamboo},
       {"id": "sunflower","emoji": "🌻","name": l10n.plantSunflower, "desc": l10n.plantDescSunflower},
     ];
   }
@@ -975,9 +973,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.1,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.0,
                   children: plantOptions.map((p) {
                     final isSelected = selectedPlant == p["id"];
                     return GestureDetector(
@@ -1000,23 +998,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(p["emoji"] as String,
-                                style: const TextStyle(fontSize: 36)),
-                            const SizedBox(height: 6),
+                                style: const TextStyle(fontSize: 48)),
+                            const SizedBox(height: 8),
                             Text(p["name"] as String,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: isSelected
                                       ? const Color(0xFF00695C)
                                       : Colors.black87,
                                 )),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                               child: Text(p["desc"] as String,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                      fontSize: 10, color: Colors.grey)),
+                                      fontSize: 11, color: Colors.grey)),
                             ),
                           ],
                         ),

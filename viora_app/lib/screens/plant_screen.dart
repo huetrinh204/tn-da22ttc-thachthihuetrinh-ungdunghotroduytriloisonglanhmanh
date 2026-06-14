@@ -8,6 +8,7 @@ import '../widgets/level_up_animation.dart';
 import '../widgets/treasure_reward_animation.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import '../models/plant_type.dart';
 
 class PlantScreen extends StatefulWidget {
   const PlantScreen({super.key, this.embedded = false});
@@ -640,75 +641,81 @@ class _PlantScreenState extends State<PlantScreen>
     Color nodeColor;
     Widget icon;
 
-    // Get plant image path
-    final plantImages = [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caydanglon.png',
-      'assets/images/tree/8_caytruongthanh.png',
-      'assets/images/tree/9_cayphattrientot.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ];
+    // Get plant image path based on current user's plant type
+    final plantType = PlantType.fromIdOrDefault(this.plantType);
+    final plantImagePath = plantType.getAssetPath(level);
 
     if (isDone) {
       nodeColor = const Color(0xFF4CAF50);
       // Show plant image for completed levels
-      icon = ClipOval(
-        child: Image.asset(
-          plantImages[level - 1],
-          width: 50,
-          height: 50,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return const Icon(Icons.check, color: Colors.white, size: 24);
-          },
+      icon = Container(
+        padding: const EdgeInsets.all(4),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            plantImagePath,
+            width: 58,
+            height: 58,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.check, color: Color(0xFF4CAF50), size: 28);
+            },
+          ),
         ),
       );
     } else if (isCurrent) {
       nodeColor = const Color(0xFF4CAF50);
       // Show plant image for current level
-      icon = ClipOval(
-        child: Image.asset(
-          plantImages[level - 1],
-          width: 50,
-          height: 50,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return const Icon(Icons.star, color: Colors.white, size: 24);
-          },
+      icon = Container(
+        padding: const EdgeInsets.all(4),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            plantImagePath,
+            width: 58,
+            height: 58,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.star, color: Color(0xFF4CAF50), size: 28);
+            },
+          ),
         ),
       );
     } else {
       nodeColor = Colors.grey.shade400; // Medium gray background for locked nodes
       // Show grayscale plant image for locked levels with RepaintBoundary isolation
-      icon = RepaintBoundary(
-        child: ClipOval(
-          child: ColorFiltered(
-            colorFilter: const ColorFilter.matrix([
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0,      0,      0,      1, 0,
-            ]),
-            child: Opacity(
-              opacity: 0.7,
-              child: Image.asset(
-                plantImages[level - 1],
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.lock, color: Colors.grey.shade600, size: 20);
-                },
+      icon = Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.grey.shade200,
+        ),
+        child: RepaintBoundary(
+          child: ClipOval(
+            child: ColorFiltered(
+              colorFilter: const ColorFilter.matrix([
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0,      0,      0,      1, 0,
+              ]),
+              child: Opacity(
+                opacity: 0.7,
+                child: Image.asset(
+                  plantImagePath,
+                  width: 58,
+                  height: 58,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(Icons.lock, color: Colors.grey.shade600, size: 24);
+                  },
+                ),
               ),
             ),
           ),
