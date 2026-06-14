@@ -6,6 +6,7 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import '../constants/app_icons.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 import 'notifications_inbox_screen.dart';
@@ -232,7 +233,7 @@ class _CommunityScreenState extends State<CommunityScreen>
             alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.notifications_outlined, size: 24),
+                icon: Icon(AppIcons.notifications, size: 24),
                 onPressed: () async {
                   await Navigator.push(
                     context,
@@ -307,7 +308,7 @@ class _CommunityScreenState extends State<CommunityScreen>
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToCreatePost,
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Icon(AppIcons.add, color: Colors.white),
       ),
     );
   }
@@ -321,7 +322,7 @@ class _CommunityScreenState extends State<CommunityScreen>
         decoration: InputDecoration(
           hintText: l10n.searchCommunity,
           hintStyle: TextStyle(color: context.textSecondary, fontSize: 14),
-          prefixIcon: Icon(Icons.search, color: context.textSecondary, size: 22),
+          prefixIcon: Icon(AppIcons.search, color: context.textSecondary, size: 22),
           filled: true,
           fillColor: context.inputFill,
           border: OutlineInputBorder(
@@ -362,7 +363,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                     color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.edit_outlined, color: AppColors.primary, size: 20),
+                  child: Icon(AppIcons.edit, color: AppColors.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -379,7 +380,7 @@ class _CommunityScreenState extends State<CommunityScreen>
           ),
           const SizedBox(height: 12),
           _buildActionButton(
-            icon: Icons.image_outlined,
+            icon: AppIcons.image,
             label: l10n.photo,
             onTap: _navigateToCreatePost,
           ),
@@ -462,7 +463,7 @@ class _CommunityScreenState extends State<CommunityScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.cloud_off_outlined, size: 56, color: context.textSecondary),
+              Icon(AppIcons.refresh, size: 56, color: context.textSecondary),
               const SizedBox(height: 16),
               Text(
                 l10n.loadFeedError,
@@ -503,7 +504,7 @@ class _CommunityScreenState extends State<CommunityScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.search_off, size: 56, color: context.textSecondary),
+              Icon(AppIcons.search, size: 56, color: context.textSecondary),
               const SizedBox(height: 16),
               Text(
                 l10n.noSearchResults,
@@ -568,7 +569,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                   ),
                   title: Text(uname,
                     style: TextStyle(fontWeight: FontWeight.w600, color: context.textPrimary)),
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.primary),
+                  trailing: Icon(AppIcons.chevronRight, color: AppColors.primary),
                 ),
               );
             })),
@@ -623,7 +624,7 @@ class _CommunityScreenState extends State<CommunityScreen>
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: _navigateToCreatePost,
-                icon: const Icon(Icons.add),
+                icon: Icon(AppIcons.add),
                 label: Text(l10n.createPost),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
@@ -822,7 +823,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.broken_image_outlined, 
+                            Icon(AppIcons.image, 
                               size: 48, 
                               color: context.textSecondary,
                             ),
@@ -872,14 +873,14 @@ class _CommunityScreenState extends State<CommunityScreen>
             child: Row(
               children: [
                 _buildActionIcon(
-                  icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
+                  icon: post.isLiked ? AppIcons.heartFilled : AppIcons.heart,
                   label: l10n.likes(post.likeCount),
                   color: post.isLiked ? Colors.red : context.textSecondary,
                   onTap: () => _handleLike(post),
                 ),
                 const SizedBox(width: 20),
                 _buildActionIcon(
-                  icon: Icons.chat_bubble_outline,
+                  icon: AppIcons.message,
                   label: l10n.comments(post.commentCount),
                   color: context.textSecondary,
                   onTap: () => _navigateToPostDetail(post),

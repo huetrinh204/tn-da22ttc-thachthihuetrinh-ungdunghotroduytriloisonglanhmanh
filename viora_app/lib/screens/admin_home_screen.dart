@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
+import '../constants/app_icons.dart';
 import 'admin_dashboard_tab.dart';
 import 'admin_users_tab.dart';
 import 'admin_posts_tab.dart';
@@ -53,23 +54,23 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         unselectedItemColor: Colors.grey,
         items: [
           BottomNavigationBarItem(
-            icon: const Icon(Icons.dashboard),
+            icon: const Icon(AppIcons.dashboard),
             label: l10n.dashboard,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.people),
+            icon: const Icon(AppIcons.users),
             label: l10n.users,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.article),
+            icon: const Icon(AppIcons.message),
             label: l10n.postsLabel,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.eco),
+            icon: const Icon(AppIcons.sprout),
             label: l10n.plants,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.settings),
+            icon: const Icon(AppIcons.settings),
             label: l10n.settings,
           ),
         ],

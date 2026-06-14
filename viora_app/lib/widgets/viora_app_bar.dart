@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../constants/app_icons.dart';
 
 /// AppBar chuẩn dùng chung — hiển thị logo Viora ở title
 class VioraAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -40,7 +41,7 @@ class VioraAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       leading: showBack
           ? IconButton(
-              icon: Icon(Icons.arrow_back_ios_rounded, color: iconColor, size: 20),
+              icon: Icon(AppIcons.arrowLeft, color: iconColor, size: 20),
               onPressed: () => Navigator.pop(context),
             )
           : leading,

@@ -3,6 +3,7 @@ import '../models/post.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import '../constants/app_icons.dart';
 
 class PostCard extends StatelessWidget {
   final Post post;
@@ -170,7 +171,7 @@ class PostCard extends StatelessWidget {
                   height: 200,
                   color: context.inputFill,
                   child: Center(
-                    child: Icon(Icons.image_outlined, 
+                    child: Icon(AppIcons.image, 
                       size: 48, 
                       color: context.textSecondary,
                     ),
@@ -209,7 +210,7 @@ class PostCard extends StatelessWidget {
               children: [
                 _buildActionIcon(
                   context,
-                  icon: post.isLiked ? Icons.favorite : Icons.favorite_border,
+                  icon: post.isLiked ? AppIcons.heartFilled : AppIcons.heart,
                   label: l10n.likes(post.likeCount),
                   color: post.isLiked ? Colors.red : context.textSecondary,
                   onTap: onLike,
@@ -217,7 +218,7 @@ class PostCard extends StatelessWidget {
                 const SizedBox(width: 20),
                 _buildActionIcon(
                   context,
-                  icon: Icons.chat_bubble_outline,
+                  icon: AppIcons.message,
                   label: l10n.comments(post.commentCount),
                   color: context.textSecondary,
                   onTap: onTap,

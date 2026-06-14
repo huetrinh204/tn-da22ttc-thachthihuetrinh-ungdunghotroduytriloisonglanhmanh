@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../models/plant_type.dart';
+import '../constants/app_icons.dart';
 
 class LevelUpAnimation extends StatefulWidget {
   final String plantType;
@@ -180,7 +181,7 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Icon(Icons.arrow_forward, 
+                          Icon(AppIcons.arrowRight, 
                               size: 20, 
                               color: Colors.brown.shade700),
                           const SizedBox(width: 12),

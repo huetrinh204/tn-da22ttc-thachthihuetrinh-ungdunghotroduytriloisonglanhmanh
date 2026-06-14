@@ -6,6 +6,7 @@ import '../navigation/app_navigation.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../constants/app_icons.dart';
 import '../widgets/viora_app_bar.dart';
 import 'achievements_screen.dart';
 import 'plant_screen.dart';
@@ -169,7 +170,7 @@ class _GrowScreenState extends State<GrowScreen> {
                 ),
               );
             },
-            icon: const Icon(Icons.emoji_events_outlined, size: 20),
+            icon: Icon(AppIcons.trophy, size: 20),
             label: Text(l10n.achievements),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
@@ -182,7 +183,7 @@ class _GrowScreenState extends State<GrowScreen> {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => AppNavigation.openHabits(),
-            icon: const Icon(Icons.check_circle_outline, size: 20),
+            icon: Icon(AppIcons.habits, size: 20),
             label: Text(l10n.habits),
             style: OutlinedButton.styleFrom(
               foregroundColor: context.textPrimary,

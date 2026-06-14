@@ -10,6 +10,7 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import '../constants/app_icons.dart';
 import 'habits_screen.dart';
 import 'grow_screen.dart';
 import 'community_screen.dart';
@@ -212,28 +213,28 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 unselectedFontSize: 11,
                 items: [
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.home_outlined, size: 24),
-                    activeIcon: const Icon(Icons.home_rounded, size: 24),
+                    icon: const Icon(AppIcons.home, size: 22),
+                    activeIcon: const Icon(AppIcons.home, size: 22),
                     label: AppLocalizations.of(context)!.today,
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.check_circle_outline_rounded, size: 24),
-                    activeIcon: const Icon(Icons.check_circle_rounded, size: 24),
+                    icon: const Icon(AppIcons.habits, size: 22),
+                    activeIcon: const Icon(AppIcons.habits, size: 22),
                     label: AppLocalizations.of(context)!.habits,
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.people_outline_rounded, size: 24),
-                    activeIcon: const Icon(Icons.people_rounded, size: 24),
+                    icon: const Icon(AppIcons.community, size: 22),
+                    activeIcon: const Icon(AppIcons.community, size: 22),
                     label: AppLocalizations.of(context)!.community,
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.eco_outlined, size: 24),
-                    activeIcon: const Icon(Icons.eco_rounded, size: 24),
+                    icon: const Icon(AppIcons.growth, size: 22),
+                    activeIcon: const Icon(AppIcons.growth, size: 22),
                     label: AppLocalizations.of(context)!.grow,
                   ),
                   BottomNavigationBarItem(
-                    icon: const Icon(Icons.person_outline_rounded, size: 24),
-                    activeIcon: const Icon(Icons.person_rounded, size: 24),
+                    icon: const Icon(AppIcons.profile, size: 22),
+                    activeIcon: const Icon(AppIcons.profile, size: 22),
                     label: AppLocalizations.of(context)!.navMe,
                   ),
                 ],
@@ -438,8 +439,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       alignment: Alignment.center,
       children: [
         IconButton(
-          icon: const Icon(Icons.notifications_none_rounded,
-              color: AppColors.primary, size: 26),
+          icon: const Icon(AppIcons.notifications,
+              color: AppColors.primary, size: 24),
           onPressed: () async {
             await Navigator.push(
               context,
@@ -592,7 +593,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
         children: [
           Row(
             children: [
-              const Text("🌿", style: TextStyle(fontSize: 18)),
+              Icon(AppIcons.sprout, size: 20, color: context.textGreen),
               const SizedBox(width: 8),
               Text(
                 l10n.yourPlant,
@@ -735,7 +736,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Text("🔥", style: TextStyle(fontSize: 28)),
+              child: Icon(AppIcons.streak, color: Colors.white, size: 28),
             ),
           ),
           const SizedBox(width: 16),
@@ -761,7 +762,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
           ),
           Column(
             children: [
-              const Text("🏆", style: TextStyle(fontSize: 20)),
+              const Icon(AppIcons.trophy, color: Colors.amber, size: 24),
               const SizedBox(height: 2),
               Text(
                 "$longestStreak",
@@ -848,7 +849,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                           color: const Color(0xFFE8F5E9),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.today_rounded,
+                        child: const Icon(AppIcons.calendarCheck,
                             color: Color(0xFF2E7D32), size: 18),
                       ),
                       const SizedBox(width: 10),
@@ -955,7 +956,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       ),
       child: Row(
         children: [
-          const Text("💬", style: TextStyle(fontSize: 24)),
+          Icon(AppIcons.quote, size: 24, color: context.textGreenLight),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

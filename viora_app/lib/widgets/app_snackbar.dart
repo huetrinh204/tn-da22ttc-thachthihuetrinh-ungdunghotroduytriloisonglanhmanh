@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_icons.dart';
 
 class AppSnackbar {
   static void showError(BuildContext context, String message) {
@@ -32,7 +33,7 @@ class AppSnackbar {
                   color: Colors.red.shade400.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.error_outline_rounded,
+                child: Icon(AppIcons.error,
                     color: Colors.red.shade300, size: 18),
               ),
               const SizedBox(width: 12),
@@ -84,7 +85,7 @@ class AppSnackbar {
                   color: Colors.green.shade300.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_circle_outline_rounded,
+                child: Icon(AppIcons.checkCircle,
                     color: Colors.white, size: 18),
               ),
               const SizedBox(width: 12),

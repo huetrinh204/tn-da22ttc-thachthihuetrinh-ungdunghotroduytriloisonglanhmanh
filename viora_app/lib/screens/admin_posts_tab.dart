@@ -6,6 +6,7 @@ import 'post_detail_screen.dart';
 import '../models/post.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import '../constants/app_icons.dart';
 
 class AdminPostsTab extends StatefulWidget {
   const AdminPostsTab({super.key});
@@ -88,10 +89,10 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                 decoration: InputDecoration(
                   hintText: l10n.searchPostsOrAuthors,
                   hintStyle: TextStyle(color: context.textSecondary),
-                  prefixIcon: Icon(Icons.search, color: context.textSecondary),
+                  prefixIcon: Icon(AppIcons.search, color: context.textSecondary),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: Icon(Icons.clear, color: context.textSecondary),
+                          icon: Icon(AppIcons.close, color: context.textSecondary),
                           onPressed: () {
                             _searchController.clear();
                             _loadPosts();
@@ -172,17 +173,17 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.flag, color: Colors.orange),
+                                        icon: Icon(AppIcons.flag, color: Colors.orange),
                                         onPressed: () => _reportViolation(post['id'], post['user_id'], post['content']),
                                         tooltip: l10n.reportViolation,
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.visibility, color: Colors.blue),
+                                        icon: Icon(AppIcons.eye, color: Colors.blue),
                                         onPressed: () => _viewPostDetails(post),
                                         tooltip: l10n.viewDetails,
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.delete, color: Colors.red),
+                                        icon: Icon(AppIcons.delete, color: Colors.red),
                                         onPressed: () => _deletePost(post['id'], post['content']),
                                         tooltip: l10n.deletePost,
                                       ),
@@ -211,7 +212,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                                         errorBuilder: (_, __, ___) => Container(
                                           height: 200,
                                           color: Colors.grey[300],
-                                          child: const Icon(Icons.broken_image),
+                                          child: Icon(AppIcons.image, size: 48, color: Colors.grey[600]),
                                         ),
                                       ),
                                     ),
@@ -220,11 +221,11 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                                   padding: const EdgeInsets.all(16),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.favorite, size: 16, color: Colors.grey[600]),
+                                      Icon(AppIcons.heart, size: 16, color: Colors.grey[600]),
                                       const SizedBox(width: 4),
                                       Text('${post['like_count'] ?? 0}'),
                                       const SizedBox(width: 16),
-                                      Icon(Icons.comment, size: 16, color: Colors.grey[600]),
+                                      Icon(AppIcons.message, size: 16, color: Colors.grey[600]),
                                       const SizedBox(width: 4),
                                       Text('${post['comment_count'] ?? 0}'),
                                       const Spacer(),
