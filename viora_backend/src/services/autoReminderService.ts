@@ -89,7 +89,9 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
     // Send reminders to each user
     for (const user of users) {
       try {
-        // Create in-app notification
+        // Create in-app notification - (REMOVED per user request)
+        // We only show push notifications on the phone, not in the app's notification list.
+        /*
         await pool.query(
           `INSERT INTO user_notifications (user_id, type, title, body, emoji, is_read, created_at)
            VALUES (?, ?, ?, ?, ?, 0, NOW())`,
@@ -102,6 +104,7 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
           ]
         );
         notificationsSent++;
+        */
 
         // Send FCM push notification if fcm_token exists
         if (user.fcm_token && user.fcm_token.trim() !== '') {

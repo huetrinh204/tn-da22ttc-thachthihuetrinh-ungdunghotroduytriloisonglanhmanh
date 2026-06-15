@@ -22,6 +22,8 @@ class _NotificationSettingsScreenState
   int eveningHour = 21;
   int eveningMinute = 0;
   bool isLoading = true;
+  bool _canExactAlarm = false;
+  bool _isSendingTest = false;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _NotificationSettingsScreenState
 
   Future<void> _load() async {
     final settings = await NotificationService.getSettings();
+    final canExact = await NotificationService.canScheduleExact();
     setState(() {
       morningEnabled = settings['morning_enabled'];
       eveningEnabled = settings['evening_enabled'];
@@ -38,6 +41,7 @@ class _NotificationSettingsScreenState
       morningMinute = settings['morning_minute'];
       eveningHour = settings['evening_hour'];
       eveningMinute = settings['evening_minute'];
+      _canExactAlarm = canExact;
       isLoading = false;
     });
   }
@@ -66,14 +70,17 @@ class _NotificationSettingsScreenState
     final picked = await showTimePicker(
       context: context,
       initialTime: initial,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFF4CAF50),
-            onPrimary: Colors.white,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF4CAF50),
+              onPrimary: Colors.white,
+            ),
           ),
+          child: child!,
         ),
-        child: child!,
       ),
     );
     if (picked == null) return;
@@ -122,6 +129,74 @@ class _NotificationSettingsScreenState
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // Exact alarm warning (Android 12+)
+                if (!_canExactAlarm) ...[
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF3E0),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFFFCC02)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          children: [
+                            Text("⚠️", style: TextStyle(fontSize: 18)),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Cần cấp quyền báo thức chính xác',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: Color(0xFFE65100),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Android 12+ yêu cầu cấp quyền "Báo thức & Nhắc nhở" để thông báo đúng giờ.\n\nVào: Cài đặt → Ứng dụng → Viora → Báo thức & Nhắc nhở → Bật lên',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF5D4037),
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final can = await NotificationService.canScheduleExact();
+                              setState(() => _canExactAlarm = can);
+                              if (!can && mounted) {
+                                AppSnackbar.showError(
+                                  context,
+                                  'Vào Cài đặt → Ứng dụng → Viora → Báo thức & Nhắc nhở → Bật lên',
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.refresh, size: 18),
+                            label: const Text('Kiểm tra lại'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFFE65100),
+                              side: const BorderSide(color: Color(0xFFE65100)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 // Info card
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -144,6 +219,76 @@ class _NotificationSettingsScreenState
                         ),
                       ),
                     ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Test notification button
+                Container(
+                  decoration: BoxDecoration(
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_active_outlined,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
+                    title: Text(
+                      'Gửi thông báo thử',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Ngay lập tức + hẹn giờ sau 10 giây',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textSecondary,
+                      ),
+                    ),
+                    trailing: _isSendingTest
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.chevron_right,
+                            color: AppColors.primary,
+                          ),
+                    onTap: _isSendingTest
+                        ? null
+                        : () async {
+                            setState(() => _isSendingTest = true);
+                            await NotificationService.sendTestNotification();
+                            if (!mounted) return;
+                            setState(() => _isSendingTest = false);
+                            AppSnackbar.showSuccess(
+                              context,
+                              'Đã gửi! Kéo thanh thông báo xuống để xem.',
+                            );
+                          },
                   ),
                 ),
 

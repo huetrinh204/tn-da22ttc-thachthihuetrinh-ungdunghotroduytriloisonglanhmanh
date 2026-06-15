@@ -72,14 +72,26 @@ class _CommunityScreenState extends State<CommunityScreen>
     final saved = prefs.getStringList("following_user_ids") ?? [];
     _followingIds.addAll(saved);
 
-    final profile = await ApiService.getProfile(_token!);
-    if (profile["user"] != null) {
-      _currentUserId = profile["user"]["id"]?.toString();
-    }
-
-    if (mounted) {
-      await _loadPosts();
-      _loadUnreadCount();
+    // Dùng cached userId nếu có, tránh gọi getProfile mỗi lần
+    final cachedUserId = prefs.getString("cached_user_id");
+    if (cachedUserId != null && cachedUserId.isNotEmpty) {
+      _currentUserId = cachedUserId;
+      if (mounted) {
+        await _loadPosts();
+        _loadUnreadCount();
+      }
+    } else {
+      final profile = await ApiService.getProfile(_token!);
+      if (profile["user"] != null) {
+        _currentUserId = profile["user"]["id"]?.toString();
+        if (_currentUserId != null) {
+          await prefs.setString("cached_user_id", _currentUserId!);
+        }
+      }
+      if (mounted) {
+        await _loadPosts();
+        _loadUnreadCount();
+      }
     }
   }
 
@@ -140,10 +152,16 @@ class _CommunityScreenState extends State<CommunityScreen>
   }
 
   Future<void> _loadPosts() async {
-    setState(() {
-      _isLoading = true;
+    // Nếu đã có data, chỉ reload ngầm (không show loading spinner)
+    final isFirstLoad = _posts.isEmpty;
+    if (isFirstLoad) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    } else {
       _loadError = null;
-    });
+    }
 
     final token = _token ?? "";
     if (token.isEmpty) {
@@ -282,15 +300,12 @@ class _CommunityScreenState extends State<CommunityScreen>
           // Search bar
           _buildSearchBar(l10n),
           
-          // Create post section
-          _buildCreatePostSection(l10n),
-          
           // Tabs
           _buildTabs(l10n),
           
           // Posts list
           Expanded(
-            child: _isLoading
+            child: _isLoading && _posts.isEmpty
                 ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : RefreshIndicator(
                     onRefresh: _refreshPosts,
@@ -343,96 +358,6 @@ class _CommunityScreenState extends State<CommunityScreen>
             borderSide: BorderSide.none,
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCreatePostSection(AppLocalizations l10n) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: _navigateToCreatePost,
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(AppIcons.edit, color: AppColors.primary, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    l10n.shareYourProgress,
-                    style: TextStyle(
-                      color: context.textSecondary,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildActionButton(
-            icon: AppIcons.image,
-            label: l10n.photo,
-            onTap: _navigateToCreatePost,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            border: Border.all(color: context.infoBoxBorder),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: context.textSecondary),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: context.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -608,7 +533,7 @@ class _CommunityScreenState extends State<CommunityScreen>
       );
     }
 
-    if (_visiblePosts.isEmpty) {
+    if (_visiblePosts.isEmpty && !_isLoading) {
       final isFollowingTab = _tabController.index == 1;
       return Center(
         child: Column(

@@ -660,15 +660,18 @@ class _HabitsScreenState extends State<HabitsScreen> {
                         context: context,
                         initialTime: reminderTime,
                         builder: (context, child) {
-                          return Theme(
-                            data: Theme.of(context).copyWith(
-                              colorScheme: ColorScheme.light(
-                                primary: AppColors.primary,
-                                onPrimary: Colors.white,
-                                onSurface: context.textPrimary,
+                          return MediaQuery(
+                            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                            child: Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: AppColors.primary,
+                                  onPrimary: Colors.white,
+                                  onSurface: context.textPrimary,
+                                ),
                               ),
+                              child: child!,
                             ),
-                            child: child!,
                           );
                         },
                       );

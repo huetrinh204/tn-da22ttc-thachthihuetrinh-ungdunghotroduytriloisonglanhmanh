@@ -790,6 +790,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: isMorning ? _morningTime : _eveningTime,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
     );
 
     if (picked != null) {
