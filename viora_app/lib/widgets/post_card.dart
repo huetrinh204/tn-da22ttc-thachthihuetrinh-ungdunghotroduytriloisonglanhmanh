@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/post.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
 
@@ -84,7 +85,7 @@ class PostCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: post.isFollowing && post.isFollowedBack
-                                    ? const Color(0xFF4CAF50).withValues(alpha: 0.1)
+                                    ? AppColors.success.withValues(alpha: 0.1)
                                     : Colors.grey.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -95,7 +96,7 @@ class PostCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: post.isFollowing && post.isFollowedBack
-                                      ? const Color(0xFF4CAF50)
+                                      ? AppColors.success
                                       : Colors.grey.shade600,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -120,7 +121,7 @@ class PostCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -132,7 +133,7 @@ class PostCard extends StatelessWidget {
                           "${post.daysStreak} ${l10n.days}",
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Color(0xFFFF9800),
+                            color: AppColors.warning,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -212,7 +213,7 @@ class PostCard extends StatelessWidget {
                   context,
                   icon: post.isLiked ? AppIcons.heartFilled : AppIcons.heart,
                   label: l10n.likes(post.likeCount),
-                  color: post.isLiked ? Colors.red : context.textSecondary,
+                  color: post.isLiked ? AppColors.error : context.textSecondary,
                   onTap: onLike,
                 ),
                 const SizedBox(width: 20),

@@ -7,6 +7,8 @@ import '../widgets/viora_app_bar.dart';
 import '../widgets/level_up_animation.dart';
 import '../widgets/treasure_reward_animation.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../models/plant_type.dart';
 import '../constants/app_icons.dart';
@@ -169,13 +171,13 @@ class _PlantScreenState extends State<PlantScreen>
   Color _getWarningColor(int days) {
     switch (days) {
       case 0:
-        return Colors.green;
+        return AppColors.success;
       case 1:
-        return Colors.orange;
+        return AppColors.warning;
       case 2:
-        return Colors.deepOrange;
+        return const Color(0xFFEA580C);
       default:
-        return Colors.red;
+        return AppColors.error;
     }
   }
 
@@ -286,11 +288,11 @@ class _PlantScreenState extends State<PlantScreen>
 
     final plantBody = isLoading
         ? const Center(
-            child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+            child: CircularProgressIndicator(color: AppColors.primary),
           )
         : RefreshIndicator(
             onRefresh: _loadPlant,
-            color: const Color(0xFF4CAF50),
+            color: AppColors.primary,
             child: ListView(
               padding: EdgeInsets.all(widget.embedded ? 16 : 20),
               children: [
@@ -511,7 +513,7 @@ class _PlantScreenState extends State<PlantScreen>
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildStatChip(l10n.totalPoints, l10n.points(plantExp), AppIcons.star, Colors.amber),
-        _buildStatChip(l10n.levelProgress, "$plantLevel / 15", AppIcons.trendingUp, const Color(0xFF4CAF50)),
+        _buildStatChip(l10n.levelProgress, "$plantLevel / 15", AppIcons.trendingUp, AppColors.primary),
       ],
     );
   }
@@ -717,13 +719,13 @@ class _PlantScreenState extends State<PlantScreen>
     final plantImagePath = plantType.getAssetPath(level);
 
     if (isDone) {
-      nodeColor = const Color(0xFF4CAF50);
+      nodeColor = AppColors.primary;
       // Show plant image for completed levels
       icon = Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color.fromARGB(255, 30, 181, 35), // Medium green background (Green 200)
+          color: AppColors.primaryLight, // Light green background
         ),
         child: ClipOval(
           child: Image.asset(
@@ -738,13 +740,13 @@ class _PlantScreenState extends State<PlantScreen>
         ),
       );
     } else if (isCurrent) {
-      nodeColor = const Color(0xFF4CAF50);
+      nodeColor = AppColors.primary;
       // Show plant image for current level
       icon = Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color.fromARGB(255, 44, 198, 49), // Medium green background (Green 200)
+          color: AppColors.primaryLight,
         ),
         child: ClipOval(
           child: Image.asset(
@@ -753,7 +755,7 @@ class _PlantScreenState extends State<PlantScreen>
             height: 58,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              return Icon(AppIcons.star, color: Color(0xFF4CAF50), size: 28);
+              return Icon(AppIcons.star, color: AppColors.primary, size: 28);
             },
           ),
         ),
@@ -801,7 +803,7 @@ class _PlantScreenState extends State<PlantScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF4CAF50),
+              color: AppColors.primary,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -825,7 +827,7 @@ class _PlantScreenState extends State<PlantScreen>
             boxShadow: isCurrent
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+                      color: AppColors.primary.withValues(alpha: 0.4),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),

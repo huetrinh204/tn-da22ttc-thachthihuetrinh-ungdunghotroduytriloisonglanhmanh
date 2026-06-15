@@ -712,7 +712,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String confirmDeleteHabit(String name) {
-    return 'Bạn có chắc muốn xóa \\\"$name\\\" không?';
+    return 'Bạn có chắc chắn muốn xóa thói quen “$name” không?';
   }
 
   @override

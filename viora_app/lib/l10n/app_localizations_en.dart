@@ -711,7 +711,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String confirmDeleteHabit(String name) {
-    return 'Are you sure you want to delete \\\"$name\\\"?';
+    return 'Are you sure you want to delete “$name”?';
   }
 
   @override

@@ -1451,7 +1451,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmDeleteHabit.
   ///
   /// In vi, this message translates to:
-  /// **'Bạn có chắc muốn xóa \\\"{name}\\\" không?'**
+  /// **'Bạn có chắc chắn muốn xóa thói quen “{name}” không?'**
   String confirmDeleteHabit(String name);
 
   /// No description provided for @cancel.

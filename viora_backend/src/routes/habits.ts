@@ -81,14 +81,14 @@ router.get("/today", authMiddleware, async (req: any, res) => {
 
 // ================= CREATE HABIT =================
 router.post("/", authMiddleware, async (req: any, res) => {
-  const { name, category, frequency, target_count, icon, color } = req.body;
+  const { name, category, frequency, target_count, icon, color, reminder_time, reminder_enabled } = req.body;
 
   if (!name) return res.status(400).json({ message: "Tên thói quen không được trống" });
 
   try {
     const [result]: any = await pool.query(
-      `INSERT INTO habits (user_id, name, category, frequency, target_count, icon, color)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO habits (user_id, name, category, frequency, target_count, icon, color, reminder_time)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         req.user.id,
         name,
@@ -97,6 +97,7 @@ router.post("/", authMiddleware, async (req: any, res) => {
         target_count || 1,
         icon || "⭐",
         color || "#4CAF50",
+        (reminder_enabled !== false && reminder_time) ? reminder_time : null,
       ]
     );
 
@@ -106,6 +107,7 @@ router.post("/", authMiddleware, async (req: any, res) => {
     );
 
     res.json({ message: "Habit created", habit: rows[0] });
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -114,13 +116,14 @@ router.post("/", authMiddleware, async (req: any, res) => {
 
 // ================= UPDATE HABIT =================
 router.put("/:id", authMiddleware, async (req: any, res) => {
-  const { name, category, icon, color, target_count } = req.body;
+  const { name, category, icon, color, target_count, reminder_time, reminder_enabled } = req.body;
 
   try {
+    const finalReminderTime = (reminder_enabled !== false && reminder_time) ? reminder_time : null;
     await pool.query(
-      `UPDATE habits SET name = ?, category = ?, icon = ?, color = ?, target_count = ?
+      `UPDATE habits SET name = ?, category = ?, icon = ?, color = ?, target_count = ?, reminder_time = ?
        WHERE id = ? AND user_id = ?`,
-      [name, category, icon, color, target_count, req.params.id, req.user.id]
+      [name, category, icon, color, target_count, finalReminderTime, req.params.id, req.user.id]
     );
 
     res.json({ message: "Habit updated" });

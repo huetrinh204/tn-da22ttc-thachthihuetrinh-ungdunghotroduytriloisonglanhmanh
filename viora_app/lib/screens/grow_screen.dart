@@ -6,8 +6,10 @@ import '../navigation/app_navigation.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_colors.dart';
 import '../constants/app_icons.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/secondary_button.dart';
 import 'achievements_screen.dart';
 import 'plant_screen.dart';
 
@@ -97,7 +99,7 @@ class _GrowScreenState extends State<GrowScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF1B5E20), Color(0xFF43A047)],
+              colors: [AppColors.primaryDark, AppColors.primary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -161,7 +163,8 @@ class _GrowScreenState extends State<GrowScreen> {
     return Row(
       children: [
         Expanded(
-          child: OutlinedButton.icon(
+          child: SecondaryButton(
+            text: l10n.achievements,
             onPressed: () {
               Navigator.push(
                 context,
@@ -171,24 +174,14 @@ class _GrowScreenState extends State<GrowScreen> {
               );
             },
             icon: Icon(AppIcons.trophy, size: 20),
-            label: Text(l10n.achievements),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: const BorderSide(color: AppColors.primary),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: OutlinedButton.icon(
+          child: SecondaryButton(
+            text: l10n.habits,
             onPressed: () => AppNavigation.openHabits(),
             icon: Icon(AppIcons.habits, size: 20),
-            label: Text(l10n.habits),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: context.textPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-            ),
           ),
         ),
       ],

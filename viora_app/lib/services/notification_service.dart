@@ -67,6 +67,14 @@ class NotificationService {
       );
       await androidPlugin.createNotificationChannel(
         const AndroidNotificationChannel(
+          'viora_habit_reminder',
+          'Nhắc nhở thói quen',
+          description: 'Thông báo nhắc nhở từng thói quen theo giờ thiết lập',
+          importance: Importance.high,
+        ),
+      );
+      await androidPlugin.createNotificationChannel(
+        const AndroidNotificationChannel(
           'viora_test',
           'Test',
           description: 'Test notification',
@@ -78,14 +86,36 @@ class NotificationService {
     _initialized = true;
   }
 
+
   static Future<bool> requestPermission() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
-      return await android.requestNotificationsPermission() ?? false;
+      final notifGranted = await android.requestNotificationsPermission() ?? false;
+      try {
+        final exactGranted = await android.requestExactAlarmsPermission() ?? false;
+        print('[Notification] requestPermission: notif=$notifGranted, exact=$exactGranted');
+      } catch (e) {
+        print('[Notification] requestExactAlarmsPermission error: $e');
+      }
+      return notifGranted;
     }
     return true;
+  }
+
+  static Future<bool> canScheduleExact() async {
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      try {
+        return await android.canScheduleExactNotifications() ?? false;
+      } catch (e) {
+        print('[Notification] canScheduleExactNotifications error: $e');
+      }
+    }
+    return false;
   }
 
   // ===== SCHEDULE =====
@@ -104,7 +134,8 @@ class NotificationService {
     final locale = prefs.getString('locale') ?? 'vi';
     final isVietnamese = locale == 'vi';
 
-    await _plugin.cancelAll();
+    await _plugin.cancel(1);
+    await _plugin.cancel(2);
 
     if (morningEnabled) {
       await _scheduleDailyNotification(
@@ -155,11 +186,16 @@ class NotificationService {
       if (scheduled.isBefore(now)) {
         scheduled = scheduled.add(const Duration(days: 1));
       }
-      
+
       final prefs = await SharedPreferences.getInstance();
       final locale = prefs.getString('locale') ?? 'vi';
       final isVietnamese = locale == 'vi';
       final channelDesc = isVietnamese ? 'Nhắc nhở thói quen hàng ngày' : 'Daily habit reminders';
+
+      final canExact = await canScheduleExact();
+      final scheduleMode = canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexact;
 
       await _plugin.zonedSchedule(
         id,
@@ -181,13 +217,13 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexact,
+        androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: 'tab:1',
       );
-      print('[Notification] Scheduled id=$id at $hour:$minute');
+      print('[Notification] Scheduled id=$id at $hour:$minute (local TZ) using $scheduleMode');
     } catch (e) {
       print('[Notification] Schedule error id=$id: $e');
     }
@@ -197,21 +233,19 @@ class NotificationService {
     await _plugin.cancelAll();
   }
 
-  // Gửi thông báo test ngay lập tức (không schedule)
+  // Gửi thông báo test ngay lập tức và hẹn giờ 10 giây
   static Future<void> sendTestNotification() async {
     try {
       await init();
-      await requestPermission();
+      final hasPerm = await requestPermission();
+      final canExact = await canScheduleExact();
+      print('[Notification] Permission status: $hasPerm, canExact: $canExact');
 
-      // Test zonedSchedule sau 10 giây
-      final now = tz.TZDateTime.now(tz.local);
-      final scheduled = now.add(const Duration(seconds: 10));
-
-      await _plugin.zonedSchedule(
-        99,
-        "🌱 Thông báo test (10s)",
-        "zonedSchedule hoạt động! Notification theo giờ sẽ hoạt động.",
-        scheduled,
+      // Gửi thông báo ngay lập tức để kiểm tra quyền và channel
+      await _plugin.show(
+        98,
+        "🌱 Thông báo test ngay lập tức",
+        "Quyền: $hasPerm, ExactAlarm: $canExact. Nếu thấy thông báo này, hệ thống hoạt động tốt!",
         const NotificationDetails(
           android: AndroidNotificationDetails(
             'viora_test',
@@ -227,26 +261,43 @@ class NotificationService {
             presentBadge: true,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexact,
+      );
+      print('[Notification] Instant test notification sent');
+
+      // Đồng thời hẹn giờ 10 giây dùng tz.local
+      final now10s = tz.TZDateTime.now(tz.local);
+      final scheduledTZ = now10s.add(const Duration(seconds: 10));
+      final scheduleMode = canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexact;
+
+      await _plugin.zonedSchedule(
+        99,
+        "🌱 Thông báo test (sau 10 giây)",
+        "Hẹn giờ hoạt động tốt với chế độ: ${scheduleMode.toString().split('.').last}!",
+        scheduledTZ,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'viora_test',
+            'Test',
+            channelDescription: 'Test notification',
+            importance: Importance.max,
+            priority: Priority.max,
+            playSound: true,
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentSound: true,
+            presentBadge: true,
+          ),
+        ),
+        androidScheduleMode: scheduleMode,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-      print('[Notification] Test scheduled for 10 seconds from now');
+      print('[Notification] 10s test scheduled using local TZ: $scheduledTZ, mode: $scheduleMode');
     } catch (e) {
       print('[Notification] Test error: $e');
-      // Fallback: show ngay
-      await _plugin.show(
-        99,
-        "🌱 Thông báo test",
-        "Local notification hoạt động!",
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'viora_test', 'Test',
-            importance: Importance.max,
-            priority: Priority.max,
-          ),
-        ),
-      );
     }
   }
 
@@ -296,5 +347,90 @@ class NotificationService {
     }
 
     await scheduleAll();
+  }
+
+  // ===== HABIT-SPECIFIC REMINDERS =====
+
+  /// Lên lịch thông báo nhắc nhở cho một thói quen cụ thể.
+  /// [reminderTime] có dạng "H:mm" hoặc "HH:mm", ví dụ "7:0" hoặc "08:30".
+  /// [habitId] dùng để tính notification ID: 100 + habitId
+  static Future<void> scheduleHabitReminders({
+    required int habitId,
+    required String habitName,
+    required String reminderTime,
+  }) async {
+    await init();
+
+    final parts = reminderTime.split(':');
+    if (parts.length < 2) return;
+    final hour = int.tryParse(parts[0]) ?? 8;
+    final minute = int.tryParse(parts[1]) ?? 0;
+
+    final prefs = await SharedPreferences.getInstance();
+    final locale = prefs.getString('locale') ?? 'vi';
+    final isVietnamese = locale == 'vi';
+
+    final canExact = await canScheduleExact();
+    final scheduleMode = canExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexact;
+
+    final notifId = 100 + habitId;
+
+    try {
+      final now = tz.TZDateTime.now(tz.local);
+      var scheduled = tz.TZDateTime(
+        tz.local,
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      );
+      if (scheduled.isBefore(now)) {
+        scheduled = scheduled.add(const Duration(days: 1));
+      }
+
+      await _plugin.zonedSchedule(
+        notifId,
+        isVietnamese ? '⏰ Đến giờ rồi!' : '⏰ Time for your habit!',
+        isVietnamese
+            ? 'Đã đến lúc thực hiện thói quen "$habitName" rồi 💪'
+            : 'It\'s time to do your habit "$habitName" 💪',
+        scheduled,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'viora_habit_reminder',
+            'Nhắc nhở thói quen',
+            channelDescription: 'Thông báo nhắc nhở từng thói quen theo giờ thiết lập',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/ic_launcher',
+          ),
+          iOS: DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
+        ),
+        androidScheduleMode: scheduleMode,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+        payload: 'tab:1',
+      );
+      print('[HabitReminder] Scheduled habit reminder id=$notifId ($habitName) at $hour:${minute.toString().padLeft(2, "0")} using $scheduleMode');
+    } catch (e) {
+      print('[HabitReminder] Error scheduling habit reminder id=$notifId: $e');
+    }
+  }
+
+  /// Hủy thông báo nhắc nhở của một thói quen.
+  /// Gọi khi người dùng đạt đủ mục tiêu trong ngày.
+  static Future<void> cancelHabitReminders(int habitId) async {
+    await init();
+    final notifId = 100 + habitId;
+    await _plugin.cancel(notifId);
+    print('[HabitReminder] Cancelled habit reminder notifId=$notifId (habit=$habitId)');
   }
 }

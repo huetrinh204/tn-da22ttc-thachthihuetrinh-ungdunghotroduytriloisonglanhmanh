@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import 'admin_screen.dart';
@@ -340,12 +341,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
                         color: isSel
-                            ? const Color(0xFFE8F5E9)
+                            ? AppColors.primaryLight
                             : const Color(0xFFF5F5F5),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSel
-                              ? const Color(0xFF4CAF50)
+                              ? AppColors.primary
                               : Colors.transparent,
                           width: 1.5,
                         ),
@@ -356,7 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: isSel
-                              ? const Color(0xFF2E7D32)
+                              ? AppColors.primaryDark
                               : Colors.black87,
                         ),
                       ),
@@ -518,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: VioraAppBar(title: l10n.profile),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
+              child: CircularProgressIndicator(color: AppColors.primary))
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -978,11 +979,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+          colors: [AppColors.primaryDark, AppColors.primary, Color(0xFF00845F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -1034,7 +1042,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 // Camera badge
                 if (!_isUploadingAvatar)
-                  Positioned(
+                                  Positioned(
                     bottom: 0,
                     right: 0,
                     child: Container(
@@ -1042,9 +1050,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF4CAF50), width: 1.5),
+                        border: Border.all(color: AppColors.primary, width: 1.5),
                       ),
-                      child: const Icon(Icons.camera_alt, size: 14, color: Color(0xFF4CAF50)),
+                      child: const Icon(Icons.camera_alt, size: 14, color: AppColors.primary),
                     ),
                   ),
               ],
@@ -1106,16 +1114,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildTile(String label, String value, IconData icon,
       {VoidCallback? onTap}) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF4CAF50), size: 22),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: AppColors.primary, size: 18),
+      ),
       title: Text(label,
-          style: TextStyle(fontSize: 14, color: context.textSecondary)),
+          style: TextStyle(fontSize: 13, color: context.textSecondary)),
       subtitle: Text(value,
           style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               color: context.textPrimary)),
       trailing: onTap != null
-          ? Icon(Icons.chevron_right, color: context.textSecondary)
+          ? Icon(Icons.chevron_right_rounded, color: context.textSecondary, size: 20)
           : null,
       onTap: onTap,
     );
@@ -1131,20 +1147,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       color = Colors.blue;
     } else if (bmi < 25) {
       category = l10n.normal;
-      color = const Color(0xFF4CAF50);
+      color = AppColors.primary;
     } else if (bmi < 30) {
       category = l10n.overweight;
-      color = Colors.orange;
+      color = AppColors.warning;
     } else {
       category = l10n.obese;
-      color = Colors.red;
+      color = AppColors.error;
     }
 
     return ListTile(
-      leading: const Icon(Icons.calculate_outlined,
-          color: Color(0xFF4CAF50), size: 22),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.calculate_outlined, color: AppColors.primary, size: 18),
+      ),
       title: Text(l10n.bmi,
-          style: TextStyle(fontSize: 14, color: context.textSecondary)),
+          style: TextStyle(fontSize: 13, color: context.textSecondary)),
       subtitle: Row(
         children: [
           Text(bmi.toStringAsFixed(1),
@@ -1178,10 +1201,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .toList();
 
     return ListTile(
-      leading: const Icon(Icons.flag_outlined,
-          color: Color(0xFF4CAF50), size: 22),
+      leading: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.flag_outlined, color: AppColors.primary, size: 18),
+      ),
       title: Text(l10n.goals,
-          style: TextStyle(fontSize: 14, color: context.textSecondary)),
+          style: TextStyle(fontSize: 13, color: context.textSecondary)),
       subtitle: activeGoals.isEmpty
           ? Text(l10n.noGoalsSelected,
               style: TextStyle(fontSize: 15, color: context.textPrimary))
@@ -1193,19 +1223,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
+                          color: AppColors.primaryLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           "${g["icon"]} ${g["label"]}",
                           style: const TextStyle(
                               fontSize: 12,
-                              color: Color(0xFF2E7D32)),
+                              color: AppColors.primaryDark),
                         ),
                       ))
                   .toList(),
             ),
-      trailing: Icon(Icons.chevron_right, color: context.textSecondary),
+      trailing: Icon(Icons.chevron_right_rounded, color: context.textSecondary, size: 20),
       onTap: _showEditGoalsSheet,
     );
   }
@@ -1325,24 +1355,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {String? suffixText, String? error, Widget? suffix}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-      prefixIcon: Icon(icon, color: Colors.grey, size: 20),
+      hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+      prefixIcon: Icon(icon, color: AppColors.textSecondary, size: 20),
       suffixText: suffixText,
       suffixIcon: suffix,
       errorText: error,
       filled: true,
-      fillColor: const Color(0xFFF5F5F5),
+      fillColor: AppColors.background,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.border),
+      ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 1.5),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.red, width: 1),
+        borderSide: const BorderSide(color: AppColors.error, width: 1),
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1350,9 +1384,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   ButtonStyle _btnStyle() => ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
+        minimumSize: const Size(double.infinity, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       );
 }

@@ -8,6 +8,7 @@ import '../widgets/level_up_animation.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
@@ -185,67 +186,95 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       children: [
         Scaffold(
           body: _buildScreen(_currentIndex),
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.darkSurface
-                  : Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: BottomNavigationBar(
-                currentIndex: _currentIndex,
-                onTap: _onTabTapped,
-                selectedItemColor: AppColors.primary,
-                unselectedItemColor: const Color(0xFFBDBDBD),
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.darkSurface
-                    : Colors.white,
-                elevation: 0,
-                type: BottomNavigationBarType.fixed,
-                selectedFontSize: 11,
-                unselectedFontSize: 11,
-                items: [
-                  BottomNavigationBarItem(
-                    icon: const Icon(AppIcons.home, size: 22),
-                    activeIcon: const Icon(AppIcons.home, size: 22),
-                    label: AppLocalizations.of(context)!.today,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(AppIcons.habits, size: 22),
-                    activeIcon: const Icon(AppIcons.habits, size: 22),
-                    label: AppLocalizations.of(context)!.habits,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(AppIcons.community, size: 22),
-                    activeIcon: const Icon(AppIcons.community, size: 22),
-                    label: AppLocalizations.of(context)!.community,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(AppIcons.growth, size: 22),
-                    activeIcon: const Icon(AppIcons.growth, size: 22),
-                    label: AppLocalizations.of(context)!.grow,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(AppIcons.profile, size: 22),
-                    activeIcon: const Icon(AppIcons.profile, size: 22),
-                    label: AppLocalizations.of(context)!.navMe,
-                  ),
-                ],
-              ),
-            ),
-          ),
+          bottomNavigationBar: _buildBottomNavBar(context),
         ),
         if (globalLevelUpOverlay != null) globalLevelUpOverlay,
       ],
     );
   }
+
+  Widget _buildBottomNavBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final navItems = [
+      _NavItem(icon: AppIcons.home, label: l10n.today),
+      _NavItem(icon: AppIcons.habits, label: l10n.habits),
+      _NavItem(icon: AppIcons.community, label: l10n.community),
+      _NavItem(icon: AppIcons.growth, label: l10n.grow),
+      _NavItem(icon: AppIcons.profile, label: l10n.navMe),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(navItems.length, (i) {
+              final item = navItems[i];
+              final isSelected = _currentIndex == i;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => _onTabTapped(i),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary.withValues(alpha: isDark ? 0.2 : 0.1)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item.icon,
+                          size: 22,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF)),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF)),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem {
+  final IconData icon;
+  final String label;
+  const _NavItem({required this.icon, required this.label});
 }
 
 class _DashboardTab extends StatefulWidget {
@@ -484,76 +513,61 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   @override
   Widget build(BuildContext context) {
     final progress = totalToday == 0 ? 0.0 : completedToday / totalToday;
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF0F1A0F) : const Color(0xFFF1F8E9);
-    final gradColors = isDark
-        ? [const Color(0xFF0F1A0F), const Color(0xFF1A2E1A), const Color(0xFF1E2E1E)]
-        : [const Color(0xFFE8F5E9), const Color(0xFFF1F8E9), const Color(0xFFFAFDFA)];
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
       appBar: VioraAppBar(
         showLogo: true,
         actions: [
           _buildNotificationButton(),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: gradColors,
-            stops: const [0.0, 0.4, 1.0],
-          ),
-        ),
-        child: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)))
-          : RefreshIndicator(
-              onRefresh: _loadData,
-              color: const Color(0xFF4CAF50),
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  if (profileIncomplete) ...[
-                    _buildProfileIncompleteBanner(),
-                    const SizedBox(height: 16),
-                  ],
-                  // Greeting
-                  Text(
-                    "${_getGreeting()}${userName.isNotEmpty ? ', $userName' : ''} 👋",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getTodayLabel(),
-                    style: TextStyle(fontSize: 14, color: context.textSecondary),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Streak card
-                  _buildStreakCard(),
+      body: isLoading
+        ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+        : RefreshIndicator(
+            onRefresh: _loadData,
+            color: AppColors.primary,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              children: [
+                if (profileIncomplete) ...[
+                  _buildProfileIncompleteBanner(),
                   const SizedBox(height: 16),
-
-                  // Plant card
-                  _buildPlantCard(),
-                  const SizedBox(height: 16),
-
-                  // Today progress card
-                  _buildTodayCard(progress),
-                  const SizedBox(height: 16),
-
-                  // Motivational quote
-                  _buildQuoteCard(),
                 ],
-              ),
+                // Greeting
+                Text(
+                  "${_getGreeting()}${userName.isNotEmpty ? ', $userName' : ''} 👋",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _getTodayLabel(),
+                  style: TextStyle(fontSize: 14, color: context.textSecondary),
+                ),
+                const SizedBox(height: 24),
+
+                // Streak card
+                _buildStreakCard(),
+                const SizedBox(height: 16),
+
+                // Plant card
+                _buildPlantCard(),
+                const SizedBox(height: 16),
+
+                // Today progress card
+                _buildTodayCard(progress),
+                const SizedBox(height: 16),
+
+                // Motivational quote
+                _buildQuoteCard(),
+              ],
             ),
-        ),
+          ),
     );
   }
 
@@ -568,7 +582,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   Widget _buildPlantCard() {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
+    final cardColor = isDark ? AppColors.darkSurface : AppColors.surface;
     return Material(
       color: cardColor,
       borderRadius: BorderRadius.circular(20),
@@ -662,7 +676,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     final l10n = AppLocalizations.of(context)!;
     return Material(
       color: const Color(0xFFFFF8E1),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -670,12 +684,20 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
             MaterialPageRoute(builder: (_) => const OnboardingScreen()),
           ).then((_) => _loadData());
         },
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              const Text('✨', style: TextStyle(fontSize: 22)),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3CD),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(child: Text('✨', style: TextStyle(fontSize: 22))),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -685,10 +707,11 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                       l10n.completeProfileBanner,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
+                        fontSize: 14,
                         color: Color(0xFF5D4037),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       l10n.completeProfileBannerAction,
                       style: const TextStyle(
@@ -699,7 +722,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF8D6E63)),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF8D6E63), size: 20),
             ],
           ),
         ),
@@ -713,16 +736,16 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF43A047)],
+          colors: [AppColors.primaryDark, AppColors.primary, Color(0xFF00845F)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2E7D32).withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -786,36 +809,22 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   }
 
   Color _getProgressColor(double progress) {
-    if (progress == 0.0) {
-      return const Color(0xFFD32F2F); // Red
-    }
+    if (progress == 0.0) return AppColors.error;
     if (progress < 0.35) {
-      return Color.lerp(
-        const Color(0xFFD32F2F), // Red
-        const Color(0xFFF57C00), // Orange
-        progress / 0.35,
-      )!;
+      return Color.lerp(AppColors.error, AppColors.warning, progress / 0.35)!;
     } else if (progress < 0.7) {
-      return Color.lerp(
-        const Color(0xFFF57C00), // Orange
-        const Color(0xFFFBC02D), // Amber/Yellow
-        (progress - 0.35) / 0.35,
-      )!;
+      return Color.lerp(AppColors.warning, const Color(0xFFFBC02D), (progress - 0.35) / 0.35)!;
     } else if (progress < 1.0) {
-      return Color.lerp(
-        const Color(0xFFFBC02D), // Amber/Yellow
-        const Color(0xFF4CAF50), // Green
-        (progress - 0.7) / 0.3,
-      )!;
+      return Color.lerp(const Color(0xFFFBC02D), AppColors.primary, (progress - 0.7) / 0.3)!;
     } else {
-      return const Color(0xFF2E7D32); // Deep Green
+      return AppColors.primaryDark;
     }
   }
 
   Widget _buildTodayCard(double progress) {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? const Color(0xFF1E2E1E) : Colors.white;
+    final cardColor = isDark ? AppColors.darkSurface : AppColors.surface;
     final allDone = completedToday == totalToday && totalToday > 0;
     return Material(
       color: cardColor,
@@ -846,11 +855,11 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
+                          color: AppColors.primaryLight,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(AppIcons.calendarCheck,
-                            color: Color(0xFF2E7D32), size: 18),
+                            color: AppColors.primary, size: 18),
                       ),
                       const SizedBox(width: 10),
                       Text(
@@ -867,8 +876,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: allDone
-                          ? const Color(0xFFE8F5E9)
-                          : const Color(0xFFF5F5F5),
+                          ? AppColors.primaryLight
+                          : AppColors.border.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -877,8 +886,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: allDone
-                            ? const Color(0xFF2E7D32)
-                            : const Color(0xFF666666),
+                            ? AppColors.primaryDark
+                            : context.textSecondary,
                       ),
                     ),
                   ),
@@ -893,11 +902,11 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                       : (completedToday == 0 ? 0.06 : progress),
                   minHeight: 10,
                   backgroundColor: (totalToday > 0 && completedToday == 0)
-                      ? const Color(0xFFFFEBEE)
-                      : const Color(0xFFE8F5E9),
+                      ? AppColors.error.withValues(alpha: 0.1)
+                      : AppColors.primaryLight,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     totalToday == 0
-                        ? const Color(0xFFBDBDBD)
+                        ? AppColors.border
                         : _getProgressColor(progress),
                   ),
                 ),
@@ -911,8 +920,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                         : l10n.habitsRemaining(totalToday - completedToday),
                 style: TextStyle(
                   fontSize: 13,
-                  color: allDone ? const Color(0xFF2E7D32) : Colors.grey,
-                  fontWeight: allDone ? FontWeight.w500 : FontWeight.normal,
+                  color: allDone ? AppColors.primary : context.textSecondary,
+                  fontWeight: allDone ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
               if (totalToday == 0) ...[

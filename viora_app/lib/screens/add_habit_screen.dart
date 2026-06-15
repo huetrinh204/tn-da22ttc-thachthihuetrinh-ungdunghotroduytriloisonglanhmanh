@@ -13,8 +13,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   String _selectedCategory = 'hydration';
   String _selectedIcon = '💧';
   double _dailyGoal = 2000;
-  TimeOfDay _reminderTime = const TimeOfDay(hour: 8, minute: 0);
-  bool _reminderEnabled = true;
 
   @override
   void dispose() {
@@ -70,8 +68,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           _buildIconSection(),
           const SizedBox(height: 16),
           _buildDailyGoalSection(),
-          const SizedBox(height: 16),
-          _buildReminderSection(),
           const SizedBox(height: 16),
           _buildMotivationalQuote(),
           const SizedBox(height: 24),
@@ -458,112 +454,6 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  Widget _buildReminderSection() {
-    final hour = _reminderTime.hourOfPeriod == 0 ? 12 : _reminderTime.hourOfPeriod;
-    final minute = _reminderTime.minute.toString().padLeft(2, '0');
-    final period = _reminderTime.period == DayPeriod.am ? 'AM' : 'PM';
-    final timeStr = '${hour.toString().padLeft(2, '0')}:$minute $period';
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'NHẮC NHỞ',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF7E8A85),
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Thông báo\ncho tôi vào\nlúc',
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 1.4,
-                    color: Color(0xFF1E352F),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              InkWell(
-                onTap: () async {
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: _reminderTime,
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.light(
-                            primary: Color(0xFF0F623F),
-                            onPrimary: Colors.white,
-                            onSurface: Color(0xFF1E352F),
-                          ),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  );
-                  if (time != null) {
-                    setState(() => _reminderTime = time);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF4F6F4),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        timeStr,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF0F623F),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        LucideIcons.clock,
-                        size: 18,
-                        color: Color(0xFF0F623F),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Switch(
-                value: _reminderEnabled,
-                onChanged: (value) => setState(() => _reminderEnabled = value),
-                activeColor: Colors.white,
-                activeTrackColor: const Color(0xFF0F623F),
-                inactiveTrackColor: const Color(0xFFE5ECE8),
-                inactiveThumbColor: Colors.white,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMotivationalQuote() {
     return Container(
       padding: const EdgeInsets.all(24),
@@ -615,8 +505,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       'category': _selectedCategory,
       'icon': _selectedIcon,
       'daily_goal': _dailyGoal,
-      'reminder_time': '${_reminderTime.hour}:${_reminderTime.minute}',
-      'reminder_enabled': _reminderEnabled,
+      'reminder_enabled': false,
+      'reminder_time': null,
     });
   }
 }

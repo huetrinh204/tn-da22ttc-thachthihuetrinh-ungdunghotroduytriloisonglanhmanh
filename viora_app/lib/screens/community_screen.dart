@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
 import 'create_post_screen.dart';
@@ -252,7 +253,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: const BoxDecoration(
-                      color: Colors.red,
+                      color: AppColors.error,
                       shape: BoxShape.circle,
                     ),
                     constraints: const BoxConstraints(
@@ -748,7 +749,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -760,7 +761,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                           "${post.daysStreak} ${l10n.days}",
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Color(0xFFFF9800),
+                            color: AppColors.warning,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -875,7 +876,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                 _buildActionIcon(
                   icon: post.isLiked ? AppIcons.heartFilled : AppIcons.heart,
                   label: l10n.likes(post.likeCount),
-                  color: post.isLiked ? Colors.red : context.textSecondary,
+                  color: post.isLiked ? AppColors.error : context.textSecondary,
                   onTap: () => _handleLike(post),
                 ),
                 const SizedBox(width: 20),

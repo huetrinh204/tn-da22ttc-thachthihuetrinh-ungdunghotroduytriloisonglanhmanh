@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
 import '../constants/app_icons.dart';
 
 /// AppBar chuẩn dùng chung — hiển thị logo Viora ở title
@@ -32,8 +33,8 @@ class VioraAppBar extends StatelessWidget implements PreferredSizeWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final appBarBg = isDark ? AppColors.darkSurface : Colors.white;
-    final titleColor = isDark ? const Color(0xFF81C784) : AppColors.primaryDarker;
-    final iconColor = isDark ? const Color(0xFF81C784) : AppColors.primaryDark;
+    final titleColor = isDark ? AppColors.primaryLight : AppColors.primaryDark;
+    final iconColor = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return AppBar(
       backgroundColor: appBarBg,

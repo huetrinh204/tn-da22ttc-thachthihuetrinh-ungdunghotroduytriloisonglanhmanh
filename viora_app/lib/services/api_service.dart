@@ -253,6 +253,8 @@ class ApiService {
     String icon = "⭐",
     String color = "#4CAF50",
     int? targetCount,
+    String? reminderTime,
+    bool reminderEnabled = true,
   }) async {
     try {
       final response = await http.post(
@@ -267,6 +269,8 @@ class ApiService {
           "icon": icon,
           "color": color,
           if (targetCount != null) "target_count": targetCount,
+          if (reminderTime != null) "reminder_time": reminderTime,
+          "reminder_enabled": reminderEnabled,
         }),
       );
       final data = jsonDecode(response.body);
@@ -276,6 +280,7 @@ class ApiService {
       return {"message": "Network error"};
     }
   }
+
 
   // ================= GET ACHIEVEMENTS =================
   static Future<Map<String, dynamic>> getAchievements(String token) async {
@@ -470,6 +475,8 @@ class ApiService {
     String icon = "⭐",
     String color = "#4CAF50",
     int? targetCount,
+    String? reminderTime,
+    bool reminderEnabled = true,
   }) async {
     try {
       final response = await http.put(
@@ -484,6 +491,8 @@ class ApiService {
           "icon": icon,
           "color": color,
           if (targetCount != null) "target_count": targetCount,
+          "reminder_time": reminderEnabled ? reminderTime : null,
+          "reminder_enabled": reminderEnabled,
         }),
       );
       final data = jsonDecode(response.body);

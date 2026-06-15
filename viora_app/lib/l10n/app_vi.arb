@@ -342,7 +342,7 @@
   "notSure": "Chưa chắc",
   "completedExclaim": "Đã hoàn thành!",
   "deleteHabit": "Xóa thói quen?",
-  "confirmDeleteHabit": "Bạn có chắc muốn xóa \\\"{name}\\\" không?",
+  "confirmDeleteHabit": "Bạn có chắc chắn muốn xóa thói quen “{name}” không?",
   "@confirmDeleteHabit": {
     "placeholders": {
       "name": {

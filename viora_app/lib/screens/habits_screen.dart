@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../services/flow_prefs.dart';
 import '../services/notification_inbox_store.dart';
+import '../services/notification_service.dart';
 import '../navigation/app_navigation.dart';
 import '../widgets/achievement_popup.dart';
 import '../widgets/app_snackbar.dart';
@@ -11,6 +12,7 @@ import '../widgets/points_fly_animation.dart';
 import '../widgets/habit_icon.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import 'stats_screen.dart';
 import 'add_habit_screen.dart';
@@ -66,6 +68,25 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     final res = await ApiService.getTodayHabits(token);
     final list = res["habits"] ?? [];
+    
+    // Auto-schedule / update reminders on launch/load
+    for (final h in list) {
+      final habitId = h["id"] as int?;
+      final isCompleted = h["is_completed"] == 1;
+      final reminderTime = h["reminder_time"] as String?;
+      if (habitId != null && reminderTime != null && reminderTime.isNotEmpty) {
+        if (isCompleted) {
+          await NotificationService.cancelHabitReminders(habitId);
+        } else {
+          await NotificationService.scheduleHabitReminders(
+            habitId: habitId,
+            habitName: h["name"] ?? "",
+            reminderTime: reminderTime,
+          );
+        }
+      }
+    }
+
     final showOnboardingReady = await FlowPrefs.consumeOnboardingHabitsReady();
     if (mounted) {
       setState(() {
@@ -136,6 +157,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
         habits[idx]["is_completed"] = serverCompleted ? 1 : 0;
       }
     });
+
+    // Nếu đã hoàn thành mục tiêu, hủy các thông báo nhắc nhở còn lại trong ngày
+    if (serverCompleted) {
+      await NotificationService.cancelHabitReminders(habitId);
+    }
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -290,16 +316,16 @@ class _HabitsScreenState extends State<HabitsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
+                color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF81C784)),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(
                     Icons.bar_chart_rounded,
-                    color: Color(0xFF2E7D32),
+                    color: AppColors.primary,
                     size: 22,
                   ),
                   const SizedBox(width: 10),
@@ -309,7 +335,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                       style: const TextStyle(
                         fontSize: 13,
                         height: 1.45,
-                        color: Color(0xFF1B5E20),
+                        color: AppColors.primaryDark,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -380,115 +406,142 @@ class _HabitsScreenState extends State<HabitsScreen> {
         metricUnit = null;
     }
 
-    return AlertDialog(
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       backgroundColor: ctx.cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Row(
-        children: [
-          const Text("✅ ", style: TextStyle(fontSize: 22)),
-          Text(
-            l10n.confirmCompletion,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: ctx.textPrimary,
-            ),
-          ),
-        ],
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.confirmHabitMessage,
-            style: TextStyle(
-              fontSize: 14,
-              color: ctx.textPrimary,
-              height: 1.5,
-            ),
-          ),
-          if (metricLabel != null) ...[
-            const SizedBox(height: 16),
-            Text(
-              metricLabel,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: ctx.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: metricController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: TextStyle(color: ctx.textPrimary),
-              decoration: InputDecoration(
-                hintText: l10n.enterNumberOptional,
-                hintStyle: TextStyle(color: ctx.textSecondary, fontSize: 14),
-                suffixText: metricUnit,
-                filled: true,
-                fillColor: ctx.inputFill,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-          ],
-        ],
-      ),
-      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      actions: [
-        Row(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(ctx, {"confirmed": false}),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: ctx.textSecondary,
-                  side: BorderSide(color: ctx.textSecondary.withValues(alpha: 0.3)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text(l10n.notSure),
+            // Icon Success/Confirmation
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: AppColors.primaryLight,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_outline_rounded,
+                color: AppColors.primary,
+                size: 36,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  final metricValue = metricController.text.trim().isNotEmpty
-                      ? double.tryParse(metricController.text.trim())
-                      : null;
-                  Navigator.pop(ctx, {
-                    "confirmed": true,
-                    "metric_value": metricValue,
-                    "metric_unit": metricUnit,
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text(l10n.completedExclaim),
+            const SizedBox(height: 20),
+            // Title
+            Text(
+              l10n.confirmCompletion,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: ctx.textPrimary,
               ),
+            ),
+            const SizedBox(height: 12),
+            // Message Description
+            Text(
+              l10n.confirmHabitMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: ctx.textSecondary,
+                height: 1.45,
+              ),
+            ),
+            if (metricLabel != null) ...[
+              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  metricLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: ctx.textSecondary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: metricController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: TextStyle(color: ctx.textPrimary),
+                decoration: InputDecoration(
+                  hintText: l10n.enterNumberOptional,
+                  hintStyle: TextStyle(color: ctx.textSecondary.withValues(alpha: 0.6), fontSize: 14),
+                  suffixText: metricUnit,
+                  filled: true,
+                  fillColor: ctx.inputFill,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
+            const SizedBox(height: 28),
+            // Actions
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx, {"confirmed": false}),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      l10n.notSure,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final metricValue = metricController.text.trim().isNotEmpty
+                          ? double.tryParse(metricController.text.trim())
+                          : null;
+                      Navigator.pop(ctx, {
+                        "confirmed": true,
+                        "metric_value": metricValue,
+                        "metric_unit": metricUnit,
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      l10n.completedExclaim,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
@@ -504,6 +557,17 @@ class _HabitsScreenState extends State<HabitsScreen> {
     String selectedIcon = habit["icon"]?.toString() ?? "⭐";
     final habitId = habit["id"] as int;
     final icons = ["⭐", "🏃", "🥗", "💧", "😴", "🧘", "📚", "🎯", "💪", "🌿"];
+
+    TimeOfDay reminderTime = const TimeOfDay(hour: 8, minute: 0);
+    bool reminderEnabled = habit["reminder_time"] != null;
+    if (habit["reminder_time"] != null) {
+      final parts = habit["reminder_time"].toString().split(':');
+      if (parts.length >= 2) {
+        final h = int.tryParse(parts[0]) ?? 8;
+        final m = int.tryParse(parts[1]) ?? 0;
+        reminderTime = TimeOfDay(hour: h, minute: m);
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -568,12 +632,86 @@ class _HabitsScreenState extends State<HabitsScreen> {
                     label: HabitIcon(
                       iconString: icon,
                       size: 20,
-                      color: selectedIcon == icon ? const Color(0xFF4CAF50) : null,
+                      color: selectedIcon == icon ? AppColors.primary : null,
                     ),
                     selected: selectedIcon == icon,
                     onSelected: (_) => setSheetState(() => selectedIcon = icon),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.habitReminders,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: ctx.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: reminderTime,
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: AppColors.primary,
+                                onPrimary: Colors.white,
+                                onSurface: context.textPrimary,
+                              ),
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (time != null) {
+                        setSheetState(() => reminderTime = time);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ctx.inputFill,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            '${reminderTime.hour.toString().padLeft(2, '0')}:${reminderTime.minute.toString().padLeft(2, '0')}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.access_time,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Switch(
+                    value: reminderEnabled,
+                    onChanged: (value) => setSheetState(() => reminderEnabled = value),
+                    activeColor: Colors.white,
+                    activeTrackColor: AppColors.primary,
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -582,16 +720,33 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   onPressed: () async {
                     if (nameController.text.trim().isEmpty) return;
                     Navigator.pop(ctx);
+                    final reminderTimeStr = '${reminderTime.hour}:${reminderTime.minute}';
                     final res = await ApiService.updateHabit(
                       token: token,
                       habitId: habitId,
                       name: nameController.text.trim(),
                       category: selectedCategory,
                       icon: selectedIcon,
+                      reminderTime: reminderTimeStr,
+                      reminderEnabled: reminderEnabled,
                     );
                     if (!mounted) return;
                     if (res["message"] == null ||
                         res["message"] == "Habit updated") {
+                      if (reminderEnabled) {
+                        final isCompleted = habit["is_completed"] == 1;
+                        if (isCompleted) {
+                          await NotificationService.cancelHabitReminders(habitId);
+                        } else {
+                          await NotificationService.scheduleHabitReminders(
+                            habitId: habitId,
+                            habitName: nameController.text.trim(),
+                            reminderTime: reminderTimeStr,
+                          );
+                        }
+                      } else {
+                        await NotificationService.cancelHabitReminders(habitId);
+                      }
                       loadHabits();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -628,20 +783,37 @@ class _HabitsScreenState extends State<HabitsScreen> {
     if (result == null || !mounted) return;
     
     final habitData = result as Map<String, dynamic>;
+    final reminderEnabled = habitData['reminder_enabled'] as bool? ?? false;
+    final reminderTime = habitData['reminder_time'] as String?;
+
     final res = await ApiService.createHabit(
       token: token,
       name: habitData['name'],
       category: habitData['category'],
       icon: habitData['icon'],
       targetCount: (habitData['daily_goal'] as double?)?.toInt(),
+      reminderTime: reminderEnabled ? reminderTime : null,
+      reminderEnabled: reminderEnabled,
     );
     
     if (!mounted) return;
     
     if (res['habit'] != null) {
-      await _onHabitCreated(
-        Map<String, dynamic>.from(res['habit'] as Map),
-      );
+      final newHabit = Map<String, dynamic>.from(res['habit'] as Map);
+      await _onHabitCreated(newHabit);
+
+      // Lên lịch thông báo nhắc nhở nếu người dùng đã bật
+      if (reminderEnabled && reminderTime != null && reminderTime.isNotEmpty) {
+        final habitId = newHabit['id'] as int?;
+        final habitName = newHabit['name'] as String? ?? habitData['name'];
+        if (habitId != null) {
+          await NotificationService.scheduleHabitReminders(
+            habitId: habitId,
+            habitName: habitName,
+            reminderTime: reminderTime,
+          );
+        }
+      }
     } else {
       AppSnackbar.showError(
         context,
@@ -665,7 +837,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     Widget bodyContent;
     if (isLoading) {
       bodyContent = const Center(
-        child: CircularProgressIndicator(color: Color(0xFF0F623F)),
+        child: CircularProgressIndicator(color: AppColors.primary),
       );
     } else if (habits.isEmpty) {
       bodyContent = _buildEmptyState();
@@ -673,14 +845,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
       bodyContent = ListView(
         physics: const BouncingScrollPhysics(),
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Text(
               'Thói quen của tôi',
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1E352F),
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -712,7 +884,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: const Color(0xFFF9FAF7),
+          backgroundColor: AppColors.background,
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -720,13 +892,26 @@ class _HabitsScreenState extends State<HabitsScreen> {
             actions: [
               IconButton(
                 key: _treeIconKey,
-                icon: const Icon(Icons.eco_rounded, color: Color(0xFF0F623F), size: 26),
+                icon: const Icon(Icons.eco_rounded, color: AppColors.primary, size: 26),
                 tooltip: l10n.myPlant,
                 onPressed: () => AppNavigation.openPlant(),
               ),
               IconButton(
+                icon: const Icon(Icons.notification_important_rounded, color: AppColors.primary, size: 24),
+                tooltip: "Test thông báo",
+                onPressed: () async {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đang gửi thông báo test sau 10 giây...'),
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                  await NotificationService.sendTestNotification();
+                },
+              ),
+              IconButton(
                 key: widget.statsCoachKey,
-                icon: const Icon(Icons.bar_chart_rounded, color: Color(0xFF0F623F), size: 24),
+                icon: const Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 24),
                 tooltip: l10n.statsTitle,
                 onPressed: () => Navigator.push(
                   context,
@@ -741,7 +926,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               ? null
               : FloatingActionButton.extended(
                   onPressed: showAddHabitSheet,
-                  backgroundColor: const Color(0xFF0F623F),
+                  backgroundColor: AppColors.primary,
                   elevation: 4,
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: const Text(
@@ -768,7 +953,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFECEFEB),
+        color: context.inputFill,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -779,7 +964,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _activeTabIndex == 0 ? Colors.white : Colors.transparent,
+                  color: _activeTabIndex == 0 ? context.cardColor : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -787,7 +972,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                     'Đang thực hiện',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: _activeTabIndex == 0 ? const Color(0xFF0F623F) : const Color(0xFF7E8A85),
+                      color: _activeTabIndex == 0 ? AppColors.primary : context.textSecondary,
                       fontSize: 14,
                     ),
                   ),
@@ -801,7 +986,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: _activeTabIndex == 1 ? Colors.white : Colors.transparent,
+                  color: _activeTabIndex == 1 ? context.cardColor : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
@@ -809,7 +994,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                     'Đã hoàn thành',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: _activeTabIndex == 1 ? const Color(0xFF0F623F) : const Color(0xFF7E8A85),
+                      color: _activeTabIndex == 1 ? AppColors.primary : context.textSecondary,
                       fontSize: 14,
                     ),
                   ),
@@ -827,7 +1012,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF5EF),
+        color: AppColors.primaryLight,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -837,7 +1022,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               '"Sức khỏe là lựa chọn, không phải sự tình cờ. Hãy kiên trì với những thói quen nhỏ mỗi ngày nhé!"',
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF0F623F),
+                color: AppColors.primary,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
               ),
@@ -847,7 +1032,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           Icon(
             LucideIcons.sprout,
             size: 48,
-            color: const Color(0xFF0F623F).withValues(alpha: 0.5),
+            color: AppColors.primary.withValues(alpha: 0.5),
           ),
         ],
       ),
@@ -894,7 +1079,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         width: 36,
         height: 36,
         decoration: const BoxDecoration(
-          color: Color(0xFF0F623F),
+          color: AppColors.primary,
           shape: BoxShape.circle,
         ),
         child: const Icon(Icons.check, color: Colors.white, size: 20),
@@ -907,11 +1092,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: const Color(0xFF0F623F), width: 1.5),
+          border: Border.all(color: AppColors.primary, width: 1.5),
         ),
         child: Icon(
           isProgressType ? Icons.add : Icons.play_arrow,
-          color: const Color(0xFF0F623F),
+          color: AppColors.primary,
           size: 20,
         ),
       );
@@ -933,20 +1118,93 @@ class _HabitsScreenState extends State<HabitsScreen> {
       confirmDismiss: (_) async {
         return await showDialog(
           context: context,
-          builder: (_) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Text(l10n.deleteHabit),
-            content: Text(l10n.confirmDeleteHabit(habit["name"])),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(l10n.cancel, style: const TextStyle(color: Colors.grey)),
+          builder: (dialogCtx) => Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor: context.cardColor,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.error,
+                      size: 36,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.deleteHabit,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.confirmDeleteHabit(habit["name"]),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: context.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(dialogCtx, false),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.grey.shade300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            l10n.cancel,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(dialogCtx, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            l10n.delete,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-              ),
-            ],
+            ),
           ),
         );
       },
@@ -985,14 +1243,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
                     width: 48,
                     height: 48,
                     decoration: const BoxDecoration(
-                      color: Color(0xFFEAF5EF),
+                      color: AppColors.primaryLight,
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: HabitIcon(
                         iconString: habit["icon"] ?? categoryIcon,
                         size: 24,
-                        color: const Color(0xFF0F623F),
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
@@ -1005,10 +1263,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
                       children: [
                         Text(
                           habit["name"] ?? "",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E352F),
+                            color: context.textPrimary,
                           ),
                         ),
                         if (currentStreak > 0) ...[
@@ -1018,7 +1276,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                               const Icon(
                                 Icons.local_fire_department,
                                 size: 14,
-                                color: Color(0xFF0F623F),
+                                color: AppColors.warning,
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -1026,7 +1284,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0F623F),
+                                  color: AppColors.warning,
                                 ),
                               ),
                             ],
@@ -1056,11 +1314,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Tiến độ',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF7E8A85),
+                      color: context.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1069,7 +1327,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: isCompleted ? const Color(0xFF0F623F) : const Color(0xFF1E352F),
+                      color: isCompleted ? AppColors.primary : context.textPrimary,
                     ),
                   ),
                 ],
@@ -1081,8 +1339,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress,
-                  backgroundColor: const Color(0xFFF4F6F4),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F623F)),
+                  backgroundColor: context.inputFill,
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                   minHeight: 6,
                 ),
               ),
@@ -1121,7 +1379,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
             icon: const Icon(Icons.add),
             label: Text(l10n.addHabit),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),

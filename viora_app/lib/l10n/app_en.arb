@@ -342,7 +342,7 @@
   "notSure": "Not sure",
   "completedExclaim": "Completed!",
   "deleteHabit": "Delete Habit?",
-  "confirmDeleteHabit": "Are you sure you want to delete \\\"{name}\\\"?",
+  "confirmDeleteHabit": "Are you sure you want to delete “{name}”?",
   "@confirmDeleteHabit": {
     "placeholders": {
       "name": {
