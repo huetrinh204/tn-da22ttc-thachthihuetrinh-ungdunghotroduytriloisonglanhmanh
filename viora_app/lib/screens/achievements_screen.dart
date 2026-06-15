@@ -5,6 +5,7 @@ import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/app_snackbar.dart';
+import '../constants/app_icons.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -21,15 +22,15 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   List<Map<String, dynamic>> get _allAchievements {
     final l10n = AppLocalizations.of(context)!;
     return [
-      {"key": "first_checkin",  "title": l10n.achievementFirstStep,    "icon": "🌱", "desc": l10n.achievementFirstStepDesc,      "color": 0xFF4CAF50},
-      {"key": "streak_3",       "title": l10n.achievementStreak3, "icon": "🔥", "desc": l10n.achievementStreak3Desc,   "color": 0xFFFF7043},
-      {"key": "streak_7",       "title": l10n.achievementStreak7,    "icon": "⚡", "desc": l10n.achievementStreak7Desc,   "color": 0xFFFFB300},
-      {"key": "streak_30",      "title": l10n.achievementStreak30,     "icon": "🏆", "desc": l10n.achievementStreak30Desc,  "color": 0xFFFFD700},
-      {"key": "habits_5",       "title": l10n.achievementHabits5,         "icon": "🎯", "desc": l10n.achievementHabits5Desc,                   "color": 0xFF7C4DFF},
-      {"key": "checkin_50",     "title": l10n.achievementCheckin50,         "icon": "💪", "desc": l10n.achievementCheckin50Desc,           "color": 0xFF00BCD4},
-      {"key": "checkin_100",    "title": l10n.achievementCheckin100,       "icon": "🌟", "desc": l10n.achievementCheckin100Desc,          "color": 0xFFFF6F00},
-      {"key": "plant_level_3",  "title": l10n.achievementPlantLevel3,          "icon": "🪴", "desc": l10n.achievementPlantLevel3Desc,              "color": 0xFF43A047},
-      {"key": "plant_level_5",  "title": l10n.achievementPlantLevel5,   "icon": "🌳", "desc": l10n.achievementPlantLevel5Desc,         "color": 0xFF1B5E20},
+      {"key": "first_checkin",  "title": l10n.achievementFirstStep,    "icon": AppIcons.sprout, "emoji": "🌱", "desc": l10n.achievementFirstStepDesc,      "color": 0xFF4CAF50},
+      {"key": "streak_3",       "title": l10n.achievementStreak3, "icon": AppIcons.streak, "emoji": "🔥", "desc": l10n.achievementStreak3Desc,   "color": 0xFFFF7043},
+      {"key": "streak_7",       "title": l10n.achievementStreak7,    "icon": AppIcons.zap, "emoji": "⚡", "desc": l10n.achievementStreak7Desc,   "color": 0xFFFFB300},
+      {"key": "streak_30",      "title": l10n.achievementStreak30,     "icon": AppIcons.trophy, "emoji": "🏆", "desc": l10n.achievementStreak30Desc,  "color": 0xFFFFD700},
+      {"key": "habits_5",       "title": l10n.achievementHabits5,         "icon": AppIcons.target, "emoji": "🎯", "desc": l10n.achievementHabits5Desc,                   "color": 0xFF7C4DFF},
+      {"key": "checkin_50",     "title": l10n.achievementCheckin50,         "icon": AppIcons.dumbbell, "emoji": "💪", "desc": l10n.achievementCheckin50Desc,           "color": 0xFF00BCD4},
+      {"key": "checkin_100",    "title": l10n.achievementCheckin100,       "icon": AppIcons.crown, "emoji": "🌟", "desc": l10n.achievementCheckin100Desc,          "color": 0xFFFF6F00},
+      {"key": "plant_level_3",  "title": l10n.achievementPlantLevel3,          "icon": AppIcons.sprout, "emoji": "🪴", "desc": l10n.achievementPlantLevel3Desc,              "color": 0xFF43A047},
+      {"key": "plant_level_5",  "title": l10n.achievementPlantLevel5,   "icon": AppIcons.tree, "emoji": "🌳", "desc": l10n.achievementPlantLevel5Desc,         "color": 0xFF1B5E20},
     ];
   }
 
@@ -143,7 +144,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
         children: [
           Row(
             children: [
-              const Text("🏆", style: TextStyle(fontSize: 32)),
+              Icon(AppIcons.trophy, color: Colors.white, size: 36),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,11 +228,10 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                       0.2126, 0.7152, 0.0722, 0, 0,
                       0,      0,      0,      1, 0,
                     ]),
-              child: Text(
-                ach["icon"] as String,
-                style: TextStyle(
-                    fontSize: isUnlocked ? 32 : 28,
-                    color: isUnlocked ? null : context.textSecondary),
+              child: Icon(
+                ach["icon"] as IconData,
+                size: isUnlocked ? 32 : 28,
+                color: isUnlocked ? color : context.textSecondary,
               ),
             ),
             const SizedBox(height: 6),
@@ -261,6 +261,7 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   void _showDetail(Map<String, dynamic> ach, String? date) {
     final l10n = AppLocalizations.of(context)!;
     bool isSharing = false;
+    final color = Color(ach["color"] as int);
 
     showDialog(
       context: context,
@@ -274,8 +275,11 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(ach["icon"] as String,
-                    style: const TextStyle(fontSize: 56)),
+                Icon(
+                  ach["icon"] as IconData,
+                  size: 56,
+                  color: color,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   ach["title"] as String,
@@ -321,10 +325,10 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                             setDialog(() => isSharing = true);
                             final prefs = await SharedPreferences.getInstance();
                             final token = prefs.getString('token') ?? '';
-                            final icon = ach['icon'] as String;
+                            final emoji = ach['emoji'] as String;
                             final title = ach['title'] as String;
                             final desc = ach['desc'] as String;
-                            final content = '$icon $title\n$desc';
+                            final content = '$emoji $title\n$desc';
                             await ApiService.createPost(
                               token: token,
                               content: content,
@@ -384,7 +388,11 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("🔒", style: TextStyle(fontSize: 48)),
+              Icon(
+                AppIcons.lock,
+                size: 48,
+                color: context.textSecondary,
+              ),
               const SizedBox(height: 12),
               Text(
                 ach["title"] as String,

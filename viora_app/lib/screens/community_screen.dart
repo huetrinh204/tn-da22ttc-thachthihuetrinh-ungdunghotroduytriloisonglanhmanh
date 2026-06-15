@@ -755,7 +755,7 @@ class _CommunityScreenState extends State<CommunityScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text("🔥", style: TextStyle(fontSize: 14)),
+                        Icon(AppIcons.streak, color: AppColors.warning, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           "${post.daysStreak} ${l10n.days}",

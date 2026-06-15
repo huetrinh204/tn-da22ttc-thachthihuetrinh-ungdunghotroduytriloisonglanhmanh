@@ -47,7 +47,26 @@ class AppIcons {
   static const calendar = LucideIcons.calendarCheck;
   
   /// Quote/health tip icon
-  static const quote = LucideIcons.messageCircle;
+  static const quote = LucideIcons.quote;
+  
+  // ========================================
+  // WELCOME & GENERAL ICONS
+  // ========================================
+  
+  /// Friendly smile icon for greetings
+  static const smile = LucideIcons.smile;
+  
+  /// Zap icon for achievements
+  static const zap = LucideIcons.zap;
+  
+  /// Target icon for achievements
+  static const target = LucideIcons.target;
+  
+  /// Dumbbell icon for achievements
+  static const dumbbell = LucideIcons.dumbbell;
+  
+  /// Crown icon for achievements
+  static const crown = LucideIcons.crown;
   
   // ========================================
   // HABIT ICONS

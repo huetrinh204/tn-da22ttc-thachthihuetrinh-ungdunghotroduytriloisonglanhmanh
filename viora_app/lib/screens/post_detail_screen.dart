@@ -6,6 +6,8 @@ import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_colors.dart';
+import '../constants/app_icons.dart';
 import '../l10n/app_localizations.dart';
 import 'user_profile_screen.dart';
 
@@ -323,7 +325,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         actions: [
           if (_isOwnPost)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.error),
+              icon: Icon(AppIcons.delete, color: AppColors.error),
               onPressed: _deletePost,
             ),
         ],
@@ -371,7 +373,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             color: context.inputFill,
                             child: Center(
                               child: Icon(
-                                Icons.image_outlined,
+                                AppIcons.image,
                                 size: 48,
                                 color: context.textSecondary,
                               ),
@@ -514,19 +516,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF9800).withValues(alpha: 0.1),
+                color: AppColors.warning.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text("🔥", style: TextStyle(fontSize: 16)),
+                  Icon(AppIcons.streak, color: AppColors.warning, size: 16),
                   const SizedBox(width: 4),
                   Text(
                     "${_post.daysStreak} ${l10n.days}",
                     style: const TextStyle(
                       fontSize: 13,
-                      color: Color(0xFFFF9800),
+                      color: AppColors.warning,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -544,14 +546,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       child: Row(
         children: [
           _buildActionButton(
-            icon: _post.isLiked ? Icons.favorite : Icons.favorite_border,
+            icon: _post.isLiked ? AppIcons.heartFilled : AppIcons.heart,
             label: l10n.likes(_post.likeCount),
-            color: _post.isLiked ? Colors.red : context.textSecondary,
+            color: _post.isLiked ? AppColors.error : context.textSecondary,
             onTap: _handleLike,
           ),
           const SizedBox(width: 20),
           _buildActionButton(
-            icon: Icons.chat_bubble_outline,
+            icon: AppIcons.message,
             label: l10n.comments(_post.commentCount),
             color: context.textSecondary,
             onTap: () {},
@@ -630,7 +632,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           child: Column(
             children: [
               Icon(
-                Icons.chat_bubble_outline,
+                AppIcons.message,
                 size: 48,
                 color: context.textSecondary,
               ),
@@ -775,9 +777,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         child: Row(
                           children: [
                             Icon(
-                              comment.isLiked ? Icons.favorite : Icons.favorite_border,
+                              comment.isLiked ? AppIcons.heartFilled : AppIcons.heart,
                               size: 14,
-                              color: comment.isLiked ? Colors.red : context.textSecondary,
+                              color: comment.isLiked ? AppColors.error : context.textSecondary,
                             ),
                             if (comment.likeCount > 0) ...[
                               const SizedBox(width: 4),

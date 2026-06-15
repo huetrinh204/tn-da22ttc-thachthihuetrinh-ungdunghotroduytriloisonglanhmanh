@@ -141,25 +141,25 @@ class AppLocalizationsVi extends AppLocalizations {
   String get howToEarnPoints => 'Cách kiếm điểm';
 
   @override
-  String get earnTip1 => '✅ Hoàn thành ≥ 1 habit trong ngày';
+  String get earnTip1 => 'Hoàn thành ≥ 1 habit trong ngày';
 
   @override
   String get earnReward1 => '+1 điểm';
 
   @override
-  String get earnTip2 => '✅ Hoàn thành ≥ 50% habits trong ngày';
+  String get earnTip2 => 'Hoàn thành ≥ 50% habits trong ngày';
 
   @override
   String get earnReward2 => '+2 điểm';
 
   @override
-  String get earnTip3 => '🏆 Hoàn thành 100% habits trong ngày';
+  String get earnTip3 => 'Hoàn thành 100% habits trong ngày';
 
   @override
   String get earnReward3 => '+3 điểm';
 
   @override
-  String get earnTip4 => '⚠️ Không check-in 3 ngày liên tiếp';
+  String get earnTip4 => 'Không check-in 3 ngày liên tiếp';
 
   @override
   String get earnReward4 => 'Cây héo';

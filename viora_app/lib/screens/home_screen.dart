@@ -536,13 +536,24 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                   const SizedBox(height: 16),
                 ],
                 // Greeting
-                Text(
-                  "${_getGreeting()}${userName.isNotEmpty ? ', $userName' : ''} 👋",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: context.textPrimary,
-                  ),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      "${_getGreeting()}${userName.isNotEmpty ? ', $userName' : ''}",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      AppIcons.smile,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(

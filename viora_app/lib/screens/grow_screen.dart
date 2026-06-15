@@ -107,7 +107,7 @@ class _GrowScreenState extends State<GrowScreen> {
           ),
           child: Row(
             children: [
-              const Text('🔥', style: TextStyle(fontSize: 32)),
+              Icon(AppIcons.streak, color: Colors.white, size: 32),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -134,7 +134,7 @@ class _GrowScreenState extends State<GrowScreen> {
               ),
               Column(
                 children: [
-                  const Text('🏆', style: TextStyle(fontSize: 18)),
+                  Icon(AppIcons.trophy, color: Colors.amber.shade300, size: 22),
                   Text(
                     '$longestStreak',
                     style: const TextStyle(

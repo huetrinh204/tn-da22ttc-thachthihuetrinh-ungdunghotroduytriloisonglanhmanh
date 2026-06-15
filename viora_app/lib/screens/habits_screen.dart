@@ -14,6 +14,7 @@ import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/viora_app_bar.dart';
 import 'stats_screen.dart';
 import 'add_habit_screen.dart';
 
@@ -845,17 +846,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
       bodyContent = ListView(
         physics: const BouncingScrollPhysics(),
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Text(
-              'Thói quen của tôi',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: context.textPrimary,
-              ),
-            ),
-          ),
           _buildTabSelector(),
           const SizedBox(height: 8),
           if (filteredHabits.isEmpty)
@@ -884,20 +874,18 @@ class _HabitsScreenState extends State<HabitsScreen> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            scrolledUnderElevation: 0,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          appBar: VioraAppBar(
+            title: l10n.habits,
             actions: [
               IconButton(
                 key: _treeIconKey,
-                icon: const Icon(Icons.eco_rounded, color: AppColors.primary, size: 26),
+                icon: const Icon(Icons.eco_rounded, size: 26),
                 tooltip: l10n.myPlant,
                 onPressed: () => AppNavigation.openPlant(),
               ),
               IconButton(
-                icon: const Icon(Icons.notification_important_rounded, color: AppColors.primary, size: 24),
+                icon: const Icon(Icons.notification_important_rounded, size: 24),
                 tooltip: "Test thông báo",
                 onPressed: () async {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -911,7 +899,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
               ),
               IconButton(
                 key: widget.statsCoachKey,
-                icon: const Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 24),
+                icon: const Icon(Icons.bar_chart_rounded, size: 24),
                 tooltip: l10n.statsTitle,
                 onPressed: () => Navigator.push(
                   context,
@@ -1090,7 +1078,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.cardColor,
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.primary, width: 1.5),
         ),
@@ -1223,7 +1211,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(

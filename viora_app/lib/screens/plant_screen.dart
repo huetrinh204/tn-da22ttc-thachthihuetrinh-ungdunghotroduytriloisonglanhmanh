@@ -451,7 +451,7 @@ class _PlantScreenState extends State<PlantScreen>
                       children: [
                         Row(
                           children: [
-                            const Text("💡", style: TextStyle(fontSize: 18)),
+                            Icon(AppIcons.infoCircle, size: 20, color: context.textGreen),
                             const SizedBox(width: 8),
                             Text(AppLocalizations.of(context)!.howToEarnPoints,
                                 style: TextStyle(
@@ -461,10 +461,10 @@ class _PlantScreenState extends State<PlantScreen>
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildTip(AppLocalizations.of(context)!.earnTip1, AppLocalizations.of(context)!.earnReward1),
-                        _buildTip(AppLocalizations.of(context)!.earnTip2, AppLocalizations.of(context)!.earnReward2),
-                        _buildTip(AppLocalizations.of(context)!.earnTip3, AppLocalizations.of(context)!.earnReward3),
-                        _buildTip(AppLocalizations.of(context)!.earnTip4, AppLocalizations.of(context)!.earnReward4),
+                        _buildTip(AppIcons.checkCircle, AppColors.success, AppLocalizations.of(context)!.earnTip1, AppLocalizations.of(context)!.earnReward1),
+                        _buildTip(AppIcons.checkCircle, AppColors.success, AppLocalizations.of(context)!.earnTip2, AppLocalizations.of(context)!.earnReward2),
+                        _buildTip(AppIcons.trophy, Colors.amber, AppLocalizations.of(context)!.earnTip3, AppLocalizations.of(context)!.earnReward3),
+                        _buildTip(AppIcons.warning, AppColors.error, AppLocalizations.of(context)!.earnTip4, AppLocalizations.of(context)!.earnReward4),
                       ],
                     ),
                   ),
@@ -876,15 +876,17 @@ class _PlantScreenState extends State<PlantScreen>
     );
   }
 
-  Widget _buildTip(String text, String reward) {
+  Widget _buildTip(IconData icon, Color iconColor, String text, String reward) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          Icon(icon, color: iconColor, size: 16),
+          const SizedBox(width: 8),
           Expanded(
               child: Text(text,
                   style: TextStyle(fontSize: 13, color: context.textGreenLight))),
+          const SizedBox(width: 8),
           Text(reward,
               style: TextStyle(
                   fontSize: 13,

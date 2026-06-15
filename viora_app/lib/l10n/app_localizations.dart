@@ -341,7 +341,7 @@ abstract class AppLocalizations {
   /// No description provided for @earnTip1.
   ///
   /// In vi, this message translates to:
-  /// **'✅ Hoàn thành ≥ 1 habit trong ngày'**
+  /// **'Hoàn thành ≥ 1 habit trong ngày'**
   String get earnTip1;
 
   /// No description provided for @earnReward1.
@@ -353,7 +353,7 @@ abstract class AppLocalizations {
   /// No description provided for @earnTip2.
   ///
   /// In vi, this message translates to:
-  /// **'✅ Hoàn thành ≥ 50% habits trong ngày'**
+  /// **'Hoàn thành ≥ 50% habits trong ngày'**
   String get earnTip2;
 
   /// No description provided for @earnReward2.
@@ -365,7 +365,7 @@ abstract class AppLocalizations {
   /// No description provided for @earnTip3.
   ///
   /// In vi, this message translates to:
-  /// **'🏆 Hoàn thành 100% habits trong ngày'**
+  /// **'Hoàn thành 100% habits trong ngày'**
   String get earnTip3;
 
   /// No description provided for @earnReward3.
@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// No description provided for @earnTip4.
   ///
   /// In vi, this message translates to:
-  /// **'⚠️ Không check-in 3 ngày liên tiếp'**
+  /// **'Không check-in 3 ngày liên tiếp'**
   String get earnTip4;
 
   /// No description provided for @earnReward4.
