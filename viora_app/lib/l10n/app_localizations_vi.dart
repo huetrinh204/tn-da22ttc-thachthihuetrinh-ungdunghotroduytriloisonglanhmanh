@@ -699,7 +699,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get confirmHabitMessage =>
-      'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.';
+      'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?';
 
   @override
   String get notSure => 'Chưa chắc';
@@ -1990,4 +1990,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get sunflowerLevel16 => 'Cây hướng dương hoàn hảo';
+
+  @override
+  String get habitsInProgress => 'Đang thực hiện';
+
+  @override
+  String get habitsCompleted => 'Đã hoàn thành';
+
+  @override
+  String get noHabitsCompletedToday =>
+      'Chưa có thói quen nào hoàn thành hôm nay 🌱';
+
+  @override
+  String get addHabitToStart => 'Hãy thêm thói quen mới để bắt đầu nhé! 🌱';
+
+  @override
+  String get addHabitButton => 'Thêm thói quen';
 }

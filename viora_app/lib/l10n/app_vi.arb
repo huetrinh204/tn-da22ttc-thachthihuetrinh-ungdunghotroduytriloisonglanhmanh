@@ -338,7 +338,7 @@
   
   "habitsToday": "Thói quen hôm nay",
   "confirmCompletion": "Xác nhận hoàn thành",
-  "confirmHabitMessage": "Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.",
+  "confirmHabitMessage": "Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?",
   "notSure": "Chưa chắc",
   "completedExclaim": "Đã hoàn thành!",
   "deleteHabit": "Xóa thói quen?",
@@ -952,5 +952,11 @@
   "sunflowerLevel13": "Cây hướng dương hoa đẹp",
   "sunflowerLevel14": "Cây hướng dương chín hạt",
   "sunflowerLevel15": "Cây hướng dương vàng óng",
-  "sunflowerLevel16": "Cây hướng dương hoàn hảo"
+  "sunflowerLevel16": "Cây hướng dương hoàn hảo",
+
+  "habitsInProgress": "Đang thực hiện",
+  "habitsCompleted": "Đã hoàn thành",
+  "noHabitsCompletedToday": "Chưa có thói quen nào hoàn thành hôm nay 🌱",
+  "addHabitToStart": "Hãy thêm thói quen mới để bắt đầu nhé! 🌱",
+  "addHabitButton": "Thêm thói quen"
 }

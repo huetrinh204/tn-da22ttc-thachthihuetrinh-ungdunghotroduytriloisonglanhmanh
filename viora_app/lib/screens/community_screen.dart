@@ -306,10 +306,22 @@ class _CommunityScreenState extends State<CommunityScreen>
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToCreatePost,
         backgroundColor: AppColors.primary,
-        child: Icon(AppIcons.add, color: Colors.white),
+        elevation: 4,
+        icon: Icon(AppIcons.add, color: Colors.white),
+        label: Text(
+          l10n.createPost, // "Thêm bài đăng"
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+        ),
       ),
     );
   }

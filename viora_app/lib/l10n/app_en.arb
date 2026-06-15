@@ -338,7 +338,7 @@
   
   "habitsToday": "Today's Habits",
   "confirmCompletion": "Confirm Completion",
-  "confirmHabitMessage": "Are you sure you completed this habit today?\n\nOnce confirmed, you cannot uncheck it today.",
+  "confirmHabitMessage": "Are you sure you completed this habit today?",
   "notSure": "Not sure",
   "completedExclaim": "Completed!",
   "deleteHabit": "Delete Habit?",
@@ -952,5 +952,11 @@
   "sunflowerLevel13": "Beautiful sunflower",
   "sunflowerLevel14": "Ripe sunflower",
   "sunflowerLevel15": "Golden glory",
-  "sunflowerLevel16": "Perfect sunflower"
+  "sunflowerLevel16": "Perfect sunflower",
+
+  "habitsInProgress": "In Progress",
+  "habitsCompleted": "Completed",
+  "noHabitsCompletedToday": "No habits completed today 🌱",
+  "addHabitToStart": "Add a new habit to get started! 🌱",
+  "addHabitButton": "Add Habit"
 }

@@ -698,7 +698,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get confirmHabitMessage =>
-      'Are you sure you completed this habit today?\n\nOnce confirmed, you cannot uncheck it today.';
+      'Are you sure you completed this habit today?';
 
   @override
   String get notSure => 'Not sure';
@@ -1990,4 +1990,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sunflowerLevel16 => 'Perfect sunflower';
+
+  @override
+  String get habitsInProgress => 'In Progress';
+
+  @override
+  String get habitsCompleted => 'Completed';
+
+  @override
+  String get noHabitsCompletedToday => 'No habits completed today 🌱';
+
+  @override
+  String get addHabitToStart => 'Add a new habit to get started! 🌱';
+
+  @override
+  String get addHabitButton => 'Add Habit';
 }

@@ -854,8 +854,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 60),
                 child: Text(
                   _activeTabIndex == 1
-                      ? 'Chưa có thói quen nào hoàn thành hôm nay 🌱'
-                      : 'Hãy thêm thói quen mới để bắt đầu nhé! 🌱',
+                      ? l10n.noHabitsCompletedToday
+                      : l10n.addHabitToStart,
                   style: const TextStyle(
                     color: Color(0xFF7E8A85),
                     fontSize: 14,
@@ -885,19 +885,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 onPressed: () => AppNavigation.openPlant(),
               ),
               IconButton(
-                icon: const Icon(Icons.notification_important_rounded, size: 24),
-                tooltip: "Test thông báo",
-                onPressed: () async {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đang gửi thông báo test sau 10 giây...'),
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                  await NotificationService.sendTestNotification();
-                },
-              ),
-              IconButton(
                 key: widget.statsCoachKey,
                 icon: const Icon(Icons.bar_chart_rounded, size: 24),
                 tooltip: l10n.statsTitle,
@@ -917,9 +904,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   backgroundColor: AppColors.primary,
                   elevation: 4,
                   icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text(
-                    'Thêm thói quen',
-                    style: TextStyle(
+                  label: Text(
+                    l10n.addHabitButton,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -937,6 +924,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Widget _buildTabSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(4),
@@ -957,7 +945,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'Đang thực hiện',
+                    l10n.habitsInProgress,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: _activeTabIndex == 0 ? AppColors.primary : context.textSecondary,
@@ -979,7 +967,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'Đã hoàn thành',
+                    l10n.habitsCompleted,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: _activeTabIndex == 1 ? AppColors.primary : context.textSecondary,

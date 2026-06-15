@@ -1427,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmHabitMessage.
   ///
   /// In vi, this message translates to:
-  /// **'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?\n\nSau khi xác nhận, bạn sẽ không thể bỏ tick trong ngày.'**
+  /// **'Bạn có chắc chắn đã hoàn thành thói quen này hôm nay không?'**
   String get confirmHabitMessage;
 
   /// No description provided for @notSure.
@@ -3889,6 +3889,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cây hướng dương hoàn hảo'**
   String get sunflowerLevel16;
+
+  /// No description provided for @habitsInProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang thực hiện'**
+  String get habitsInProgress;
+
+  /// No description provided for @habitsCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hoàn thành'**
+  String get habitsCompleted;
+
+  /// No description provided for @noHabitsCompletedToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thói quen nào hoàn thành hôm nay 🌱'**
+  String get noHabitsCompletedToday;
+
+  /// No description provided for @addHabitToStart.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy thêm thói quen mới để bắt đầu nhé! 🌱'**
+  String get addHabitToStart;
+
+  /// No description provided for @addHabitButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm thói quen'**
+  String get addHabitButton;
 }
 
 class _AppLocalizationsDelegate
