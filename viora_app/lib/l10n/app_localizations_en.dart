@@ -2005,4 +2005,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addHabitButton => 'Add Habit';
+
+  @override
+  String get addHabitDailyGoal => 'DAILY GOAL';
+
+  @override
+  String get addHabitCategory => 'CATEGORY';
+
+  @override
+  String get addHabitIcon => 'ICON';
+
+  @override
+  String get addHabitReminder => 'REMINDER';
+
+  @override
+  String get addHabitReminderLabel => 'Notify me\nat this\ntime';
+
+  @override
+  String get addHabitUnitTimes => 'times';
+
+  @override
+  String get addHabitUnitMinutes => 'min';
+
+  @override
+  String get addHabitUnitCalories => 'cal';
+
+  @override
+  String get addHabitEnterName => 'Please enter habit name';
+
+  @override
+  String get addHabitQuote =>
+      '\"Discipline is the bridge between goals and accomplishment.\"';
+
+  @override
+  String get addHabitQuoteAuthor => '— Jim Rohn';
 }

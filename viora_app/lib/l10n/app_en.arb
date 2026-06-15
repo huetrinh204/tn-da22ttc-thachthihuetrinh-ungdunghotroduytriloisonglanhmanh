@@ -958,5 +958,17 @@
   "habitsCompleted": "Completed",
   "noHabitsCompletedToday": "No habits completed today 🌱",
   "addHabitToStart": "Add a new habit to get started! 🌱",
-  "addHabitButton": "Add Habit"
+  "addHabitButton": "Add Habit",
+
+  "addHabitDailyGoal": "DAILY GOAL",
+  "addHabitCategory": "CATEGORY",
+  "addHabitIcon": "ICON",
+  "addHabitReminder": "REMINDER",
+  "addHabitReminderLabel": "Notify me\nat this\ntime",
+  "addHabitUnitTimes": "times",
+  "addHabitUnitMinutes": "min",
+  "addHabitUnitCalories": "cal",
+  "addHabitEnterName": "Please enter habit name",
+  "addHabitQuote": "\"Discipline is the bridge between goals and accomplishment.\"",
+  "addHabitQuoteAuthor": "— Jim Rohn"
 }

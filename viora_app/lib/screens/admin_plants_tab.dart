@@ -4,6 +4,7 @@ import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
+import '../models/plant_type.dart';
 import 'admin_plant_detail_screen.dart';
 
 class AdminPlantsTab extends StatefulWidget {
@@ -42,47 +43,49 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
     }
   }
 
-  String _getPlantImagePath(int level) {
-    const imagePaths = [
-      'assets/images/tree/1_hatgiong.png',
-      'assets/images/tree/2_hatnaymam.png',
-      'assets/images/tree/3_mamnon.png',
-      'assets/images/tree/4_caynon.png',
-      'assets/images/tree/5_caycon.png',
-      'assets/images/tree/6_caynho.png',
-      'assets/images/tree/7_caylon.png',
-      'assets/images/tree/8_cayxanhtot.png',
-      'assets/images/tree/9_cayphattrien.png',
-      'assets/images/tree/10_cayrahoa.png',
-      'assets/images/tree/11_caykettrainon.png',
-      'assets/images/tree/12_caytrailondan.png',
-      'assets/images/tree/13_caykettraichin.png',
-      'assets/images/tree/14_caysaiqua.png',
-      'assets/images/tree/15_caytruongthanh.png',
-    ];
-    return imagePaths[level - 1];
+  String _getPlantImagePath(int level, String plantTypeId) {
+    final plantType = PlantType.fromIdOrDefault(plantTypeId);
+    return plantType.getAssetPath(level);
   }
 
-  String _getPlantName(BuildContext context, int level) {
+  String _getPlantName(BuildContext context, int level, String plantTypeId) {
     final loc = AppLocalizations.of(context)!;
-    final names = [
-      loc.plantLevel1,
-      loc.plantLevel2,
-      loc.plantLevel3,
-      loc.plantLevel4,
-      loc.plantLevel5,
-      loc.plantLevel6,
-      loc.plantLevel7,
-      loc.plantLevel8,
-      loc.plantLevel9,
-      loc.plantLevel10,
-      loc.plantLevel11,
-      loc.plantLevel12,
-      loc.plantLevel13,
-      loc.plantLevel14,
-      loc.plantLevel15,
-    ];
-    return names[level - 1];
+    final plantType = PlantType.fromIdOrDefault(plantTypeId);
+    final key = plantType.getStageNameKey(level);
+    // Map key → localized string
+    final all = {
+      'bambooLevel1': loc.bambooLevel1, 'bambooLevel2': loc.bambooLevel2,
+      'bambooLevel3': loc.bambooLevel3, 'bambooLevel4': loc.bambooLevel4,
+      'bambooLevel5': loc.bambooLevel5, 'bambooLevel6': loc.bambooLevel6,
+      'bambooLevel7': loc.bambooLevel7, 'bambooLevel8': loc.bambooLevel8,
+      'bambooLevel9': loc.bambooLevel9, 'bambooLevel10': loc.bambooLevel10,
+      'bambooLevel11': loc.bambooLevel11, 'bambooLevel12': loc.bambooLevel12,
+      'bambooLevel13': loc.bambooLevel13, 'bambooLevel14': loc.bambooLevel14,
+      'bambooLevel15': loc.bambooLevel15,
+      'cactusLevel1': loc.cactusLevel1, 'cactusLevel2': loc.cactusLevel2,
+      'cactusLevel3': loc.cactusLevel3, 'cactusLevel4': loc.cactusLevel4,
+      'cactusLevel5': loc.cactusLevel5, 'cactusLevel6': loc.cactusLevel6,
+      'cactusLevel7': loc.cactusLevel7, 'cactusLevel8': loc.cactusLevel8,
+      'cactusLevel9': loc.cactusLevel9, 'cactusLevel10': loc.cactusLevel10,
+      'cactusLevel11': loc.cactusLevel11, 'cactusLevel12': loc.cactusLevel12,
+      'cactusLevel13': loc.cactusLevel13,
+      'sakuraLevel1': loc.sakuraLevel1, 'sakuraLevel2': loc.sakuraLevel2,
+      'sakuraLevel3': loc.sakuraLevel3, 'sakuraLevel4': loc.sakuraLevel4,
+      'sakuraLevel5': loc.sakuraLevel5, 'sakuraLevel6': loc.sakuraLevel6,
+      'sakuraLevel7': loc.sakuraLevel7, 'sakuraLevel8': loc.sakuraLevel8,
+      'sakuraLevel9': loc.sakuraLevel9, 'sakuraLevel10': loc.sakuraLevel10,
+      'sakuraLevel11': loc.sakuraLevel11, 'sakuraLevel12': loc.sakuraLevel12,
+      'sakuraLevel13': loc.sakuraLevel13, 'sakuraLevel14': loc.sakuraLevel14,
+      'sunflowerLevel1': loc.sunflowerLevel1, 'sunflowerLevel2': loc.sunflowerLevel2,
+      'sunflowerLevel3': loc.sunflowerLevel3, 'sunflowerLevel4': loc.sunflowerLevel4,
+      'sunflowerLevel5': loc.sunflowerLevel5, 'sunflowerLevel6': loc.sunflowerLevel6,
+      'sunflowerLevel7': loc.sunflowerLevel7, 'sunflowerLevel8': loc.sunflowerLevel8,
+      'sunflowerLevel9': loc.sunflowerLevel9, 'sunflowerLevel10': loc.sunflowerLevel10,
+      'sunflowerLevel11': loc.sunflowerLevel11, 'sunflowerLevel12': loc.sunflowerLevel12,
+      'sunflowerLevel13': loc.sunflowerLevel13, 'sunflowerLevel14': loc.sunflowerLevel14,
+      'sunflowerLevel15': loc.sunflowerLevel15, 'sunflowerLevel16': loc.sunflowerLevel16,
+    };
+    return all[key] ?? '${plantType.emoji} Level $level';
   }
 
   double _getProgressToNextLevel(int level, int experience) {
@@ -144,6 +147,7 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
           final userName = plant['user_name'] ?? 'Unknown';
           final userId = plant['user_id']?.toString() ?? '';
           final userAvatar = plant['user_avatar'] as String?;
+          final plantTypeId = plant['plant_type'] as String? ?? 'bamboo';
           
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
@@ -179,8 +183,14 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
                       ),
                       padding: const EdgeInsets.all(8),
                       child: Image.asset(
-                        _getPlantImagePath(level),
+                        _getPlantImagePath(level, plantTypeId),
                         fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Text(
+                            PlantType.fromIdOrDefault(plantTypeId).emoji,
+                            style: const TextStyle(fontSize: 40),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -237,7 +247,7 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
                           const SizedBox(height: 8),
                           // Plant name and level
                           Text(
-                            '${_getPlantName(context, level)} (${loc.level(level)})',
+                            '${_getPlantName(context, level, plantTypeId)} (${loc.level(level)})',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,

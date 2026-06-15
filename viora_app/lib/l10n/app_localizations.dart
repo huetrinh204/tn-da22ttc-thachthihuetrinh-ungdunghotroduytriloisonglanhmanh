@@ -3919,6 +3919,72 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thêm thói quen'**
   String get addHabitButton;
+
+  /// No description provided for @addHabitDailyGoal.
+  ///
+  /// In vi, this message translates to:
+  /// **'MỤC TIÊU MỖI NGÀY'**
+  String get addHabitDailyGoal;
+
+  /// No description provided for @addHabitCategory.
+  ///
+  /// In vi, this message translates to:
+  /// **'DANH MỤC'**
+  String get addHabitCategory;
+
+  /// No description provided for @addHabitIcon.
+  ///
+  /// In vi, this message translates to:
+  /// **'BIỂU TƯỢNG'**
+  String get addHabitIcon;
+
+  /// No description provided for @addHabitReminder.
+  ///
+  /// In vi, this message translates to:
+  /// **'NHẮC NHỞ'**
+  String get addHabitReminder;
+
+  /// No description provided for @addHabitReminderLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo\ncho tôi vào\nlúc'**
+  String get addHabitReminderLabel;
+
+  /// No description provided for @addHabitUnitTimes.
+  ///
+  /// In vi, this message translates to:
+  /// **'lần'**
+  String get addHabitUnitTimes;
+
+  /// No description provided for @addHabitUnitMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'phút'**
+  String get addHabitUnitMinutes;
+
+  /// No description provided for @addHabitUnitCalories.
+  ///
+  /// In vi, this message translates to:
+  /// **'calo'**
+  String get addHabitUnitCalories;
+
+  /// No description provided for @addHabitEnterName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên thói quen'**
+  String get addHabitEnterName;
+
+  /// No description provided for @addHabitQuote.
+  ///
+  /// In vi, this message translates to:
+  /// **'\"Kỷ luật là cầu nối giữa mục tiêu và thành tựu.\"'**
+  String get addHabitQuote;
+
+  /// No description provided for @addHabitQuoteAuthor.
+  ///
+  /// In vi, this message translates to:
+  /// **'— Jim Rohn'**
+  String get addHabitQuoteAuthor;
 }
 
 class _AppLocalizationsDelegate

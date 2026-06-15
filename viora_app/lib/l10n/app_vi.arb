@@ -958,5 +958,17 @@
   "habitsCompleted": "Đã hoàn thành",
   "noHabitsCompletedToday": "Chưa có thói quen nào hoàn thành hôm nay 🌱",
   "addHabitToStart": "Hãy thêm thói quen mới để bắt đầu nhé! 🌱",
-  "addHabitButton": "Thêm thói quen"
+  "addHabitButton": "Thêm thói quen",
+
+  "addHabitDailyGoal": "MỤC TIÊU MỖI NGÀY",
+  "addHabitCategory": "DANH MỤC",
+  "addHabitIcon": "BIỂU TƯỢNG",
+  "addHabitReminder": "NHẮC NHỞ",
+  "addHabitReminderLabel": "Thông báo\ncho tôi vào\nlúc",
+  "addHabitUnitTimes": "lần",
+  "addHabitUnitMinutes": "phút",
+  "addHabitUnitCalories": "calo",
+  "addHabitEnterName": "Vui lòng nhập tên thói quen",
+  "addHabitQuote": "\"Kỷ luật là cầu nối giữa mục tiêu và thành tựu.\"",
+  "addHabitQuoteAuthor": "— Jim Rohn"
 }

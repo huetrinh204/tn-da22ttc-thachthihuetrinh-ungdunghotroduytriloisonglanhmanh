@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../l10n/app_localizations.dart';
 
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
@@ -24,6 +25,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: const Color(0xFFF9FAF7),
       appBar: AppBar(
@@ -34,9 +36,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F623F)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Thêm thói quen',
-          style: TextStyle(
+        title: Text(
+          l10n.addNewHabit,
+          style: const TextStyle(
             color: Color(0xFF1E352F),
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -46,11 +48,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         actions: [
           TextButton(
             onPressed: _saveHabit,
-            child: const Padding(
-              padding: EdgeInsets.only(right: 8.0),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
               child: Text(
-                'Lưu',
-                style: TextStyle(
+                l10n.save,
+                style: const TextStyle(
                   color: Color(0xFF0F623F),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -63,24 +65,24 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          _buildNameSection(),
+          _buildNameSection(l10n),
           const SizedBox(height: 16),
-          _buildCategorySection(),
+          _buildCategorySection(l10n),
           const SizedBox(height: 16),
-          _buildIconSection(),
+          _buildIconSection(l10n),
           const SizedBox(height: 16),
-          _buildDailyGoalSection(),
+          _buildDailyGoalSection(l10n),
           const SizedBox(height: 16),
-          _buildReminderSection(),
+          _buildReminderSection(l10n),
           const SizedBox(height: 16),
-          _buildMotivationalQuote(),
+          _buildMotivationalQuote(l10n),
           const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _buildNameSection() {
+  Widget _buildNameSection(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -90,9 +92,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'TÊN THÓI QUEN',
-            style: TextStyle(
+          Text(
+            l10n.habitName.toUpperCase(),
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Color(0xFF7E8A85),
@@ -102,26 +104,17 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _nameController,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF1E352F),
-            ),
+            style: const TextStyle(fontSize: 16, color: Color(0xFF1E352F)),
             decoration: InputDecoration(
-              hintText: 'Ví dụ: Uống nước, Thiền định...',
-              hintStyle: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade400,
-              ),
+              hintText: l10n.habitNameExample,
+              hintStyle: TextStyle(fontSize: 16, color: Colors.grey.shade400),
               filled: true,
               fillColor: const Color(0xFFF4F6F4),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ],
@@ -129,14 +122,14 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  Widget _buildCategorySection() {
+  Widget _buildCategorySection(AppLocalizations l10n) {
     final categories = [
-      {'id': 'eat', 'label': 'Ăn uống', 'icon': LucideIcons.utensils},
-      {'id': 'exercise', 'label': 'Vận động', 'icon': LucideIcons.dumbbell},
-      {'id': 'sleep', 'label': 'Giấc ngủ', 'icon': LucideIcons.moon},
-      {'id': 'mental', 'label': 'Tinh thần', 'icon': LucideIcons.flower2},
-      {'id': 'hydration', 'label': 'Uống nước', 'icon': LucideIcons.droplet},
-      {'id': 'other', 'label': 'Khác', 'icon': LucideIcons.moreHorizontal},
+      {'id': 'eat', 'label': l10n.categoryEat, 'icon': LucideIcons.utensils},
+      {'id': 'exercise', 'label': l10n.categoryExercise, 'icon': LucideIcons.dumbbell},
+      {'id': 'sleep', 'label': l10n.categorySleep, 'icon': LucideIcons.moon},
+      {'id': 'mental', 'label': l10n.categoryMental, 'icon': LucideIcons.flower2},
+      {'id': 'hydration', 'label': l10n.categoryHydration, 'icon': LucideIcons.droplet},
+      {'id': 'other', 'label': l10n.categoryOther, 'icon': LucideIcons.moreHorizontal},
     ];
 
     return Container(
@@ -148,9 +141,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'DANH MỤC',
-            style: TextStyle(
+          Text(
+            l10n.addHabitCategory,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Color(0xFF7E8A85),
@@ -167,76 +160,49 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             childAspectRatio: 1.1,
             children: categories.map((cat) {
               final isSelected = _selectedCategory == cat['id'];
-              
               Widget iconWidget = Icon(
                 cat['icon'] as IconData,
-                color: isSelected 
-                    ? Colors.white
-                    : const Color(0xFF0F623F),
+                color: isSelected ? Colors.white : const Color(0xFF0F623F),
                 size: 24,
               );
-
               if (cat['id'] == 'exercise') {
-                iconWidget = Transform.rotate(
-                  angle: -0.5,
-                  child: iconWidget,
-                );
+                iconWidget = Transform.rotate(angle: -0.5, child: iconWidget);
               }
-
               return GestureDetector(
                 onTap: () => setState(() {
                   _selectedCategory = cat['id'] as String;
                   switch (cat['id']) {
                     case 'hydration':
                       _selectedIcon = '💧';
-                      if (_dailyGoal < 100) _dailyGoal = 100;
-                      if (_dailyGoal > 5000) _dailyGoal = 5000;
+                      _dailyGoal = _dailyGoal.clamp(100, 5000);
                       break;
                     case 'eat':
                       _selectedIcon = '🍴';
-                      if (_dailyGoal < 100) _dailyGoal = 100;
-                      if (_dailyGoal > 5000) _dailyGoal = 5000;
+                      _dailyGoal = _dailyGoal.clamp(100, 5000);
                       break;
                     case 'exercise':
-                      _selectedIcon = '🏃';
-                      if (_dailyGoal < 5) _dailyGoal = 5;
-                      if (_dailyGoal > 480) _dailyGoal = 480;
-                      break;
                     case 'sleep':
-                      _selectedIcon = '😴';
-                      if (_dailyGoal < 5) _dailyGoal = 5;
-                      if (_dailyGoal > 480) _dailyGoal = 480;
-                      break;
                     case 'mental':
-                      _selectedIcon = '🧘';
-                      if (_dailyGoal < 5) _dailyGoal = 5;
-                      if (_dailyGoal > 480) _dailyGoal = 480;
+                      _selectedIcon = cat['id'] == 'exercise' ? '🏃' : (cat['id'] == 'sleep' ? '😴' : '🧘');
+                      _dailyGoal = _dailyGoal.clamp(5, 480);
                       break;
                     default:
                       _selectedIcon = '⭐';
-                      if (_dailyGoal < 1) _dailyGoal = 1;
-                      if (_dailyGoal > 10) _dailyGoal = 10;
+                      _dailyGoal = _dailyGoal.clamp(1, 10);
                   }
                 }),
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: isSelected
-                        ? Border.all(
-                            color: const Color(0xFF0F623F),
-                            width: 1.5,
-                          )
+                        ? Border.all(color: const Color(0xFF0F623F), width: 1.5)
                         : null,
                   ),
                   padding: isSelected ? const EdgeInsets.all(2) : EdgeInsets.zero,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isSelected 
-                          ? const Color(0xFF0F623F)
-                          : const Color(0xFFF4F6F4),
-                      borderRadius: isSelected 
-                          ? BorderRadius.circular(13) 
-                          : BorderRadius.circular(16),
+                      color: isSelected ? const Color(0xFF0F623F) : const Color(0xFFF4F6F4),
+                      borderRadius: isSelected ? BorderRadius.circular(13) : BorderRadius.circular(16),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -248,9 +214,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isSelected 
-                                  ? Colors.white
-                                  : const Color(0xFF0F623F),
+                            color: isSelected ? Colors.white : const Color(0xFF0F623F),
                           ),
                         ),
                       ],
@@ -265,7 +229,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  Widget _buildIconSection() {
+  Widget _buildIconSection(AppLocalizations l10n) {
     final iconOptions = [
       {'emoji': '💧', 'icon': LucideIcons.droplet},
       {'emoji': '🌿', 'icon': LucideIcons.leaf},
@@ -286,9 +250,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'BIỂU TƯỢNG',
-            style: TextStyle(
+          Text(
+            l10n.addHabitIcon,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Color(0xFF7E8A85),
@@ -307,26 +271,20 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               final emoji = item['emoji'] as String;
               final iconData = item['icon'] as IconData;
               final isSelected = _selectedIcon == emoji;
-
               return GestureDetector(
                 onTap: () => setState(() => _selectedIcon = emoji),
                 child: Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: isSelected
-                        ? Border.all(
-                            color: const Color(0xFF0F623F),
-                            width: 1.5,
-                          )
+                        ? Border.all(color: const Color(0xFF0F623F), width: 1.5)
                         : null,
                   ),
                   padding: isSelected ? const EdgeInsets.all(3) : EdgeInsets.zero,
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected 
-                          ? const Color(0xFF0F623F)
-                          : const Color(0xFFF4F6F4),
+                      color: isSelected ? const Color(0xFF0F623F) : const Color(0xFFF4F6F4),
                     ),
                     child: Center(
                       child: Icon(
@@ -345,27 +303,24 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  Widget _buildDailyGoalSection() {
-    String unit = 'lần';
-    double minVal = 1;
-    double maxVal = 10;
-    int divisions = 9;
+  Widget _buildDailyGoalSection(AppLocalizations l10n) {
+    String unit;
+    double minVal;
+    double maxVal;
+    int divisions;
 
     if (_selectedCategory == 'hydration') {
-      unit = 'ml';
-      minVal = 100;
-      maxVal = 5000;
-      divisions = 49;
+      unit = l10n.unitMl;
+      minVal = 100; maxVal = 5000; divisions = 49;
     } else if (_selectedCategory == 'exercise' || _selectedCategory == 'mental' || _selectedCategory == 'sleep') {
-      unit = 'phút';
-      minVal = 5;
-      maxVal = 480;
-      divisions = 95;
+      unit = l10n.addHabitUnitMinutes;
+      minVal = 5; maxVal = 480; divisions = 95;
     } else if (_selectedCategory == 'eat') {
-      unit = 'calo';
-      minVal = 100;
-      maxVal = 5000;
-      divisions = 49;
+      unit = l10n.addHabitUnitCalories;
+      minVal = 100; maxVal = 5000; divisions = 49;
+    } else {
+      unit = l10n.addHabitUnitTimes;
+      minVal = 1; maxVal = 10; divisions = 9;
     }
 
     return Container(
@@ -380,9 +335,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'MỤC TIÊU MỖI NGÀY',
-                style: TextStyle(
+              Text(
+                l10n.addHabitDailyGoal,
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF7E8A85),
@@ -390,17 +345,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEAF5EF),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: const Color(0xFFB1E5CD),
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: const Color(0xFFB1E5CD), width: 1.5),
                 ),
                 child: Text(
                   '${_dailyGoal.toInt()} $unit',
@@ -419,10 +368,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               activeTrackColor: const Color(0xFFB1E5CD),
               inactiveTrackColor: const Color(0xFFE5ECE8),
               thumbColor: const Color(0xFF0F623F),
-              overlayColor: const Color(0xFF0F623F).withOpacity(0.1),
-              thumbShape: const RoundSliderThumbShape(
-                enabledThumbRadius: 10,
-              ),
+              overlayColor: const Color(0xFF0F623F).withValues(alpha: 0.1),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
               trackHeight: 6,
             ),
             child: Slider(
@@ -437,20 +384,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Min: ${minVal.toInt()}$unit',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF7E8A85),
-                ),
-              ),
-              Text(
-                'Max: ${maxVal.toInt()}$unit',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF7E8A85),
-                ),
-              ),
+              Text('Min: ${minVal.toInt()}$unit',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF7E8A85))),
+              Text('Max: ${maxVal.toInt()}$unit',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF7E8A85))),
             ],
           ),
         ],
@@ -458,14 +395,13 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  Widget _buildReminderSection() {
+  Widget _buildReminderSection(AppLocalizations l10n) {
     final hour = _reminderTime.hour;
     final minute = _reminderTime.minute;
     final isAM = hour < 12;
     final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
     final period = isAM ? 'AM' : 'PM';
-    final timeStr =
-        '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
+    final timeStr = '${displayHour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $period';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -476,9 +412,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'NHẮC NHỞ',
-            style: TextStyle(
+          Text(
+            l10n.addHabitReminder,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: Color(0xFF7E8A85),
@@ -490,7 +426,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Thông báo\ncho tôi vào\nlúc',
+                  l10n.addHabitReminderLabel,
                   style: const TextStyle(
                     fontSize: 14,
                     height: 1.5,
@@ -523,14 +459,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                     : null,
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: _reminderEnabled
-                        ? const Color(0xFFF4F6F4)
-                        : const Color(0xFFECECEC),
+                    color: _reminderEnabled ? const Color(0xFFF4F6F4) : const Color(0xFFECECEC),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: const Color(0xFFDDE3DE)),
                   ),
@@ -542,18 +473,14 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: _reminderEnabled
-                              ? const Color(0xFF0F623F)
-                              : const Color(0xFFAAAAAA),
+                          color: _reminderEnabled ? const Color(0xFF0F623F) : const Color(0xFFAAAAAA),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Icon(
                         LucideIcons.clock,
                         size: 16,
-                        color: _reminderEnabled
-                            ? const Color(0xFF0F623F)
-                            : const Color(0xFFAAAAAA),
+                        color: _reminderEnabled ? const Color(0xFF0F623F) : const Color(0xFFAAAAAA),
                       ),
                     ],
                   ),
@@ -563,7 +490,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               Switch(
                 value: _reminderEnabled,
                 onChanged: (v) => setState(() => _reminderEnabled = v),
-                activeColor: Colors.white,
+                activeThumbColor: Colors.white,
                 activeTrackColor: const Color(0xFF0F623F),
                 inactiveThumbColor: Colors.white,
                 inactiveTrackColor: const Color(0xFFCCCCCC),
@@ -575,7 +502,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     );
   }
 
-  Widget _buildMotivationalQuote() {
+  Widget _buildMotivationalQuote(AppLocalizations l10n) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -583,12 +510,12 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         borderRadius: BorderRadius.circular(16),
       ),
       width: double.infinity,
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '"Kỷ luật là cầu nối giữa mục tiêu và thành tựu."',
-            style: TextStyle(
+            l10n.addHabitQuote,
+            style: const TextStyle(
               fontSize: 15,
               height: 1.5,
               color: Colors.white,
@@ -596,10 +523,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               fontStyle: FontStyle.italic,
             ),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
-            '— Jim Rohn',
-            style: TextStyle(
+            l10n.addHabitQuoteAuthor,
+            style: const TextStyle(
               fontSize: 13,
               color: Color(0xFFB1E5CD),
               fontWeight: FontWeight.w500,
@@ -611,10 +538,11 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   }
 
   void _saveHabit() {
+    final l10n = AppLocalizations.of(context)!;
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng nhập tên thói quen'),
+        SnackBar(
+          content: Text(l10n.addHabitEnterName),
           backgroundColor: Colors.red,
         ),
       );

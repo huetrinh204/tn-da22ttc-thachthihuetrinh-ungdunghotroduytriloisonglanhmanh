@@ -2006,4 +2006,38 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get addHabitButton => 'Thêm thói quen';
+
+  @override
+  String get addHabitDailyGoal => 'MỤC TIÊU MỖI NGÀY';
+
+  @override
+  String get addHabitCategory => 'DANH MỤC';
+
+  @override
+  String get addHabitIcon => 'BIỂU TƯỢNG';
+
+  @override
+  String get addHabitReminder => 'NHẮC NHỞ';
+
+  @override
+  String get addHabitReminderLabel => 'Thông báo\ncho tôi vào\nlúc';
+
+  @override
+  String get addHabitUnitTimes => 'lần';
+
+  @override
+  String get addHabitUnitMinutes => 'phút';
+
+  @override
+  String get addHabitUnitCalories => 'calo';
+
+  @override
+  String get addHabitEnterName => 'Vui lòng nhập tên thói quen';
+
+  @override
+  String get addHabitQuote =>
+      '\"Kỷ luật là cầu nối giữa mục tiêu và thành tựu.\"';
+
+  @override
+  String get addHabitQuoteAuthor => '— Jim Rohn';
 }
