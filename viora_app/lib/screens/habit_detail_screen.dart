@@ -6,6 +6,7 @@ import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import '../widgets/category_icon_dot_painter.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/habit_icon.dart';
 
 class HabitDetailScreen extends StatefulWidget {
   final int habitId;
@@ -86,7 +87,11 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
         ),
         title: Row(
           children: [
-            Text(widget.habitIcon, style: const TextStyle(fontSize: 24)),
+            HabitIcon(
+              iconString: widget.habitIcon,
+              size: 24,
+              color: context.textPrimary,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(

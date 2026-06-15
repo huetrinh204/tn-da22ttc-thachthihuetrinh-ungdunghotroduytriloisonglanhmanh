@@ -55,12 +55,15 @@ router.get("/", authMiddleware, async (req: any, res) => {
 // ================= GET HABITS WITH TODAY'S LOG =================
 router.get("/today", authMiddleware, async (req: any, res) => {
   try {
-    const today = new Date().toISOString().split("T")[0];
+    // Dùng giờ Việt Nam (UTC+7) để đồng nhất với route check-in
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
+    const today = vietnamTime.toISOString().split("T")[0];
 
     const [habits]: any = await pool.query(
       `SELECT h.*, 
-        CASE WHEN hl.id IS NOT NULL THEN 1 ELSE 0 END AS is_completed,
-        hl.value AS completed_count, hl.note
+        CASE WHEN hl.is_completed = 1 THEN 1 ELSE 0 END AS is_completed,
+        COALESCE(hl.metric_value, hl.value, 0) AS completed_count, hl.note
        FROM habits h
        LEFT JOIN habit_logs hl ON h.id = hl.habit_id AND hl.log_date = ?
        WHERE h.user_id = ? AND h.is_active = 1
@@ -69,6 +72,7 @@ router.get("/today", authMiddleware, async (req: any, res) => {
     );
 
     res.json({ habits, date: today });
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -157,44 +161,69 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
   console.log(`[Check-in] UTC time: ${now.toISOString()}, Vietnam time: ${vietnamTime.toISOString()}, today: ${today}`);
 
   try {
+    // Lấy target_count của habit
+    const [habitRows]: any = await pool.query("SELECT target_count FROM habits WHERE id = ?", [req.params.id]);
+    const targetCount = habitRows[0]?.target_count || 1;
+    const addMetric = metric_value || 1;
+
     // check xem đã check-in hôm nay chưa
     const [existing]: any = await pool.query(
       "SELECT * FROM habit_logs WHERE habit_id = ? AND log_date = ?",
       [req.params.id, today]
     );
 
+    let isCompletedNow = false;
+
     if (existing.length > 0) {
-      // Đã check-in rồi, không cho undo
-      return res.json({ message: "Already checked in", is_completed: true });
+      const currentLog = existing[0];
+      if (currentLog.is_completed) {
+        return res.json({ message: "Already fully completed", is_completed: true });
+      }
+      const newMetric = (parseFloat(currentLog.metric_value) || 0) + addMetric;
+      isCompletedNow = newMetric >= targetCount;
+      await pool.query(
+        "UPDATE habit_logs SET metric_value = ?, is_completed = ?, note = ? WHERE id = ?",
+        [newMetric, isCompletedNow ? 1 : 0, note || currentLog.note, currentLog.id]
+      );
+      console.log(`[Check-in] Updated progress: ${newMetric}/${targetCount}`);
+    } else {
+      isCompletedNow = addMetric >= targetCount;
+      // check-in mới - dùng CAST để đảm bảo lưu đúng ngày
+      await pool.query(
+        `INSERT INTO habit_logs (habit_id, user_id, log_date, note, metric_value, metric_unit, is_completed)
+         VALUES (?, ?, CAST(? AS DATE), ?, ?, ?, ?)`,
+        [req.params.id, req.user.id, today, note || null, addMetric, metric_unit || null, isCompletedNow ? 1 : 0]
+      );
+      console.log(`[Check-in] Saved new progress: ${addMetric}/${targetCount} to database with log_date: ${today}`);
     }
 
-    // check-in mới - dùng CAST để đảm bảo lưu đúng ngày
-    await pool.query(
-      `INSERT INTO habit_logs (habit_id, user_id, log_date, note, metric_value, metric_unit)
-       VALUES (?, ?, CAST(? AS DATE), ?, ?, ?)`,
-      [req.params.id, req.user.id, today, note || null, metric_value || null, metric_unit || null]
-    );
+    if (isCompletedNow) {
+      // cập nhật streak tổng
+      await updateStreak(req.user.id);
 
-    console.log(`[Check-in] Saved to database with log_date: ${today}`);
+      // cập nhật streak riêng của habit này
+      await updateHabitStreak(req.params.id, today);
 
-    // cập nhật streak tổng
-    await updateStreak(req.user.id);
+      // cập nhật plant và lấy số điểm được cộng
+      const pointsEarned = await updatePlant(req.user.id, today);
 
-    // cập nhật streak riêng của habit này
-    await updateHabitStreak(req.params.id, today);
+      // kiểm tra và unlock achievements
+      const newAchievements = await checkAchievements(req.user.id);
 
-    // cập nhật plant và lấy số điểm được cộng
-    const pointsEarned = await updatePlant(req.user.id, today);
-
-    // kiểm tra và unlock achievements
-    const newAchievements = await checkAchievements(req.user.id);
-
-    res.json({ 
-      message: "Checked in", 
-      is_completed: true, 
-      points_earned: pointsEarned,
-      new_achievements: newAchievements 
-    });
+      res.json({ 
+        message: "Checked in completely", 
+        is_completed: true, 
+        points_earned: pointsEarned,
+        new_achievements: newAchievements 
+      });
+    } else {
+      res.json({
+        message: "Progress updated",
+        is_completed: false,
+        points_earned: 0,
+        new_achievements: []
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });

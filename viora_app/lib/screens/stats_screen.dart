@@ -7,6 +7,7 @@ import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import 'habit_detail_screen.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/habit_icon.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -249,9 +250,10 @@ class _StatsScreenState extends State<StatsScreen>
           children: [
             Row(
               children: [
-                Text(
-                  habit["icon"] ?? "⭐",
-                  style: const TextStyle(fontSize: 32),
+                HabitIcon(
+                  iconString: habit["icon"] ?? "⭐",
+                  size: 32,
+                  color: context.textPrimary,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

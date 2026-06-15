@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../services/flow_prefs.dart';
@@ -6,12 +7,13 @@ import '../services/notification_inbox_store.dart';
 import '../navigation/app_navigation.dart';
 import '../widgets/achievement_popup.dart';
 import '../widgets/app_snackbar.dart';
-import '../widgets/viora_app_bar.dart';
 import '../widgets/points_fly_animation.dart';
+import '../widgets/habit_icon.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import 'stats_screen.dart';
+import 'add_habit_screen.dart';
 
 class HabitsScreen extends StatefulWidget {
   final GlobalKey? statsCoachKey;
@@ -36,6 +38,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   bool isLoading = true;
   String token = "";
   int? _highlightHabitId;
+  int _activeTabIndex = 0;
   final List<Widget> _flyingAnimations = [];
   final GlobalKey _treeIconKey = GlobalKey();
 
@@ -95,22 +98,44 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     if (result == null || result["confirmed"] != true) return;
 
+    if (!mounted) return;
+
     // Get habit card position for animation start
     final RenderBox? habitBox = context.findRenderObject() as RenderBox?;
     final habitPosition = habitBox?.localToGlobal(Offset.zero) ?? Offset.zero;
 
-    // Optimistic update
+    final currentCountGlobal = double.tryParse(habit["completed_count"]?.toString() ?? '') ?? 0.0;
+    final targetCountGlobal = double.tryParse(habit["target_count"]?.toString() ?? '') ?? 1.0;
+    final remaining = targetCountGlobal - currentCountGlobal;
+    final metricValue = result["metric_value"] as double? ?? (remaining > 0 ? remaining : 1.0);
+
+    // Optimistic update: chỉ cập nhật completed_count, KHÔNG set is_completed
+    // vì phải đợi server xác nhận mới biết có đủ mục tiêu chưa
     setState(() {
       final idx = habits.indexWhere((h) => h["id"] == habitId);
-      if (idx != -1) habits[idx]["is_completed"] = 1;
+      if (idx != -1) {
+        final currentCount = double.tryParse(habits[idx]["completed_count"]?.toString() ?? '') ?? 0.0;
+        habits[idx]["completed_count"] = currentCount + metricValue;
+        // KHÔNG set is_completed ở đây — chờ server trả về kết quả thực
+      }
     });
 
     final res = await ApiService.checkInHabit(
       token,
       habitId,
-      metricValue: result["metric_value"],
+      metricValue: metricValue,
       metricUnit: result["metric_unit"],
     );
+
+    // Cập nhật is_completed DỰA THEO kết quả từ server
+    if (!mounted) return;
+    final serverCompleted = res["is_completed"] == true;
+    setState(() {
+      final idx = habits.indexWhere((h) => h["id"] == habitId);
+      if (idx != -1) {
+        habits[idx]["is_completed"] = serverCompleted ? 1 : 0;
+      }
+    });
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
@@ -149,6 +174,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
     }
 
     await widget.onHabitCheckInCompleted?.call();
+    
+    // Refresh habits from server to ensure accuracy
+    loadHabits();
 
   }
 
@@ -537,7 +565,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 spacing: 8,
                 children: icons.map((icon) {
                   return ChoiceChip(
-                    label: Text(icon),
+                    label: HabitIcon(
+                      iconString: icon,
+                      size: 20,
+                      color: selectedIcon == icon ? const Color(0xFF4CAF50) : null,
+                    ),
                     selected: selectedIcon == icon,
                     onSelected: (_) => setSheetState(() => selectedIcon = icon),
                   );
@@ -583,233 +615,96 @@ class _HabitsScreenState extends State<HabitsScreen> {
     );
   }
 
-  void showAddHabitSheet() {
+  void showAddHabitSheet() async {
     final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
-    String selectedCategory = "other";
-    String selectedIcon = "⭐";
-
-    final icons = ["⭐", "🏃", "🥗", "💧", "😴", "🧘", "📚", "🎯", "💪", "🌿"];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
-          padding: EdgeInsets.only(
-            left: 24, right: 24, top: 24,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // handle bar
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                    color: ctx.textSecondary.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(l10n.addNewHabit,
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: ctx.textPrimary)),
-              const SizedBox(height: 24),
-
-              // ICON PICKER
-              Text(l10n.selectIcon,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ctx.textSecondary)),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 10,
-                children: icons.map((icon) => GestureDetector(
-                  onTap: () => setSheetState(() => selectedIcon = icon),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      color: selectedIcon == icon
-                          ? const Color(0xFFE8F5E9)
-                          : ctx.inputFill,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: selectedIcon == icon
-                            ? const Color(0xFF4CAF50)
-                            : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(icon, style: const TextStyle(fontSize: 22)),
-                    ),
-                  ),
-                )).toList(),
-              ),
-              const SizedBox(height: 20),
-
-              // NAME
-              Text(l10n.habitName,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ctx.textSecondary)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                style: TextStyle(color: ctx.textPrimary),
-                decoration: InputDecoration(
-                  hintText: l10n.habitNameExample,
-                  hintStyle: TextStyle(color: ctx.textSecondary, fontSize: 14),
-                  filled: true,
-                  fillColor: ctx.inputFill,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 1.5),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // CATEGORY
-              Text(l10n.category,
-                  style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: ctx.textSecondary)),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: categories.map((c) => GestureDetector(
-                  onTap: () => setSheetState(() => selectedCategory = c["id"]),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: selectedCategory == c["id"]
-                          ? const Color(0xFFE8F5E9)
-                          : ctx.inputFill,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: selectedCategory == c["id"]
-                            ? const Color(0xFF4CAF50)
-                            : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      "${c["icon"]} ${c["label"]}",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: selectedCategory == c["id"]
-                            ? const Color(0xFF2E7D32)
-                            : ctx.textPrimary,
-                      ),
-                    ),
-                  ),
-                )).toList(),
-              ),
-              const SizedBox(height: 28),
-
-              // SAVE BUTTON
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (nameController.text.trim().isEmpty) return;
-                    final name = nameController.text.trim();
-                    Navigator.pop(ctx);
-                    final res = await ApiService.createHabit(
-                      token: token,
-                      name: name,
-                      category: selectedCategory,
-                      icon: selectedIcon,
-                    );
-                    if (!mounted) return;
-                    if (res['habit'] != null) {
-                      await _onHabitCreated(
-                        Map<String, dynamic>.from(res['habit'] as Map),
-                      );
-                    } else {
-                      AppSnackbar.showError(
-                        context,
-                        res['message']?.toString() ?? l10n.failed,
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Text(l10n.addHabit,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                ),
-              ),
-            ],
-          ),
-        ),
+    
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const AddHabitScreen(),
       ),
     );
+    
+    if (result == null || !mounted) return;
+    
+    final habitData = result as Map<String, dynamic>;
+    final res = await ApiService.createHabit(
+      token: token,
+      name: habitData['name'],
+      category: habitData['category'],
+      icon: habitData['icon'],
+      targetCount: (habitData['daily_goal'] as double?)?.toInt(),
+    );
+    
+    if (!mounted) return;
+    
+    if (res['habit'] != null) {
+      await _onHabitCreated(
+        Map<String, dynamic>.from(res['habit'] as Map),
+      );
+    } else {
+      AppSnackbar.showError(
+        context,
+        res['message']?.toString() ?? l10n.failed,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final completed = habits.where((h) => h["is_completed"] == 1).length;
-    final total = habits.length;
-    final progress = total > 0 ? completed / total : 0.0;
+    final filteredHabits = habits.where((h) {
+      final isCompleted = h["is_completed"] == 1;
+      if (_activeTabIndex == 0) {
+        return !isCompleted;
+      } else {
+        return isCompleted;
+      }
+    }).toList();
 
-    Widget body;
+    Widget bodyContent;
     if (isLoading) {
-      body = const Center(
-        child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+      bodyContent = const Center(
+        child: CircularProgressIndicator(color: Color(0xFF0F623F)),
       );
     } else if (habits.isEmpty) {
-      body = _buildEmptyState();
+      bodyContent = _buildEmptyState();
     } else {
-      body = CustomScrollView(
-        slivers: [
-          if (_highlightHabitId != null)
-            SliverToBoxAdapter(child: _buildTapToCompleteHint()),
-          SliverToBoxAdapter(
-            child: _buildProgressCard(completed, total, progress),
-          ),
-          SliverToBoxAdapter(
-            child: SizedBox(key: widget.listCoachKey, height: 1),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (_, i) => _buildHabitCard(habits[i]),
-                childCount: habits.length,
+      bodyContent = ListView(
+        physics: const BouncingScrollPhysics(),
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Text(
+              'Thói quen của tôi',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E352F),
               ),
             ),
           ),
+          _buildTabSelector(),
+          const SizedBox(height: 8),
+          if (filteredHabits.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 60),
+                child: Text(
+                  _activeTabIndex == 1
+                      ? 'Chưa có thói quen nào hoàn thành hôm nay 🌱'
+                      : 'Hãy thêm thói quen mới để bắt đầu nhé! 🌱',
+                  style: const TextStyle(
+                    color: Color(0xFF7E8A85),
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            )
+          else
+            ...filteredHabits.map((h) => _buildHabitCard(h)),
+          _buildQuoteCard(),
+          const SizedBox(height: 100),
         ],
       );
     }
@@ -817,45 +712,50 @@ class _HabitsScreenState extends State<HabitsScreen> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: VioraAppBar(
-            title: l10n.habitsToday,
+          backgroundColor: const Color(0xFFF9FAF7),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
             actions: [
-              // Leaf icon - navigate to Plant tab
               IconButton(
                 key: _treeIconKey,
-                icon: const Icon(Icons.eco_rounded,
-                    color: AppColors.primary, size: 26),
+                icon: const Icon(Icons.eco_rounded, color: Color(0xFF0F623F), size: 26),
                 tooltip: l10n.myPlant,
                 onPressed: () => AppNavigation.openPlant(),
               ),
               IconButton(
                 key: widget.statsCoachKey,
-                icon: const Icon(Icons.bar_chart_rounded,
-                    color: AppColors.primary, size: 24),
+                icon: const Icon(Icons.bar_chart_rounded, color: Color(0xFF0F623F), size: 24),
                 tooltip: l10n.statsTitle,
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const StatsScreen()),
                 ),
               ),
-              IconButton(
-                key: widget.addCoachKey,
-                icon: const Icon(Icons.add_circle_outline_rounded,
-                    color: AppColors.primary, size: 26),
-                onPressed: showAddHabitSheet,
-              ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 12),
             ],
           ),
-          body: body,
-          floatingActionButton: habits.isNotEmpty
-              ? FloatingActionButton(
+          body: bodyContent,
+          floatingActionButton: isLoading
+              ? null
+              : FloatingActionButton.extended(
                   onPressed: showAddHabitSheet,
-                  backgroundColor: const Color(0xFF4CAF50),
-                  child: const Icon(Icons.add, color: Colors.white),
-                )
-              : null,
+                  backgroundColor: const Color(0xFF0F623F),
+                  elevation: 4,
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text(
+                    'Thêm thói quen',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
         ),
         // Flying animations overlay
         ..._flyingAnimations,
@@ -863,94 +763,91 @@ class _HabitsScreenState extends State<HabitsScreen> {
     );
   }
 
-  Widget _buildTapToCompleteHint() {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildTabSelector() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
+        color: const Color(0xFFECEFEB),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF4CAF50), width: 1.5),
       ),
       child: Row(
         children: [
-          const Icon(Icons.touch_app_rounded, color: Color(0xFF2E7D32), size: 22),
-          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              l10n.tapHabitToCompleteHint,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2E7D32),
+            child: GestureDetector(
+              onTap: () => setState(() => _activeTabIndex = 0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: _activeTabIndex == 0 ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    'Đang thực hiện',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _activeTabIndex == 0 ? const Color(0xFF0F623F) : const Color(0xFF7E8A85),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 18, color: Color(0xFF2E7D32)),
-            onPressed: () => setState(() => _highlightHabitId = null),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _activeTabIndex = 1),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: _activeTabIndex == 1 ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    'Đã hoàn thành',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _activeTabIndex == 1 ? const Color(0xFF0F623F) : const Color(0xFF7E8A85),
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProgressCard(int completed, int total, double progress) {
-    final l10n = AppLocalizations.of(context)!;
+  Widget _buildQuoteCard() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF43A047)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFEAF5EF),
+        borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            completed == total && total > 0
-                ? l10n.amazingAllDone
-                : l10n.yourToday,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+          const Expanded(
+            child: Text(
+              '"Sức khỏe là lựa chọn, không phải sự tình cờ. Hãy kiên trì với những thói quen nhỏ mỗi ngày nhé!"',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF0F623F),
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Text(
-                "$completed/$total",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                l10n.habitsLabel,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: Colors.white30,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-              minHeight: 8,
-            ),
+          const SizedBox(width: 16),
+          Icon(
+            LucideIcons.sprout,
+            size: 48,
+            color: const Color(0xFF0F623F).withValues(alpha: 0.5),
           ),
         ],
       ),
@@ -961,13 +858,64 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final isCompleted = habit["is_completed"] == 1;
     final currentStreak = habit["current_streak"] ?? 0;
+    final category = habit["category"]?.toString() ?? "other";
     final categoryIcon = categories.firstWhere(
-      (c) => c["id"] == habit["category"],
+      (c) => c["id"] == category,
       orElse: () => {"icon": "⭐"},
     )["icon"];
 
     final habitId = habit['id'] as int;
-    final isHighlighted = _highlightHabitId == habitId;
+
+    // Safely parse target and completed count
+    final double target = double.tryParse(habit["target_count"]?.toString() ?? '') ?? 1.0;
+    final double current = double.tryParse(habit["completed_count"]?.toString() ?? '') ?? (isCompleted ? target : 0.0);
+    final progress = target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
+
+    // Format progress text
+    String progressText = "";
+    if (isCompleted) {
+      progressText = "Đã hoàn thành";
+    } else {
+      if (category == 'hydration') {
+        progressText = "${current.toInt()} / ${target.toInt()} ml";
+      } else if (category == 'exercise' || category == 'sleep' || category == 'mental') {
+        progressText = "${current.toInt()} / ${target.toInt()} phút";
+      } else if (category == 'eat') {
+        progressText = "${current.toInt()} / ${target.toInt()} calo";
+      } else {
+        progressText = "${current.toInt()} / ${target.toInt()} lần";
+      }
+    }
+
+    // Determine right action button
+    Widget actionButton;
+    if (isCompleted) {
+      actionButton = Container(
+        width: 36,
+        height: 36,
+        decoration: const BoxDecoration(
+          color: Color(0xFF0F623F),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.check, color: Colors.white, size: 20),
+      );
+    } else {
+      final isProgressType = category == 'hydration' || category == 'eat';
+      actionButton = Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF0F623F), width: 1.5),
+        ),
+        child: Icon(
+          isProgressType ? Icons.add : Icons.play_arrow,
+          color: const Color(0xFF0F623F),
+          size: 20,
+        ),
+      );
+    }
 
     return Dismissible(
       key: Key("habit_${habit["id"]}"),
@@ -975,7 +923,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: Colors.red.shade400,
           borderRadius: BorderRadius.circular(16),
@@ -1013,130 +961,131 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 }
                 handleCheckIn(habitId, isCompleted);
               },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Container(
+          margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: isCompleted
-                ? const Color(0xFFE8F5E9)
-                : Theme.of(context).cardTheme.color ?? Colors.white,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isCompleted
-                  ? const Color(0xFF4CAF50)
-                  : isHighlighted
-                      ? const Color(0xFF66BB6A)
-                      : Colors.transparent,
-              width: isHighlighted ? 2.5 : 1.5,
-            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  // icon
+                  // Circular Left Icon
                   Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: isCompleted
-                          ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
-                          : const Color(0xFFF7F7F7),
-                      borderRadius: BorderRadius.circular(12),
+                    width: 48,
+                    height: 48,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEAF5EF),
+                      shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: Text(
-                        habit["icon"] ?? categoryIcon,
-                        style: const TextStyle(fontSize: 22),
+                      child: HabitIcon(
+                        iconString: habit["icon"] ?? categoryIcon,
+                        size: 24,
+                        color: const Color(0xFF0F623F),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
-
-                  // name + category
+                  const SizedBox(width: 16),
+                  
+                  // Center Title + Streak
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          habit["name"],
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: isCompleted
-                                ? const Color(0xFF2E7D32)
-                                : context.textPrimary,
-                            decoration: isCompleted
-                                ? TextDecoration.lineThrough
-                                : TextDecoration.none,
+                          habit["name"] ?? "",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E352F),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "$categoryIcon ${categories.firstWhere((c) => c["id"] == habit["category"], orElse: () => {"label": l10n.categoryOther})["label"]}",
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
+                        if (currentStreak > 0) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.local_fire_department,
+                                size: 14,
+                                color: Color(0xFF0F623F),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$currentStreak ngày',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0F623F),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
-
-                  // checkbox
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: isCompleted
-                          ? const Color(0xFF4CAF50)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isCompleted
-                            ? const Color(0xFF4CAF50)
-                            : Colors.grey.shade300,
-                        width: 2,
-                      ),
-                    ),
-                    child: isCompleted
-                        ? const Icon(Icons.check, color: Colors.white, size: 18)
-                        : null,
+                  
+                  // Right Action Button
+                  GestureDetector(
+                    onTap: isCompleted
+                        ? null
+                        : () {
+                            if (_highlightHabitId == habitId) {
+                              setState(() => _highlightHabitId = null);
+                            }
+                            handleCheckIn(habitId, isCompleted);
+                          },
+                    child: actionButton,
                   ),
                 ],
               ),
-              // Streak indicator
-              if (currentStreak > 0) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF9800).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 16),
+              
+              // Progress Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Tiến độ',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF7E8A85),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text("🔥", style: TextStyle(fontSize: 14)),
-                      const SizedBox(width: 4),
-                      Text(
-                        l10n.consecutiveDays(currentStreak),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFFF9800),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    progressText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isCompleted ? const Color(0xFF0F623F) : const Color(0xFF1E352F),
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              
+              // Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: const Color(0xFFF4F6F4),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F623F)),
+                  minHeight: 6,
                 ),
-              ],
+              ),
             ],
           ),
         ),

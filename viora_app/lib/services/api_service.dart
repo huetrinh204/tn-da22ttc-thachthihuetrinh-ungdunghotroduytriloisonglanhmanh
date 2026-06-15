@@ -252,6 +252,7 @@ class ApiService {
     String category = "other",
     String icon = "⭐",
     String color = "#4CAF50",
+    int? targetCount,
   }) async {
     try {
       final response = await http.post(
@@ -265,6 +266,7 @@ class ApiService {
           "category": category,
           "icon": icon,
           "color": color,
+          if (targetCount != null) "target_count": targetCount,
         }),
       );
       final data = jsonDecode(response.body);
@@ -467,6 +469,7 @@ class ApiService {
     String category = "other",
     String icon = "⭐",
     String color = "#4CAF50",
+    int? targetCount,
   }) async {
     try {
       final response = await http.put(
@@ -480,6 +483,7 @@ class ApiService {
           "category": category,
           "icon": icon,
           "color": color,
+          if (targetCount != null) "target_count": targetCount,
         }),
       );
       final data = jsonDecode(response.body);

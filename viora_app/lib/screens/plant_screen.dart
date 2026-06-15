@@ -9,6 +9,7 @@ import '../widgets/treasure_reward_animation.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import '../models/plant_type.dart';
+import '../constants/app_icons.dart';
 
 class PlantScreen extends StatefulWidget {
   const PlantScreen({super.key, this.embedded = false});
@@ -181,13 +182,13 @@ class _PlantScreenState extends State<PlantScreen>
   IconData _getWarningIcon(int days) {
     switch (days) {
       case 0:
-        return Icons.check_circle;
+        return AppIcons.checkCircle;
       case 1:
-        return Icons.warning_amber_rounded;
+        return AppIcons.warning;
       case 2:
-        return Icons.error_outline;
+        return AppIcons.error;
       default:
-        return Icons.dangerous;
+        return AppIcons.error;
     }
   }
 
@@ -509,8 +510,8 @@ class _PlantScreenState extends State<PlantScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildStatChip(l10n.totalPoints, l10n.points(plantExp), Icons.star_rounded, Colors.amber),
-        _buildStatChip(l10n.levelProgress, "$plantLevel / 15", Icons.trending_up, const Color(0xFF4CAF50)),
+        _buildStatChip(l10n.totalPoints, l10n.points(plantExp), AppIcons.star, Colors.amber),
+        _buildStatChip(l10n.levelProgress, "$plantLevel / 15", AppIcons.trendingUp, const Color(0xFF4CAF50)),
       ],
     );
   }
@@ -731,7 +732,7 @@ class _PlantScreenState extends State<PlantScreen>
             height: 58,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.check, color: Color.fromARGB(255, 22, 160, 27), size: 28);
+              return Icon(AppIcons.check, color: Color.fromARGB(255, 22, 160, 27), size: 28);
             },
           ),
         ),
@@ -752,7 +753,7 @@ class _PlantScreenState extends State<PlantScreen>
             height: 58,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.star, color: Color(0xFF4CAF50), size: 28);
+              return Icon(AppIcons.star, color: Color(0xFF4CAF50), size: 28);
             },
           ),
         ),
@@ -783,7 +784,7 @@ class _PlantScreenState extends State<PlantScreen>
                   height: 58,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    return Icon(Icons.lock, color: Colors.grey.shade600, size: 24);
+                    return Icon(AppIcons.lock, color: Colors.grey.shade600, size: 24);
                   },
                 ),
               ),
