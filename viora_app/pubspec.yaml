@@ -84,6 +84,7 @@ flutter:
     - assets/images/tree/anhdao/
     - assets/images/tree/huongduong/
     - assets/images/khobau.png
+    - assets/images/thanhtuu/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

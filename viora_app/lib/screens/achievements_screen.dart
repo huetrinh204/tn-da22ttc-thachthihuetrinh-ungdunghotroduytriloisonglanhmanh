@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
@@ -17,6 +18,19 @@ class AchievementsScreen extends StatefulWidget {
 class _AchievementsScreenState extends State<AchievementsScreen> {
   List<dynamic> unlocked = [];
   bool isLoading = true;
+
+  // Map achievement key → ảnh minh họa
+  static const Map<String, String> _achievementImages = {
+    'first_checkin': 'assets/images/thanhtuu/buocdautien.png',
+    'streak_3':      'assets/images/thanhtuu/3ngaylientiep.png',
+    'streak_7':      'assets/images/thanhtuu/tuankientri.png',
+    'streak_30':     'assets/images/thanhtuu/thangbenbi.png',
+    'habits_5':      'assets/images/thanhtuu/danhiem.png',
+    'checkin_50':    'assets/images/thanhtuu/nuatram.png',
+    'checkin_100':   'assets/images/thanhtuu/bachchien.png',
+    'plant_level_3': 'assets/images/thanhtuu/caynon.png',
+    'plant_level_5': 'assets/images/thanhtuu/vuondiadang.png',
+  };
 
   // Danh sách tất cả achievements có thể unlock
   List<Map<String, dynamic>> get _allAchievements {
@@ -132,8 +146,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2E7D32), Color(0xFF4CAF50)],
+        gradient: LinearGradient(
+          colors: [AppColors.primaryDark, AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -262,6 +276,8 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
     final l10n = AppLocalizations.of(context)!;
     bool isSharing = false;
     final color = Color(ach["color"] as int);
+    final achKey = ach["key"] as String;
+    final imagePath = _achievementImages[achKey];
 
     showDialog(
       context: context,
@@ -275,12 +291,26 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  ach["icon"] as IconData,
-                  size: 56,
-                  color: color,
-                ),
-                const SizedBox(height: 12),
+                // Ảnh thành tích (nếu có)
+                if (imagePath != null) ...[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      imagePath,
+                      height: 160,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  Icon(
+                    ach["icon"] as IconData,
+                    size: 56,
+                    color: color,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Text(
                   ach["title"] as String,
                   style: TextStyle(
@@ -329,9 +359,29 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                             final title = ach['title'] as String;
                             final desc = ach['desc'] as String;
                             final content = '$emoji $title\n$desc';
+
+                            String? imageUrl;
+                            if (imagePath != null) {
+                              try {
+                                // Load asset bytes và upload lên server
+                                final byteData = await rootBundle.load(imagePath);
+                                final bytes = byteData.buffer.asUint8List();
+                                final filename = imagePath.split('/').last;
+                                final uploadRes = await ApiService.uploadImageFromBytes(
+                                  token: token,
+                                  bytes: bytes,
+                                  filename: filename,
+                                );
+                                imageUrl = uploadRes['url'] as String?;
+                              } catch (_) {
+                                // Nếu upload ảnh lỗi vẫn tiếp tục đăng bài không có ảnh
+                              }
+                            }
+
                             await ApiService.createPost(
                               token: token,
                               content: content,
+                              imageUrl: imageUrl,
                               hashtags: ['#thanhTich', '#achievement'],
                             );
                             setDialog(() => isSharing = false);

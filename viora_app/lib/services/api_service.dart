@@ -791,6 +791,37 @@ class ApiService {
     }
   }
 
+  // ================= COMMUNITY - UPLOAD IMAGE FROM BYTES (for assets) =================
+  static Future<Map<String, dynamic>> uploadImageFromBytes({
+    required String token,
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/community/upload"),
+      );
+      request.headers["Authorization"] = "Bearer $token";
+      request.files.add(http.MultipartFile.fromBytes(
+        'image',
+        bytes,
+        filename: filename,
+        contentType: MediaType('image', 'png'),
+      ));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Upload failed"};
+    } catch (e) {
+      print("uploadImageFromBytes error: $e");
+      return {"message": "Network error"};
+    }
+  }
+
   // ================= AUTH - UPLOAD AVATAR =================
   static Future<Map<String, dynamic>> uploadAvatar(
       String token, String imagePath) async {
