@@ -92,6 +92,7 @@ function mapPostRow(row: any, currentUserId: number, req?: any) {
     user_avatar: resolveImageUrl(row.user_avatar, req),
     content: row.content,
     image_url: resolveImageUrl(row.image_url, req),
+    post_type: row.post_type ?? 'normal',
     hashtags: parseHashtags(row.hashtags),
     like_count: Number(row.like_count) || 0,
     comment_count: Number(row.comment_count) || 0,
@@ -128,6 +129,7 @@ const POST_SELECT = `
     u.avatar_url AS user_avatar,
     p.content,
     p.image_url,
+    p.post_type,
     p.hashtags,
     p.challenge_name,
     p.days_streak,
@@ -172,11 +174,14 @@ router.get("/posts", authMiddleware, async (req: any, res: Response) => {
       sql += `
         WHERE p.user_id IN (
           SELECT following_id FROM user_follows WHERE follower_id = ?
-        )
+        ) AND p.post_type = 'normal'
       `;
       params.push(userId);
     } else if (type === "achievements") {
-      sql += ` WHERE (p.days_streak IS NOT NULL OR p.challenge_name IS NOT NULL)`;
+      sql += ` WHERE p.post_type = 'achievement'`;
+    } else {
+      // trending — chỉ bài normal
+      sql += ` WHERE p.post_type = 'normal'`;
     }
 
     if (type === "trending") {
@@ -200,7 +205,7 @@ router.get("/posts", authMiddleware, async (req: any, res: Response) => {
 
 // ================= CREATE POST =================
 router.post("/posts", authMiddleware, async (req: any, res: Response) => {
-  const { content, image_url, hashtags, challenge_name, days_streak } = req.body;
+  const { content, image_url, hashtags, challenge_name, days_streak, post_type } = req.body;
   const userId = req.user.id;
 
   if (!content || String(content).trim() === "") {
@@ -223,8 +228,8 @@ router.post("/posts", authMiddleware, async (req: any, res: Response) => {
     }
 
     const [result]: any = await pool.query(
-      `INSERT INTO community_posts (user_id, content, image_url, hashtags, challenge_name, days_streak)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO community_posts (user_id, content, image_url, hashtags, challenge_name, days_streak, post_type)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         String(content).trim(),
@@ -232,6 +237,7 @@ router.post("/posts", authMiddleware, async (req: any, res: Response) => {
         hashtagsJson,
         challenge_name || null,
         streakValue,
+        post_type === 'achievement' ? 'achievement' : 'normal',
       ]
     );
 

@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/app_snackbar.dart';
 import '../constants/app_icons.dart';
+import '../navigation/app_navigation.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -383,12 +384,16 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                               content: content,
                               imageUrl: imageUrl,
                               hashtags: ['#thanhTich', '#achievement'],
+                              postType: 'achievement',
                             );
                             setDialog(() => isSharing = false);
                             if (!mounted) return;
-                            Navigator.pop(ctx);
+                            Navigator.pop(ctx); // đóng dialog
                             AppSnackbar.showSuccess(
                                 context, l10n.achievementShared);
+                            // Pop về root (home screen) rồi switch sang tab Cộng đồng
+                            Navigator.of(context).popUntil((route) => route.isFirst);
+                            AppNavigation.openCommunity();
                           },
                     icon: isSharing
                         ? const SizedBox(

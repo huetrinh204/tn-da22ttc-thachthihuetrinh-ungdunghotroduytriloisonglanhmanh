@@ -28,7 +28,9 @@ class _CommunityScreenState extends State<CommunityScreen>
   List<Post> _posts = [];
   List<Post> _filteredPosts = [];
   List<Map<String, dynamic>> _searchUsers = [];
+  List<Post> _achievementPosts = [];
   bool _isLoading = false;
+  bool _isLoadingAchievements = false;
   bool _isSearching = false;
   String? _loadError;
   String? _currentUserId;
@@ -43,7 +45,7 @@ class _CommunityScreenState extends State<CommunityScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
     _searchController.addListener(_onSearchChanged);
     _initSession();
@@ -79,6 +81,7 @@ class _CommunityScreenState extends State<CommunityScreen>
       if (mounted) {
         await _loadPosts();
         _loadUnreadCount();
+        _loadAchievementPosts();
       }
     } else {
       final profile = await ApiService.getProfile(_token!);
@@ -91,6 +94,7 @@ class _CommunityScreenState extends State<CommunityScreen>
       if (mounted) {
         await _loadPosts();
         _loadUnreadCount();
+        _loadAchievementPosts();
       }
     }
   }
@@ -109,7 +113,11 @@ class _CommunityScreenState extends State<CommunityScreen>
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
-      _loadPosts();
+      if (_tabController.index == 2) {
+        _loadAchievementPosts();
+      } else {
+        _loadPosts();
+      }
     }
   }
 
@@ -206,6 +214,23 @@ class _CommunityScreenState extends State<CommunityScreen>
 
   Future<void> _refreshPosts() async {
     await _loadPosts();
+  }
+
+  Future<void> _loadAchievementPosts() async {
+    final isFirstLoad = _achievementPosts.isEmpty;
+    if (isFirstLoad) setState(() => _isLoadingAchievements = true);
+
+    final token = _token ?? "";
+    if (token.isEmpty) return;
+
+    final response = await ApiService.getPosts(token, type: "achievements");
+    if (!mounted) return;
+
+    final postsData = response["posts"] as List? ?? [];
+    setState(() {
+      _achievementPosts = postsData.map((json) => Post.fromJson(json)).toList();
+      _isLoadingAchievements = false;
+    });
   }
 
   void _navigateToCreatePost() async {
@@ -308,13 +333,20 @@ class _CommunityScreenState extends State<CommunityScreen>
             child: _isLoading && _posts.isEmpty
                 ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : RefreshIndicator(
-                    onRefresh: _refreshPosts,
+                    onRefresh: () async {
+                      if (_tabController.index == 2) {
+                        await _loadAchievementPosts();
+                      } else {
+                        await _refreshPosts();
+                      }
+                    },
                     color: AppColors.primary,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
                         _buildPostsList(), // Xu hướng
                         _buildPostsList(), // Đang theo dõi
+                        _buildAchievementPostsList(), // Thành tích
                       ],
                     ),
                   ),
@@ -386,6 +418,7 @@ class _CommunityScreenState extends State<CommunityScreen>
         tabs: [
           Tab(text: l10n.trending),
           Tab(text: l10n.following),
+          Tab(text: l10n.achievementsTitle),
         ],
       ),
     );
@@ -584,6 +617,48 @@ class _CommunityScreenState extends State<CommunityScreen>
       itemCount: _visiblePosts.length,
       itemBuilder: (context, index) {
         return _buildPostCard(_visiblePosts[index]);
+      },
+    );
+  }
+
+  Widget _buildAchievementPostsList() {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_isLoadingAchievements) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
+
+    if (_achievementPosts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("🏆", style: TextStyle(fontSize: 64)),
+            const SizedBox(height: 16),
+            Text(
+              l10n.noPosts,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: context.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.achievementsTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: context.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      itemCount: _achievementPosts.length,
+      itemBuilder: (context, index) {
+        return _buildPostCard(_achievementPosts[index]);
       },
     );
   }

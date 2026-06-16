@@ -545,10 +545,12 @@ class ApiService {
     required String content,
     String? imageUrl,
     List<String>? hashtags,
+    String postType = 'normal',
   }) async {
     try {
       final body = <String, dynamic>{
         "content": content,
+        "post_type": postType,
       };
       if (imageUrl != null) body["image_url"] = imageUrl;
       if (hashtags != null && hashtags.isNotEmpty) body["hashtags"] = hashtags;
