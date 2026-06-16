@@ -9,11 +9,9 @@ import '../theme/app_colors.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import 'admin_screen.dart';
-import '../main.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'stats_screen.dart';
-import 'notification_settings_screen.dart';
 import 'forgot_password_screen.dart';
 import 'followers_list_screen.dart';
 import '../providers/locale_provider.dart';
@@ -612,19 +610,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             context,
                             MaterialPageRoute(
                                 builder: (_) => const AchievementsScreen()),
-                          )),
-                ]),
-                const SizedBox(height: 16),
-
-                // Notifications
-                _buildSection(l10n.notifications, [
-                  _buildTile(l10n.habitReminders, l10n.setDailyReminders,
-                      Icons.notifications_outlined,
-                      onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    const NotificationSettingsScreen()),
                           )),
                 ]),
                 const SizedBox(height: 16),

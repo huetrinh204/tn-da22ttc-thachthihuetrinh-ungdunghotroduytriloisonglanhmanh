@@ -27,6 +27,11 @@ export function startCronJobs() {
     await checkAndSendAutoReminders();
   }, { timezone: "Asia/Ho_Chi_Minh" });
 
+  // Habit-specific reminders — check every minute
+  cron.schedule("* * * * *", async () => {
+    await checkAndSendHabitReminders();
+  }, { timezone: "Asia/Ho_Chi_Minh" });
+
   // Progressive wilting check - runs at midnight every day
   cron.schedule("0 0 * * *", async () => {
     console.log("[Cron] Running progressive wilting check...");
@@ -205,6 +210,65 @@ async function sendEveningEmails() {
   }
 }
 
+
+/**
+ * Habit-specific reminders (per user, per habit)
+ * - Each habit has its own reminder_time set by the user
+ * - Repeats every 20 minutes for up to 1 hour (4 notifications max)
+ * - Stops when habit is completed for the day
+ */
+async function checkAndSendHabitReminders() {
+  try {
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const today = now.toISOString().split("T")[0];
+
+    // Lấy tất cả habits có reminder_time, chưa hoàn thành hôm nay, và user có fcm_token
+    const [habits]: any = await pool.query(
+      `SELECT h.id as habit_id, h.name as habit_name, h.reminder_time,
+              u.id as user_id, u.fcm_token
+       FROM habits h
+       INNER JOIN users u ON h.user_id = u.id
+       WHERE h.reminder_time IS NOT NULL
+         AND h.is_active = 1
+         AND u.fcm_token IS NOT NULL
+         AND h.id NOT IN (
+           SELECT habit_id FROM habit_logs
+           WHERE log_date = ? AND is_completed = 1
+         )`,
+      [today]
+    );
+
+    for (const habit of habits) {
+      const reminderTime = habit.reminder_time as string; // format "HH:MM" or "HH:MM:SS"
+      const parts = reminderTime.split(':');
+      const rHour = parseInt(parts[0]);
+      const rMinute = parseInt(parts[1]);
+
+      // Tính số phút đã trôi qua kể từ reminder_time
+      const reminderTotalMin = rHour * 60 + rMinute;
+      const currentTotalMin = currentHour * 60 + currentMinute;
+      const diffMin = currentTotalMin - reminderTotalMin;
+
+      // Chỉ gửi trong khoảng 0 → 60 phút sau reminder_time
+      if (diffMin < 0 || diffMin > 60) continue;
+
+      // Gửi tại phút 0, 20, 40, 60
+      if (diffMin % 20 !== 0) continue;
+
+      await sendPushNotification(
+        habit.fcm_token,
+        '⏰ Đến giờ rồi!',
+        `Đã đến lúc thực hiện thói quen "${habit.habit_name}" 💪`
+      );
+
+      console.log(`[HabitReminder] Sent to user=${habit.user_id} habit="${habit.habit_name}" at +${diffMin}min`);
+    }
+  } catch (error) {
+    console.error('[Cron] Habit reminder error:', error);
+  }
+}
 
 /**
  * Progressive Wilting System
