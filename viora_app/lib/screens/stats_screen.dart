@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import 'habit_detail_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/habit_icon.dart';
+import '../constants/app_icons.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -280,7 +281,7 @@ class _StatsScreenState extends State<StatsScreen>
                   ),
                 ),
                 Icon(
-                  Icons.chevron_right,
+                  AppIcons.chevronRight,
                   color: context.textSecondary,
                 ),
               ],
@@ -349,20 +350,20 @@ class _StatsScreenState extends State<StatsScreen>
       mainAxisSpacing: 12,
       childAspectRatio: 1.5,
       children: [
-        _buildSummaryCard(l10n.totalCheckins, "$totalCheckins", "✅",
-            const Color(0xFF4CAF50)),
-        _buildSummaryCard(l10n.activeDaysLabel, "$activeDays", "📅",
-            const Color(0xFF2196F3)),
-        _buildSummaryCard(l10n.longestStreakLabel, "$longestStreak ${l10n.days}", "🔥",
-            const Color(0xFFFF9800)),
-        _buildSummaryCard(l10n.habitsCount, "$totalHabits", "🎯",
-            const Color(0xFF9C27B0)),
+        _buildSummaryCard(l10n.totalCheckins, "$totalCheckins",
+            AppIcons.checkCircle, const Color(0xFF4CAF50)),
+        _buildSummaryCard(l10n.activeDaysLabel, "$activeDays",
+            AppIcons.calendar, const Color(0xFF2196F3)),
+        _buildSummaryCard(l10n.longestStreakLabel, "$longestStreak ${l10n.days}",
+            AppIcons.streak, const Color(0xFFFF9800)),
+        _buildSummaryCard(l10n.habitsCount, "$totalHabits",
+            AppIcons.target, const Color(0xFF9C27B0)),
       ],
     );
   }
 
   Widget _buildSummaryCard(
-      String label, String value, String emoji, Color color) {
+      String label, String value, IconData icon, Color color) {
     final cardColor = context.cardColor;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -381,7 +382,14 @@ class _StatsScreenState extends State<StatsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -472,6 +480,7 @@ class _StatsScreenState extends State<StatsScreen>
                   LineChartBarData(
                     spots: spots,
                     isCurved: true,
+                    preventCurveOverShooting: true,
                     color: AppColors.primary,
                     barWidth: 3,
                     dotData: FlDotData(

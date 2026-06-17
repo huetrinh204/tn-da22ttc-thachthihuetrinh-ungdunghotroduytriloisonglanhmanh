@@ -4,9 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
-import '../widgets/category_icon_dot_painter.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/habit_icon.dart';
+import '../constants/app_icons.dart';
 
 class HabitDetailScreen extends StatefulWidget {
   final int habitId;
@@ -82,7 +82,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
         backgroundColor: context.cardColor,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: context.textPrimary),
+          icon: Icon(AppIcons.arrowLeft, color: context.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -305,7 +305,6 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   Widget _buildMetricsChart() {
     final l10n = AppLocalizations.of(context)!;
     final unit = summary["unit"] ?? habitInfo["unit"] ?? "";
-    final category = habitInfo["category"] ?? "other";
     
     // Build list of spots với TẤT CẢ các ngày (bao gồm cả ngày không có dữ liệu)
     final List<FlSpot> spots = [];
@@ -393,9 +392,11 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (spot, percent, barData, index) {
-                        return CategoryIconDotPainter(
-                          category: category,
-                          size: 24,
+                        return FlDotCirclePainter(
+                          radius: 5,
+                          color: AppColors.primary,
+                          strokeWidth: 2,
+                          strokeColor: Colors.white,
                         );
                       },
                     ),
