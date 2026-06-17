@@ -305,50 +305,49 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   Widget _buildMetricsChart() {
     final l10n = AppLocalizations.of(context)!;
     final unit = summary["unit"] ?? habitInfo["unit"] ?? "";
-    
-    // Build list of spots với TẤT CẢ các ngày (bao gồm cả ngày không có dữ liệu)
-    final List<FlSpot> spots = [];
-    final List<String> allDateLabels = [];
-    
+
+    // Build bar data từ tất cả metrics
+    final List<BarChartGroupData> barGroups = [];
+    final List<String> dateLabels = [];
+
     for (int i = 0; i < metrics.length; i++) {
       final m = metrics[i];
       final metricValue = m["metric_value"];
       final logDate = m["log_date"] as String;
-      
-      // Thêm tất cả các ngày vào dateLabels
-      allDateLabels.add(logDate);
-      
-      // Chỉ thêm spot nếu có metric_value
+      dateLabels.add(logDate);
+
+      double value = 0.0;
       if (metricValue != null) {
-        double value = 0.0;
         if (metricValue is num) {
           value = metricValue.toDouble();
         } else if (metricValue is String) {
           value = double.tryParse(metricValue) ?? 0.0;
         }
-        
-        if (value > 0) {
-          // Sử dụng index thực tế từ metrics array làm X
-          spots.add(FlSpot(i.toDouble(), value));
-        }
       }
+
+      barGroups.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: value,
+              color: value > 0 ? AppColors.primary : AppColors.primary.withValues(alpha: 0.15),
+              width: metrics.length > 20 ? 6 : 12,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+            ),
+          ],
+        ),
+      );
     }
 
-    // Nếu không có dữ liệu, không hiển thị biểu đồ
-    if (spots.isEmpty) {
+    if (barGroups.isEmpty || barGroups.every((g) => g.barRods.first.toY == 0)) {
       return const SizedBox.shrink();
     }
 
-    // Tính maxY dựa trên giá trị lớn nhất
-    final maxValue = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
-    final maxY = maxValue * 1.3; // Thêm 30% để có khoảng trống phía trên
-    
-    // Tính interval cho grid Y
-    final interval = (maxY / 5).clamp(0.1, double.infinity);
-    
-    // Tính số lượng labels tối đa để hiển thị trên X axis
-    final maxLabels = 7; // Hiển thị tối đa 7 labels
-    final labelStep = (allDateLabels.length / maxLabels).ceil().clamp(1, allDateLabels.length);
+    final maxValue = barGroups.map((g) => g.barRods.first.toY).reduce((a, b) => a > b ? a : b);
+    final maxY = (maxValue * 1.25).ceilToDouble().clamp(1.0, double.infinity);
+    final interval = (maxY / 4).clamp(1.0, double.infinity);
+    final labelStep = (dateLabels.length / 7).ceil().clamp(1, dateLabels.length);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -369,7 +368,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            unit.isNotEmpty 
+            unit.isNotEmpty
                 ? l10n.dailyRecordedValuesWithUnit(unit)
                 : l10n.dailyRecordedValues,
             style: TextStyle(fontSize: 12, color: context.textSecondary),
@@ -377,70 +376,47 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
           const SizedBox(height: 20),
           SizedBox(
             height: 200,
-            child: LineChart(
-              LineChartData(
+            child: BarChart(
+              BarChartData(
                 maxY: maxY,
                 minY: 0,
-                maxX: (allDateLabels.length - 1).toDouble(),
-                minX: 0,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    color: AppColors.primary,
-                    barWidth: 3,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 5,
-                          color: AppColors.primary,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ],
+                barGroups: barGroups,
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
                   horizontalInterval: interval,
                   getDrawingHorizontalLine: (_) => FlLine(
-                    color: context.textSecondary.withValues(alpha: 0.15),
+                    color: context.textSecondary.withValues(alpha: 0.12),
                     strokeWidth: 1,
                   ),
                 ),
                 borderData: FlBorderData(show: false),
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final date = _formatChartDateLabel(dateLabels[group.x]) ?? '';
+                      final val = rod.toY;
+                      return BarTooltipItem(
+                        '$date\n${val % 1 == 0 ? val.toInt() : val.toStringAsFixed(1)}${unit.isNotEmpty ? ' $unit' : ''}',
+                        TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      );
+                    },
+                  ),
+                ),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 40,
+                      reservedSize: 36,
                       interval: interval,
-                      getTitlesWidget: (v, _) {
-                        // Chỉ hiển thị số nguyên
-                        if (v == 0 || v == maxY) {
-                          return Text(
-                            v.toInt().toString(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: context.textSecondary,
-                            ),
-                          );
-                        }
-                        return Text(
-                          v.toInt().toString(),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: context.textSecondary,
-                          ),
-                        );
-                      },
+                      getTitlesWidget: (v, _) => Text(
+                        v.toInt().toString(),
+                        style: TextStyle(fontSize: 11, color: context.textSecondary),
+                      ),
                     ),
                   ),
                   bottomTitles: AxisTitles(
@@ -448,45 +424,24 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                       showTitles: true,
                       getTitlesWidget: (v, _) {
                         final idx = v.toInt();
-                        if (idx < 0 || idx >= allDateLabels.length) {
-                          return const SizedBox();
-                        }
-                        
-                        // Chỉ hiển thị label tại các vị trí được chọn
-                        // Luôn hiển thị ngày đầu tiên và ngày cuối cùng
+                        if (idx < 0 || idx >= dateLabels.length) return const SizedBox();
                         final isFirst = idx == 0;
-                        final isLast = idx == allDateLabels.length - 1;
-                        final isStepPosition = idx % labelStep == 0;
-                        
-                        if (!isFirst && !isLast && !isStepPosition) {
-                          return const SizedBox();
-                        }
-                        
-                        // Format date label as D/M in local timezone
-                        final dateStr = allDateLabels[idx];
-                        final formattedDate = _formatChartDateLabel(dateStr);
-                        if (formattedDate != null) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              formattedDate,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox();
+                        final isLast = idx == dateLabels.length - 1;
+                        if (!isFirst && !isLast && idx % labelStep != 0) return const SizedBox();
+                        final formatted = _formatChartDateLabel(dateLabels[idx]);
+                        if (formatted == null) return const SizedBox();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            formatted,
+                            style: TextStyle(fontSize: 10, color: context.textSecondary),
+                          ),
+                        );
                       },
                     ),
                   ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
               ),
             ),

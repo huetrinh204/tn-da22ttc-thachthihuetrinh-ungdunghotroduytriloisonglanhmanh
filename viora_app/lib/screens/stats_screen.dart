@@ -410,7 +410,6 @@ class _StatsScreenState extends State<StatsScreen>
   Widget _buildSimpleBarChart(List<dynamic> data, int days, String title) {
     final l10n = AppLocalizations.of(context)!;
     
-    // Nếu không có dữ liệu
     if (data.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
@@ -420,40 +419,43 @@ class _StatsScreenState extends State<StatsScreen>
         ),
         child: Column(
           children: [
-            const Text("📊", style: TextStyle(fontSize: 48)),
+            Icon(AppIcons.barChart, size: 48, color: context.textSecondary),
             const SizedBox(height: 16),
-            Text(
-              l10n.noDataYet,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: context.textPrimary,
-              ),
-            ),
+            Text(l10n.noDataYet,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: context.textPrimary)),
             const SizedBox(height: 8),
-            Text(
-              l10n.completeHabitsToSeeStats,
-              style: TextStyle(fontSize: 14, color: context.textSecondary),
-            ),
+            Text(l10n.completeHabitsToSeeStats,
+                style: TextStyle(fontSize: 14, color: context.textSecondary)),
           ],
         ),
       );
     }
 
-    // Tạo spots cho biểu đồ đường
-    final spots = <FlSpot>[];
     double maxValue = 0;
-    
-    for (int i = 0; i < data.length; i++) {
-      final count = (data[i]["count"] as num).toDouble();
-      spots.add(FlSpot(i.toDouble(), count));
+    for (final d in data) {
+      final count = (d["count"] as num).toDouble();
       if (count > maxValue) maxValue = count;
     }
 
-    // Đảm bảo maxY > 0 và làm tròn lên số chẵn
-    final maxY = maxValue > 0 ? ((maxValue + 2) / 2).ceil() * 2.0 : 6.0;
-    // Interval phải là số nguyên >= 1
-    final interval = maxY <= 6 ? 2.0 : (maxY / 3).ceilToDouble();
+    final maxY = maxValue > 0 ? ((maxValue * 1.25).ceilToDouble()) : 4.0;
+    final interval = (maxY / 4).clamp(1.0, double.infinity);
+    final barWidth = days <= 7 ? 20.0 : days <= 14 ? 12.0 : 6.0;
+    final labelStep = days <= 7 ? 1 : days <= 14 ? 2 : 5;
+
+    final barGroups = List.generate(data.length, (i) {
+      final count = (data[i]["count"] as num).toDouble();
+      return BarChartGroupData(
+        x: i,
+        barRods: [
+          BarChartRodData(
+            toY: count,
+            color: count > 0 ? AppColors.primary : AppColors.primary.withValues(alpha: 0.12),
+            width: barWidth,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+          ),
+        ],
+      );
+    });
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -472,34 +474,11 @@ class _StatsScreenState extends State<StatsScreen>
           const SizedBox(height: 20),
           SizedBox(
             height: 200,
-            child: LineChart(
-              LineChartData(
-                minY: 0,
+            child: BarChart(
+              BarChartData(
                 maxY: maxY,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    preventCurveOverShooting: true,
-                    color: AppColors.primary,
-                    barWidth: 3,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 5,
-                          color: AppColors.primary,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                    ),
-                  ),
-                ],
+                minY: 0,
+                barGroups: barGroups,
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -510,75 +489,61 @@ class _StatsScreenState extends State<StatsScreen>
                   ),
                 ),
                 borderData: FlBorderData(show: false),
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipItem: (group, _, rod, __) {
+                      final dateStr = data[group.x]["log_date"] as String;
+                      try {
+                        final parts = dateStr.split('-');
+                        final label = '${int.parse(parts[2])}/${int.parse(parts[1])}';
+                        return BarTooltipItem(
+                          '$label\n${rod.toY.toInt()} thói quen',
+                          const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        );
+                      } catch (_) {
+                        return null;
+                      }
+                    },
+                  ),
+                ),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 30,
                       interval: interval,
-                      getTitlesWidget: (value, meta) {
-                        // Chỉ hiển thị số nguyên
-                        if (value % 1 != 0) return const SizedBox();
-                        return Text(
-                          value.toInt().toString(),
-                          style: TextStyle(
-                            color: context.textSecondary,
-                            fontSize: 11,
-                          ),
-                        );
+                      getTitlesWidget: (v, _) {
+                        if (v % 1 != 0) return const SizedBox();
+                        return Text(v.toInt().toString(),
+                            style: TextStyle(color: context.textSecondary, fontSize: 11));
                       },
                     ),
                   ),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: 1,
-                      getTitlesWidget: (value, meta) {
+                      getTitlesWidget: (value, _) {
                         final index = value.toInt();
-                        if (index < 0 || index >= data.length) {
-                          return const SizedBox();
-                        }
-                        
-                        // Chỉ hiển thị một số ngày để không bị chật
-                        if (days > 7 && index % 2 != 0) {
-                          return const SizedBox();
-                        }
-                        if (days > 14 && index % 5 != 0) {
-                          return const SizedBox();
-                        }
-                        
-                        // Parse date từ format YYYY-MM-DD
+                        if (index < 0 || index >= data.length) return const SizedBox();
+                        if (index % labelStep != 0) return const SizedBox();
                         final dateStr = data[index]["log_date"] as String;
                         try {
                           final parts = dateStr.split('-');
-                          if (parts.length == 3) {
-                            final day = int.parse(parts[2]);
-                            final month = int.parse(parts[1]);
-                            // Format: 14/5 (bỏ số 0 đầu)
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                "$day/$month",
-                                style: TextStyle(
-                                  color: context.textSecondary,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            );
-                          }
-                          return const SizedBox();
-                        } catch (e) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              '${int.parse(parts[2])}/${int.parse(parts[1])}',
+                              style: TextStyle(color: context.textSecondary, fontSize: 10),
+                            ),
+                          );
+                        } catch (_) {
                           return const SizedBox();
                         }
                       },
                     ),
                   ),
-                  topTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  rightTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
               ),
             ),
