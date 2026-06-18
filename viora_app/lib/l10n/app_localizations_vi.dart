@@ -796,6 +796,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get metricSleepHours => 'Số giờ ngủ';
 
   @override
+  String get metricSleepMinutes => 'Số phút ngủ';
+
+  @override
   String get metricCalories => 'Calories';
 
   @override
@@ -809,6 +812,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get unitHours => 'giờ';
+
+  @override
+  String get unitMinutes => 'phút';
 
   @override
   String get unitCal => 'cal';

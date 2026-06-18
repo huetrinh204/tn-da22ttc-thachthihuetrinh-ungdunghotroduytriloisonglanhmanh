@@ -391,11 +391,13 @@
   "metricWater": "Số ml nước",
   "metricDistance": "Khoảng cách (m)",
   "metricSleepHours": "Số giờ ngủ",
+  "metricSleepMinutes": "Số phút ngủ",
   "metricCalories": "Calories",
   "enterNumberOptional": "Nhập số (tùy chọn)",
   "unitMl": "ml",
   "unitM": "m",
   "unitHours": "giờ",
+  "unitMinutes": "phút",
   "unitCal": "cal",
   
   "onboardingWhoAreYou": "Bạn là?",

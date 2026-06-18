@@ -5,7 +5,6 @@ import '../l10n/app_localizations.dart';
 import '../navigation/app_navigation.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
-import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
 import '../constants/app_icons.dart';
 import '../widgets/viora_app_bar.dart';
@@ -24,6 +23,7 @@ class GrowScreen extends StatefulWidget {
 class _GrowScreenState extends State<GrowScreen> {
   int currentStreak = 0;
   int longestStreak = 0;
+  int freezeTokens = 0;
   bool streakLoading = true;
 
   @override
@@ -40,6 +40,7 @@ class _GrowScreenState extends State<GrowScreen> {
     setState(() {
       currentStreak = res['streak']?['current_streak'] ?? 0;
       longestStreak = res['streak']?['longest_streak'] ?? 0;
+      freezeTokens = res['streak']?['freeze_tokens'] ?? 0;
       streakLoading = false;
     });
   }
@@ -152,6 +153,59 @@ class _GrowScreenState extends State<GrowScreen> {
                   ),
                 ],
               ),
+              const SizedBox(width: 16),
+              Tooltip(
+                message: 'Duy trì 7 ngày liên tục để nhận Freeze\nTối đa 2 Freeze • Bảo vệ streak khi bỏ 1 ngày',
+                triggerMode: TooltipTriggerMode.longPress,
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                textStyle: const TextStyle(color: Colors.white, fontSize: 12),
+                child: Column(
+                  children: [
+                    const Text('🧊', style: TextStyle(fontSize: 22)),
+                    Text(
+                      '$freezeTokens',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Freeze',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (freezeTokens > 0) ...[
+                const SizedBox(width: 16),
+                Column(
+                  children: [
+                    const Text('🧊', style: TextStyle(fontSize: 22)),
+                    Text(
+                      '$freezeTokens',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Freeze',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white.withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

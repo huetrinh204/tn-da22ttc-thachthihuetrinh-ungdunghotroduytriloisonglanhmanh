@@ -395,8 +395,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
         metricUnit = l10n.unitM;
         break;
       case "sleep":
-        metricLabel = l10n.metricSleepHours;
-        metricUnit = l10n.unitHours;
+        metricLabel = l10n.metricSleepMinutes;
+        metricUnit = l10n.unitMinutes;
         break;
       case "eat":
         metricLabel = l10n.metricCalories;

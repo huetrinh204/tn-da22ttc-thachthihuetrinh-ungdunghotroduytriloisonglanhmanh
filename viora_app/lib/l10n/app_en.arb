@@ -391,11 +391,13 @@
   "metricWater": "Water (ml)",
   "metricDistance": "Distance (m)",
   "metricSleepHours": "Sleep hours",
+  "metricSleepMinutes": "Sleep minutes",
   "metricCalories": "Calories",
   "enterNumberOptional": "Enter number (optional)",
   "unitMl": "ml",
   "unitM": "m",
   "unitHours": "hours",
+  "unitMinutes": "min",
   "unitCal": "cal",
   
   "onboardingWhoAreYou": "Who are you?",

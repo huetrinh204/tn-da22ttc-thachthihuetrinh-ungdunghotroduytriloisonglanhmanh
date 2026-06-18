@@ -1604,6 +1604,12 @@ abstract class AppLocalizations {
   /// **'Số giờ ngủ'**
   String get metricSleepHours;
 
+  /// No description provided for @metricSleepMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số phút ngủ'**
+  String get metricSleepMinutes;
+
   /// No description provided for @metricCalories.
   ///
   /// In vi, this message translates to:
@@ -1633,6 +1639,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'giờ'**
   String get unitHours;
+
+  /// No description provided for @unitMinutes.
+  ///
+  /// In vi, this message translates to:
+  /// **'phút'**
+  String get unitMinutes;
 
   /// No description provided for @unitCal.
   ///

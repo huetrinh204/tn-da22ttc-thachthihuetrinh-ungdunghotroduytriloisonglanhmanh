@@ -286,9 +286,11 @@ async function checkProgressiveWilting() {
     const [users]: any = await pool.query(`
       SELECT u.id as user_id, u.name, u.email, u.fcm_token,
              p.id as plant_id, p.experience, p.days_without_checkin, 
-             p.is_wilted, p.last_penalty_date
+             p.is_wilted, p.last_penalty_date,
+             COALESCE(s.freeze_tokens, 0) as freeze_tokens
       FROM users u
       LEFT JOIN plants p ON u.id = p.user_id
+      LEFT JOIN streaks s ON s.user_id = u.id
       WHERE p.id IS NOT NULL
     `);
 
@@ -330,31 +332,51 @@ async function checkProgressiveWilting() {
 
         // Apply penalties based on days
         if (newDays >= 3) {
-          // Plant wilts and loses EXP
-          const shouldApplyPenalty = !user.last_penalty_date || user.last_penalty_date !== today;
-          
-          if (shouldApplyPenalty) {
-            const penalty = 3;
-            const newExp = Math.max(0, user.experience - penalty);
-            
+          // Kiểm tra còn freeze token không
+          if (user.freeze_tokens > 0) {
+            const newTokens = user.freeze_tokens - 1;
             await pool.query(
-              `UPDATE plants 
-               SET is_wilted = 1, 
-                   experience = ?,
-                   last_penalty_date = ?
-               WHERE id = ?`,
-              [newExp, today, user.plant_id]
+              "UPDATE streaks SET freeze_tokens = ? WHERE user_id = ?",
+              [newTokens, user.user_id]
             );
-
-            console.log(`[Wilting] User ${user.name} - Plant wilted! Applied -${penalty} EXP penalty (${user.experience} -> ${newExp})`);
-
-            // Send notification
+            await pool.query(
+              "UPDATE plants SET days_without_checkin = 0, is_wilted = 0 WHERE id = ?",
+              [user.plant_id]
+            );
+            console.log(`[Wilting] User ${user.name} - Freeze token used! Tokens left: ${newTokens}`);
             if (user.fcm_token) {
               await sendPushNotification(
                 user.fcm_token,
-                "🍂 Cây của bạn đang héo!",
-                `Cây đã bị mất ${penalty} điểm vì không check-in ${newDays} ngày. Hãy quay lại ngay! 💧`
+                "🧊 Streak Freeze đã được dùng!",
+                `Bạn đã bỏ lỡ hôm qua nhưng streak được bảo vệ. Còn ${newTokens} freeze token. Hãy check-in hôm nay! 💪`
               );
+            }
+          } else {
+            // Không có freeze token → phạt bình thường
+            const shouldApplyPenalty = !user.last_penalty_date || user.last_penalty_date !== today;
+            
+            if (shouldApplyPenalty) {
+              const penalty = 3;
+              const newExp = Math.max(0, user.experience - penalty);
+              
+              await pool.query(
+                `UPDATE plants 
+                 SET is_wilted = 1, 
+                     experience = ?,
+                     last_penalty_date = ?
+                 WHERE id = ?`,
+                [newExp, today, user.plant_id]
+              );
+
+              console.log(`[Wilting] User ${user.name} - Plant wilted! Applied -${penalty} EXP penalty`);
+
+              if (user.fcm_token) {
+                await sendPushNotification(
+                  user.fcm_token,
+                  "🍂 Cây của bạn đang héo!",
+                  `Cây đã bị mất ${penalty} điểm vì không check-in ${newDays} ngày. Hãy quay lại ngay! 💧`
+                );
+              }
             }
           }
         } else if (newDays === 2) {

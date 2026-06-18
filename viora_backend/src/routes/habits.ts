@@ -30,7 +30,7 @@ router.get("/streak", authMiddleware, async (req: any, res) => {
       "SELECT * FROM streaks WHERE user_id = ?",
       [req.user.id]
     );
-    const streak = rows[0] || { current_streak: 0, longest_streak: 0 };
+    const streak = rows[0] || { current_streak: 0, longest_streak: 0, freeze_tokens: 0 };
     res.json({ streak });
   } catch (error) {
     console.log(error);
@@ -270,9 +270,8 @@ async function updateHabitStreak(habitId: number, today: string) {
   );
 }
 
-// helper: cập nhật streak
+// helper: cập nhật streak (với streak freeze logic)
 async function updateStreak(userId: number) {
-  // Tính ngày hôm nay theo timezone Việt Nam (UTC+7)
   const now = new Date();
   const vietnamTime = new Date(now.getTime() + (7 * 60 * 60 * 1000));
   const today = vietnamTime.toISOString().split('T')[0];
@@ -284,7 +283,7 @@ async function updateStreak(userId: number) {
 
   if (streakRows.length === 0) {
     await pool.query(
-      "INSERT INTO streaks (user_id, current_streak, longest_streak, last_completed_date) VALUES (?, 1, 1, ?)",
+      "INSERT INTO streaks (user_id, current_streak, longest_streak, last_completed_date, freeze_tokens) VALUES (?, 1, 1, ?, 0)",
       [userId, today]
     );
     return;
@@ -297,22 +296,38 @@ async function updateStreak(userId: number) {
   const todayDate = new Date(today);
 
   let newStreak = streak.current_streak;
+  let freezeTokens = streak.freeze_tokens ?? 0;
 
   if (lastDate) {
     const diffDays = Math.floor(
       (todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    if (diffDays === 0) return;
-    if (diffDays === 1) newStreak += 1;
-    else newStreak = 1;
+    if (diffDays === 0) return; // Đã check-in hôm nay
+    if (diffDays === 1) {
+      newStreak += 1; // Liên tiếp bình thường
+    } else if (diffDays === 2 && freezeTokens > 0) {
+      // Bỏ 1 ngày nhưng có freeze token → dùng token, giữ streak
+      newStreak += 1;
+      freezeTokens -= 1;
+      console.log(`[Streak] User ${userId} used freeze token! Tokens left: ${freezeTokens}`);
+    } else {
+      newStreak = 1; // Reset streak
+    }
+  }
+
+  // Tặng freeze token khi đạt bội số của 7 (7, 14, 21...) và chưa đủ 2 tokens
+  const reachedMilestone = newStreak > 0 && newStreak % 7 === 0;
+  if (reachedMilestone && freezeTokens < 2) {
+    freezeTokens = Math.min(2, freezeTokens + 1);
+    console.log(`[Streak] User ${userId} earned freeze token! Total: ${freezeTokens}`);
   }
 
   const longestStreak = Math.max(newStreak, streak.longest_streak);
 
   await pool.query(
-    "UPDATE streaks SET current_streak = ?, longest_streak = ?, last_completed_date = ? WHERE user_id = ?",
-    [newStreak, longestStreak, today, userId]
+    "UPDATE streaks SET current_streak = ?, longest_streak = ?, last_completed_date = ?, freeze_tokens = ? WHERE user_id = ?",
+    [newStreak, longestStreak, today, freezeTokens, userId]
   );
 }
 

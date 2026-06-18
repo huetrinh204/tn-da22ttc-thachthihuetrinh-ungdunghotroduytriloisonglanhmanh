@@ -795,6 +795,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get metricSleepHours => 'Sleep hours';
 
   @override
+  String get metricSleepMinutes => 'Sleep minutes';
+
+  @override
   String get metricCalories => 'Calories';
 
   @override
@@ -808,6 +811,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unitHours => 'hours';
+
+  @override
+  String get unitMinutes => 'min';
 
   @override
   String get unitCal => 'cal';
