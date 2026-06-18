@@ -19,6 +19,7 @@ import 'profile_screen.dart';
 import 'onboarding_screen.dart';
 import '../services/notification_inbox_store.dart';
 import 'notifications_inbox_screen.dart';
+import 'ai_chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -148,6 +149,8 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return const GrowScreen();
       case AppTabs.me:
         return const ProfileScreen();
+      case AppTabs.aiChat:
+        return const AiChatScreen();
       default:
         return _DashboardTab(key: _dashboardKey);
     }
@@ -202,6 +205,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _NavItem(icon: AppIcons.community, label: l10n.community),
       _NavItem(icon: AppIcons.growth, label: l10n.grow),
       _NavItem(icon: AppIcons.profile, label: l10n.navMe),
+      _NavItem(icon: AppIcons.aiChat, label: 'AI Coach'),
     ];
     return Container(
       decoration: BoxDecoration(
@@ -335,8 +339,20 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     int unread = 0;
     if (notificationsRes["notifications"] != null) {
       final notifs = notificationsRes["notifications"] as List;
-      // Count only unread notifications (is_read = 0)
-      unread = notifs.where((n) => (n['is_read'] as int? ?? 0) == 0).length;
+      final lastSeenStr = prefs.getString('notifications_last_seen_at');
+      final lastSeen = lastSeenStr != null ? DateTime.tryParse(lastSeenStr) : null;
+      for (final n in notifs) {
+        final isRead = (n['is_read'] as int? ?? 0) == 1;
+        if (isRead) continue;
+        // For community notifs (like/comment/follow), check against last seen timestamp
+        if (lastSeen != null) {
+          try {
+            final createdAt = DateTime.parse(n['created_at'].toString());
+            if (!createdAt.isAfter(lastSeen)) continue;
+          } catch (_) {}
+        }
+        unread++;
+      }
     }
 
     if (!mounted) return;
@@ -572,6 +588,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
 
                 // Today progress card
                 _buildTodayCard(progress),
+                const SizedBox(height: 16),
+
+                // AI Coach shortcut
+                _buildAiCoachCard(),
                 const SizedBox(height: 16),
 
                 // Motivational quote
@@ -949,6 +969,62 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                   ),
                 ),
               ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAiCoachCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: isDark ? const Color(0xFF1A2E27) : const Color(0xFFEAF7F2),
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => AppNavigation.openAiChat(),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.2),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(AppIcons.aiChat, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Viora Coach 🌿',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Hỏi về sức khỏe, thói quen, dinh dưỡng...',
+                      style: TextStyle(fontSize: 12, color: context.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(AppIcons.chevronRight, color: AppColors.primary, size: 20),
             ],
           ),
         ),

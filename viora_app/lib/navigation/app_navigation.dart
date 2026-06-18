@@ -13,6 +13,7 @@ class AppNavigation {
   static void openCommunity() => switchToTab(AppTabs.community);
   static void openGrow() => switchToTab(AppTabs.grow);
   static void openMe() => switchToTab(AppTabs.me);
+  static void openAiChat() => switchToTab(AppTabs.aiChat);
 
   /// Tương thích code cũ gọi [openPlant].
   static void openPlant() => openGrow();

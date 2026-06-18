@@ -27,6 +27,20 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
   void initState() {
     super.initState();
     _loadNotifications();
+    _markAllAsRead();
+  }
+
+  Future<void> _markAllAsRead() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    if (token.isNotEmpty) {
+      await ApiService.markAllNotificationsAsRead(token);
+      // Lưu timestamp để badge biết đây là "đã xem"
+      await prefs.setString(
+        'notifications_last_seen_at',
+        DateTime.now().toUtc().toIso8601String(),
+      );
+    }
   }
 
   Future<void> _loadNotifications() async {

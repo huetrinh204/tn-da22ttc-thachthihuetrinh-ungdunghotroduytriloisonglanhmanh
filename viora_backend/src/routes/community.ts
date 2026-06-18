@@ -1001,6 +1001,21 @@ router.put("/notifications/:notificationId/read", authMiddleware, async (req: an
   }
 });
 
+// Mark all notifications as read
+router.put("/notifications/read-all", authMiddleware, async (req: any, res: Response) => {
+  const userId = req.user.id;
+  try {
+    await pool.query(
+      "UPDATE user_notifications SET is_read = 1 WHERE user_id = ?",
+      [userId]
+    );
+    res.json({ message: "All notifications marked as read", read_at: new Date().toISOString() });
+  } catch (error) {
+    console.error("Mark all notifications as read error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 async function ensureCommunitySchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS community_posts (

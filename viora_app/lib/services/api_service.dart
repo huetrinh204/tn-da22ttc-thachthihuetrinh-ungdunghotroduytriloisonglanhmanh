@@ -985,6 +985,16 @@ class ApiService {
     }
   }
 
+  // ================= COMMUNITY - MARK ALL NOTIFICATIONS AS READ =================
+  static Future<void> markAllNotificationsAsRead(String token) async {
+    try {
+      await http.put(
+        Uri.parse("$baseUrl/community/notifications/read-all"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+    } catch (_) {}
+  }
+
   // ================= ADMIN APIS =================
   
   // Get admin dashboard stats

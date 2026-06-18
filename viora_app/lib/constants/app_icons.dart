@@ -288,4 +288,11 @@ class AppIcons {
   
   /// Globe icon
   static const globe = LucideIcons.globe;
+
+  // ========================================
+  // AI CHAT ICONS
+  // ========================================
+
+  /// AI Chat / Bot icon
+  static const aiChat = LucideIcons.bot;
 }
