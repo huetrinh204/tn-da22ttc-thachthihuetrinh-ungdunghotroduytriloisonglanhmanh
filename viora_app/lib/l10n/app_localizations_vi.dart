@@ -1139,13 +1139,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ninetyDays => '90 ngày';
 
   @override
-  String get currentStreakLabel => '🔥 Streak hiện tại';
+  String get currentStreakLabel => 'Streak hiện tại';
 
   @override
-  String get longestStreakDetail => '🏆 Streak dài nhất';
+  String get longestStreakDetail => 'Streak dài nhất';
 
   @override
-  String get totalCheckinsLabel => '✅ Tổng check-in';
+  String get totalCheckinsLabel => 'Tổng check-in';
 
   @override
   String get times => 'lần';
@@ -1162,10 +1162,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get average => '📊 Trung bình';
+  String get average => 'Trung bình';
 
   @override
-  String get totalSum => '📈 Tổng cộng';
+  String get totalSum => 'Tổng cộng';
 
   @override
   String get noDataForPeriod => 'Chưa có dữ liệu trong khoảng thời gian này';

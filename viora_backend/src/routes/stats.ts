@@ -295,6 +295,7 @@ router.get("/habits/:habitId/metrics", authMiddleware, async (req: any, res) => 
         current_streak: habit.current_streak,
         longest_streak: habit.longest_streak,
         total_logs: habit.total_logs,
+        target_count: habit.target_count,
         target_value: habit.target_value,
         unit: habit.unit,
       },

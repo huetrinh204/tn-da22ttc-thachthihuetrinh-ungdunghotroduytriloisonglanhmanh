@@ -2279,19 +2279,19 @@ abstract class AppLocalizations {
   /// No description provided for @currentStreakLabel.
   ///
   /// In vi, this message translates to:
-  /// **'🔥 Streak hiện tại'**
+  /// **'Streak hiện tại'**
   String get currentStreakLabel;
 
   /// No description provided for @longestStreakDetail.
   ///
   /// In vi, this message translates to:
-  /// **'🏆 Streak dài nhất'**
+  /// **'Streak dài nhất'**
   String get longestStreakDetail;
 
   /// No description provided for @totalCheckinsLabel.
   ///
   /// In vi, this message translates to:
-  /// **'✅ Tổng check-in'**
+  /// **'Tổng check-in'**
   String get totalCheckinsLabel;
 
   /// No description provided for @times.
@@ -2321,13 +2321,13 @@ abstract class AppLocalizations {
   /// No description provided for @average.
   ///
   /// In vi, this message translates to:
-  /// **'📊 Trung bình'**
+  /// **'Trung bình'**
   String get average;
 
   /// No description provided for @totalSum.
   ///
   /// In vi, this message translates to:
-  /// **'📈 Tổng cộng'**
+  /// **'Tổng cộng'**
   String get totalSum;
 
   /// No description provided for @noDataForPeriod.

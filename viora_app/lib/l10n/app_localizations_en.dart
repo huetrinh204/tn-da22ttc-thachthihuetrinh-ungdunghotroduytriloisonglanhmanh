@@ -1137,13 +1137,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ninetyDays => '90 days';
 
   @override
-  String get currentStreakLabel => '🔥 Current Streak';
+  String get currentStreakLabel => 'Current Streak';
 
   @override
-  String get longestStreakDetail => '🏆 Longest Streak';
+  String get longestStreakDetail => 'Longest Streak';
 
   @override
-  String get totalCheckinsLabel => '✅ Total Check-ins';
+  String get totalCheckinsLabel => 'Total Check-ins';
 
   @override
   String get times => 'times';
@@ -1160,10 +1160,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get average => '📊 Average';
+  String get average => 'Average';
 
   @override
-  String get totalSum => '📈 Total';
+  String get totalSum => 'Total';
 
   @override
   String get noDataForPeriod => 'No data for this period';

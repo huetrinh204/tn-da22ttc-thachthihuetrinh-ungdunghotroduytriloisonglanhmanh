@@ -225,6 +225,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                 l10n.currentStreakLabel,
                 "$currentStreak ${l10n.days}",
                 const Color(0xFFFF9800),
+                Icons.local_fire_department_rounded,
               ),
             ),
             const SizedBox(width: 12),
@@ -233,6 +234,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                 l10n.longestStreakDetail,
                 "$longestStreak ${l10n.days}",
                 const Color(0xFF2196F3),
+                Icons.emoji_events_rounded,
               ),
             ),
           ],
@@ -245,6 +247,7 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                 l10n.totalCheckinsLabel,
                 "$totalLogs ${l10n.times}",
                 AppColors.primary,
+                Icons.check_circle_rounded,
               ),
             ),
             const SizedBox(width: 12),
@@ -254,23 +257,17 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                   l10n.average,
                   "${avgValue.toStringAsFixed(1)} $unit",
                   const Color(0xFF9C27B0),
+                  Icons.bar_chart_rounded,
                 ),
               ),
           ],
         ),
-        if (unit.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          _buildSummaryCard(
-            l10n.totalSum,
-            "${totalValue.toStringAsFixed(1)} $unit",
-            const Color(0xFF00BCD4),
-          ),
-        ],
+
       ],
     );
   }
 
-  Widget _buildSummaryCard(String label, String value, Color color) {
+  Widget _buildSummaryCard(String label, String value, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -281,14 +278,30 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: context.textSecondary,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.textSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Text(
             value,
             style: TextStyle(
@@ -305,8 +318,16 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
   Widget _buildMetricsChart() {
     final l10n = AppLocalizations.of(context)!;
     final unit = summary["unit"] ?? habitInfo["unit"] ?? "";
+    final targetCount = habitInfo["target_count"];
+    double? target;
+    if (targetCount != null) {
+      if (targetCount is num) {
+        target = targetCount.toDouble();
+      } else if (targetCount is String) {
+        target = double.tryParse(targetCount);
+      }
+    }
 
-    // Build bar data từ tất cả metrics
     final List<BarChartGroupData> barGroups = [];
     final List<String> dateLabels = [];
 
@@ -325,13 +346,23 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
         }
       }
 
+      // Màu: xanh đầy đủ nếu đạt mục tiêu, cam nếu chưa đạt, xanh nhạt nếu = 0
+      Color barColor;
+      if (value <= 0) {
+        barColor = AppColors.primary.withValues(alpha: 0.12);
+      } else if (target != null && value < target) {
+        barColor = const Color(0xFFFF9800); // cam - chưa đạt mục tiêu
+      } else {
+        barColor = AppColors.primary; // xanh - đạt mục tiêu
+      }
+
       barGroups.add(
         BarChartGroupData(
           x: i,
           barRods: [
             BarChartRodData(
               toY: value,
-              color: value > 0 ? AppColors.primary : AppColors.primary.withValues(alpha: 0.15),
+              color: barColor,
               width: metrics.length > 20 ? 6 : 12,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
             ),
@@ -345,7 +376,11 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
     }
 
     final maxValue = barGroups.map((g) => g.barRods.first.toY).reduce((a, b) => a > b ? a : b);
-    final maxY = (maxValue * 1.25).ceilToDouble().clamp(1.0, double.infinity);
+    final maxY = (target != null
+        ? (target > maxValue ? target * 1.25 : maxValue * 1.25)
+        : maxValue * 1.25)
+        .ceilToDouble()
+        .clamp(1.0, double.infinity);
     final interval = (maxY / 4).clamp(1.0, double.infinity);
     final labelStep = (dateLabels.length / 7).ceil().clamp(1, dateLabels.length);
 
@@ -360,19 +395,35 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
         children: [
           Text(
             l10n.trendOverTime,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: context.textGreen,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: context.textGreen),
           ),
           const SizedBox(height: 4),
           Text(
-            unit.isNotEmpty
-                ? l10n.dailyRecordedValuesWithUnit(unit)
-                : l10n.dailyRecordedValues,
+            unit.isNotEmpty ? l10n.dailyRecordedValuesWithUnit(unit) : l10n.dailyRecordedValues,
             style: TextStyle(fontSize: 12, color: context.textSecondary),
           ),
+          // Legend
+          if (target != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Container(width: 12, height: 12,
+                    decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                Text('Đạt mục tiêu', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                const SizedBox(width: 16),
+                Container(width: 12, height: 12,
+                    decoration: BoxDecoration(color: const Color(0xFFFF9800), borderRadius: BorderRadius.circular(2))),
+                const SizedBox(width: 6),
+                Text('Chưa đạt', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                const SizedBox(width: 16),
+                Container(width: 20, height: 2, color: Colors.red.withValues(alpha: 0.6)),
+                const SizedBox(width: 6),
+                Text('Mục tiêu: ${target.toInt()}${unit.isNotEmpty ? ' $unit' : ''}',
+                    style: TextStyle(fontSize: 11, color: context.textSecondary)),
+              ],
+            ),
+          ],
           const SizedBox(height: 20),
           SizedBox(
             height: 200,
@@ -389,15 +440,36 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                     color: context.textSecondary.withValues(alpha: 0.12),
                     strokeWidth: 1,
                   ),
+                  // Đường target màu đỏ nhạt
+                  checkToShowHorizontalLine: (value) {
+                    if (target == null) return value % interval == 0;
+                    return value % interval == 0 || (value - target).abs() < 0.01;
+                  },
+                  getDrawingVerticalLine: (_) => const FlLine(strokeWidth: 0),
                 ),
+                extraLinesData: target != null
+                    ? ExtraLinesData(horizontalLines: [
+                        HorizontalLine(
+                          y: target,
+                          color: Colors.red.withValues(alpha: 0.6),
+                          strokeWidth: 1.5,
+                          dashArray: [6, 4],
+                          label: HorizontalLineLabel(
+                            show: false,
+                          ),
+                        ),
+                      ])
+                    : null,
                 borderData: FlBorderData(show: false),
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final date = _formatChartDateLabel(dateLabels[group.x]) ?? '';
                       final val = rod.toY;
+                      final hitTarget = target == null || val >= target;
                       return BarTooltipItem(
-                        '$date\n${val % 1 == 0 ? val.toInt() : val.toStringAsFixed(1)}${unit.isNotEmpty ? ' $unit' : ''}',
+                        '$date\n${val % 1 == 0 ? val.toInt() : val.toStringAsFixed(1)}${unit.isNotEmpty ? ' $unit' : ''}'
+                        '${target != null ? '\n${hitTarget ? '✅ Đạt' : '❌ Chưa đạt'}' : ''}',
                         TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -432,10 +504,8 @@ class _HabitDetailScreenState extends State<HabitDetailScreen> {
                         if (formatted == null) return const SizedBox();
                         return Padding(
                           padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            formatted,
-                            style: TextStyle(fontSize: 10, color: context.textSecondary),
-                          ),
+                          child: Text(formatted,
+                              style: TextStyle(fontSize: 10, color: context.textSecondary)),
                         );
                       },
                     ),

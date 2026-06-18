@@ -513,9 +513,9 @@
   "sevenDays": "7 days",
   "thirtyDays": "30 days",
   "ninetyDays": "90 days",
-  "currentStreakLabel": "🔥 Current Streak",
-  "longestStreakDetail": "🏆 Longest Streak",
-  "totalCheckinsLabel": "✅ Total Check-ins",
+  "currentStreakLabel": "Current Streak",
+  "longestStreakDetail": "Longest Streak",
+  "totalCheckinsLabel": "Total Check-ins",
   "times": "times",
   "trendOverTime": "Trend Over Time",
   "dailyRecordedValues": "Daily recorded values",
@@ -528,8 +528,8 @@
     }
   },
   
-  "average": "📊 Average",
-  "totalSum": "📈 Total",
+  "average": "Average",
+  "totalSum": "Total",
   "noDataForPeriod": "No data for this period",
   "startTrackingHabit": "Start tracking habit to see chart",
   

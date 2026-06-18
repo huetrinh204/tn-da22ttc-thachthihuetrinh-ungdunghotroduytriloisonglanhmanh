@@ -513,9 +513,9 @@
   "sevenDays": "7 ngày",
   "thirtyDays": "30 ngày",
   "ninetyDays": "90 ngày",
-  "currentStreakLabel": "🔥 Streak hiện tại",
-  "longestStreakDetail": "🏆 Streak dài nhất",
-  "totalCheckinsLabel": "✅ Tổng check-in",
+  "currentStreakLabel": "Streak hiện tại",
+  "longestStreakDetail": "Streak dài nhất",
+  "totalCheckinsLabel": "Tổng check-in",
   "times": "lần",
   "trendOverTime": "Xu hướng theo thời gian",
   "dailyRecordedValues": "Giá trị ghi nhận mỗi ngày",
@@ -528,8 +528,8 @@
     }
   },
   
-  "average": "📊 Trung bình",
-  "totalSum": "📈 Tổng cộng",
+  "average": "Trung bình",
+  "totalSum": "Tổng cộng",
   "noDataForPeriod": "Chưa có dữ liệu trong khoảng thời gian này",
   "startTrackingHabit": "Bắt đầu theo dõi thói quen để xem biểu đồ",
   
