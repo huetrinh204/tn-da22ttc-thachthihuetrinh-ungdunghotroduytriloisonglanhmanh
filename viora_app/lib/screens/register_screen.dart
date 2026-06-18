@@ -7,6 +7,7 @@ import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/language_flag_toggle.dart';
+import '../theme/theme_extensions.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -335,7 +336,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-      prefixIcon: Icon(icon, color: Colors.grey, size: 20),
+      prefixIcon: Icon(icon, color: context.textSecondary, size: 20),
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white,

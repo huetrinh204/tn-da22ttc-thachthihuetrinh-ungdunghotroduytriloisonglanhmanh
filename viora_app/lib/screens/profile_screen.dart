@@ -14,7 +14,10 @@ import 'achievements_screen.dart';
 import 'stats_screen.dart';
 import 'forgot_password_screen.dart';
 import 'followers_list_screen.dart';
+import 'user_profile_screen.dart';
 import '../providers/locale_provider.dart';
+import '../utils/habit_icon_mapper.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -397,15 +400,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: 1.5,
                         ),
                       ),
-                      child: Text(
-                        "${g["icon"]} ${g["label"]}",
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: isSel
-                              ? AppColors.primaryDark
-                              : Colors.black87,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            HabitIconMapper.getIconData(g["icon"]),
+                            size: 14,
+                            color: isSel
+                                ? AppColors.primaryDark
+                                : Colors.black87,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            g["label"],
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isSel
+                                  ? AppColors.primaryDark
+                                  : Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -576,6 +592,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Community stats (Followers, Following, Posts)
                 if (_currentUserId != null) ...[
                   _buildCommunityStatsCard(),
+                  const SizedBox(height: 16),
+
+                  // Shortcut xem trang cá nhân
+                  _buildSection('Trang cá nhân', [
+                    _buildTile(
+                      'Xem trang cá nhân',
+                      'Xem hồ sơ của bạn trong cộng đồng',
+                      Icons.account_circle_outlined,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => UserProfileScreen(
+                              userId: _currentUserId!,
+                              userName: name,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ]),
                   const SizedBox(height: 16),
                 ],
 
@@ -1241,7 +1278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: AppColors.primaryLight,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.flag_outlined, color: AppColors.primary, size: 18),
+        child: const Icon(LucideIcons.target, color: AppColors.primary, size: 18),
       ),
       title: Text(l10n.goals,
           style: TextStyle(fontSize: 13, color: context.textSecondary)),
@@ -1259,11 +1296,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: AppColors.primaryLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          "${g["icon"]} ${g["label"]}",
-                          style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.primaryDark),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              HabitIconMapper.getIconData(g["icon"]),
+                              size: 12,
+                              color: AppColors.primaryDark,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              g["label"],
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.primaryDark),
+                            ),
+                          ],
                         ),
                       ))
                   .toList(),

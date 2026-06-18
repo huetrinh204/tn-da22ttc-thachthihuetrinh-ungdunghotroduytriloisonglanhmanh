@@ -6,6 +6,7 @@ import '../services/onboarding_gate.dart';
 import '../data/starter_habit_templates.dart';
 import '../l10n/app_localizations.dart';
 import 'home_screen.dart';
+import '../theme/theme_extensions.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -550,7 +551,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   decoration: InputDecoration(
                     hintText: l10n.enterBirthYear,
                     hintStyle: const TextStyle(color: Colors.grey),
-                    prefixIcon: const Icon(Icons.cake_outlined, color: Color(0xFF2E7D32)),
+                    prefixIcon: Icon(Icons.cake_outlined, color: context.textGreen),
                     errorText: birthYearError,
                     counterText: "",
                     filled: true,
@@ -670,7 +671,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, color: Color(0xFF2E7D32), size: 18),
+                      Icon(Icons.info_outline, color: context.textGreen, size: 18),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(

@@ -212,7 +212,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                                         errorBuilder: (_, __, ___) => Container(
                                           height: 200,
                                           color: Colors.grey[300],
-                                          child: Icon(AppIcons.image, size: 48, color: Colors.grey[600]),
+                                          child: Icon(AppIcons.image, size: 48, color: context.textSecondary),
                                         ),
                                       ),
                                     ),
@@ -221,11 +221,11 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                                   padding: const EdgeInsets.all(16),
                                   child: Row(
                                     children: [
-                                      Icon(AppIcons.heart, size: 16, color: Colors.grey[600]),
+                                      Icon(AppIcons.heart, size: 16, color: context.textSecondary),
                                       const SizedBox(width: 4),
                                       Text('${post['like_count'] ?? 0}'),
                                       const SizedBox(width: 16),
-                                      Icon(AppIcons.message, size: 16, color: Colors.grey[600]),
+                                      Icon(AppIcons.message, size: 16, color: context.textSecondary),
                                       const SizedBox(width: 4),
                                       Text('${post['comment_count'] ?? 0}'),
                                       const Spacer(),

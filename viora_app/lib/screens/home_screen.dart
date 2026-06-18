@@ -484,8 +484,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       alignment: Alignment.center,
       children: [
         IconButton(
-          icon: const Icon(AppIcons.notifications,
-              color: AppColors.primary, size: 24),
+          icon: Icon(AppIcons.notifications, size: 24),
           onPressed: () async {
             await Navigator.push(
               context,
@@ -753,7 +752,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF8D6E63), size: 20),
+              Icon(Icons.chevron_right_rounded, color: context.textSecondary, size: 20),
             ],
           ),
         ),

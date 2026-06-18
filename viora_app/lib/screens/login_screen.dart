@@ -8,6 +8,7 @@ import 'onboarding_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
+import '../theme/theme_extensions.dart';
 import '../services/onboarding_gate.dart';
 import 'forgot_password_screen.dart';
 import '../l10n/app_localizations.dart';
@@ -434,7 +435,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-      prefixIcon: Icon(icon, color: Colors.grey, size: 20),
+      prefixIcon: Icon(icon, color: context.textSecondary, size: 20),
       suffixIcon: suffix,
       filled: true,
       fillColor: Colors.white,

@@ -32,6 +32,8 @@ class HabitIconMapper {
         return LucideIcons.heart; // Heart/Health
       case '🍴':
         return LucideIcons.utensils; // Eating/Utensils
+      case '⚖️':
+        return LucideIcons.scale; // Weight/Balance
       default:
         return LucideIcons.circle; // Default fallback
     }
@@ -53,6 +55,7 @@ class HabitIconMapper {
       {'emoji': '🌿', 'icon': LucideIcons.leaf},
       {'emoji': '❤️', 'icon': LucideIcons.heart},
       {'emoji': '🍴', 'icon': LucideIcons.utensils},
+      {'emoji': '⚖️', 'icon': LucideIcons.scale},
     ];
   }
 

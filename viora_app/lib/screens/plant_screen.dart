@@ -584,114 +584,10 @@ class _PlantScreenState extends State<PlantScreen>
         ),
       );
 
-      // Add treasure chest every 3 levels (after level 3, 6, 9, 12)
-      if (lvl % 3 == 0 && lvl < 15) {
-        final treasureUnlocked = currentLevel > lvl;
-        roadmapWidgets.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 20),
-            child: _buildTreasureChest(
-              isUnlocked: treasureUnlocked,
-              afterLevel: lvl,
-            ),
-          ),
-        );
-      }
+      // Treasure chest nodes removed
     }
 
     return roadmapWidgets;
-  }
-
-  Widget _buildTreasureChest({
-    required bool isUnlocked,
-    required int afterLevel,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    return GestureDetector(
-      onTap: isUnlocked
-          ? () {
-              // Show treasure reward animation
-              _showTreasureReward();
-            }
-          : null,
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isUnlocked
-                  ? const Color(0xFFFFD700).withValues(alpha: 0.2)
-                  : Colors.grey.shade200,
-              border: Border.all(
-                color: isUnlocked ? const Color(0xFFFFD700) : Colors.grey.shade400,
-                width: 3,
-              ),
-              boxShadow: isUnlocked
-                  ? [
-                      BoxShadow(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : [],
-            ),
-            child: Center(
-              child: isUnlocked
-                  ? Image.asset(
-                      'assets/images/khobau.png',
-                      width: 40,
-                      height: 40,
-                      fit: BoxFit.contain,
-                    )
-                  : RepaintBoundary(
-                      child: ColorFiltered(
-                        colorFilter: const ColorFilter.matrix([
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0.2126, 0.7152, 0.0722, 0, 0,
-                          0,      0,      0,      1, 0,
-                        ]),
-                        child: Opacity(
-                          opacity: 0.7,
-                          child: Image.asset(
-                            'assets/images/khobau.png',
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: isUnlocked
-                  ? const Color(0xFFFFD700).withValues(alpha: 0.2)
-                  : Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isUnlocked ? const Color(0xFFFFD700) : Colors.grey.shade400,
-                width: 1,
-              ),
-            ),
-            child: Text(
-              isUnlocked ? l10n.treasureUnlocked : l10n.treasureLocked,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: isUnlocked ? const Color(0xFFFF8F00) : Colors.grey.shade600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showTreasureReward() {
@@ -786,7 +682,7 @@ class _PlantScreenState extends State<PlantScreen>
                   height: 58,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    return Icon(AppIcons.lock, color: Colors.grey.shade600, size: 24);
+                    return Icon(AppIcons.lock, color: context.textSecondary, size: 24);
                   },
                 ),
               ),

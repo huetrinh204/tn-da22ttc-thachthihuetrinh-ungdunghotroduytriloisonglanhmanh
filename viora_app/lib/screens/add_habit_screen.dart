@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/theme_extensions.dart';
 
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
@@ -33,7 +34,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, color: Color(0xFF0F623F)),
+          icon: Icon(LucideIcons.arrowLeft, color: context.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(

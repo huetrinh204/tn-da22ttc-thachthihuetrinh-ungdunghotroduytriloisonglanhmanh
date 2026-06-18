@@ -131,7 +131,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.park_outlined, size: 64, color: Colors.grey),
+                      Icon(Icons.park_outlined, size: 64, color: context.textSecondary),
                       const SizedBox(height: 16),
                       Text(
                         loc.userHasNoPlant,
