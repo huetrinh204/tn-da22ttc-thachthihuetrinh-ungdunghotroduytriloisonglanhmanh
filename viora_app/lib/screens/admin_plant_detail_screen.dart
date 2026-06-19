@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import '../models/plant_type.dart';
+import '../widgets/habit_icon.dart';
 
 class AdminPlantDetailScreen extends StatefulWidget {
   final String userId;
@@ -683,12 +684,23 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
                     width: 1,
                   ),
                 ),
-                child: Text(
-                  '${habit['icon'] ?? '⭐'} ${habit['name']}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: context.textPrimary,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    HabitIcon(
+                      iconString: habit['icon']?.toString() ?? '⭐',
+                      size: 12,
+                      color: context.textPrimary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      habit['name'] ?? '',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: context.textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
               );
             }).toList(),

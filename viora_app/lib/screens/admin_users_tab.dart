@@ -3,7 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'admin_user_detail_screen.dart';
 import '../theme/theme_extensions.dart';
+import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
+import '../constants/app_icons.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AdminUsersTab extends StatefulWidget {
   const AdminUsersTab({super.key});
@@ -18,8 +21,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   List<dynamic> _users = [];
   List<dynamic> _filteredUsers = [];
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
   
-  // Selection mode
   bool _isSelectionMode = false;
   final Set<int> _selectedUserIds = {};
 
@@ -32,6 +35,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
@@ -72,216 +76,436 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isDark = context.isDark;
     
     return Scaffold(
       appBar: _isSelectionMode
-          ? AppBar(
-              leading: IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  setState(() {
-                    _isSelectionMode = false;
-                    _selectedUserIds.clear();
-                  });
-                },
-              ),
-              title: Text('${_selectedUserIds.length} ${l10n.selected}'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: _selectedUserIds.isEmpty ? null : _bulkDeleteUsers,
-                ),
-              ],
-            )
+          ? _buildSelectionAppBar(l10n)
           : null,
       body: Column(
         children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              style: TextStyle(color: context.textPrimary),
-              decoration: InputDecoration(
-                hintText: l10n.searchByNameEmail,
-                hintStyle: TextStyle(color: context.textSecondary),
-                prefixIcon: Icon(Icons.search, color: context.textSecondary),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(Icons.clear, color: context.textSecondary),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('');
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.infoBoxBorder),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.infoBoxBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.isDark ? Colors.white54 : Colors.grey[400]!),
-                ),
-                filled: true,
-                fillColor: context.cardColor,
-              ),
-            ),
-          ),
-          
-          // User list
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: () => _loadUsers(),
-                    child: _filteredUsers.isEmpty
-                        ? Center(
-                            child: Text(
-                              _searchController.text.isNotEmpty
-                                  ? l10n.noUsersFound
-                                  : l10n.noUsersYet,
-                              style: TextStyle(fontSize: 16, color: context.textSecondary),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: _filteredUsers.length,
-                            itemBuilder: (context, index) {
-                              final user = _filteredUsers[index];
-                              final isAdmin = user['role'] == 'admin';
-                              final userId = user['id'] as int;
-                              final isSelected = _selectedUserIds.contains(userId);
-                              
-                              return Card(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                child: ListTile(
-                                  onTap: () {
-                                    if (_isSelectionMode) {
-                                      setState(() {
-                                        if (isSelected) {
-                                          _selectedUserIds.remove(userId);
-                                        } else {
-                                          _selectedUserIds.add(userId);
-                                        }
-                                      });
-                                    } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => AdminUserDetailScreen(user: user),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  onLongPress: () {
-                                    setState(() {
-                                      _isSelectionMode = true;
-                                      _selectedUserIds.add(userId);
-                                    });
-                                  },
-                                  leading: _isSelectionMode
-                                      ? Checkbox(
-                                          value: isSelected,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              if (value == true) {
-                                                _selectedUserIds.add(userId);
-                                              } else {
-                                                _selectedUserIds.remove(userId);
-                                              }
-                                            });
-                                          },
-                                        )
-                                      : CircleAvatar(
-                                          backgroundImage: user['avatar_url'] != null
-                                              ? NetworkImage(ApiService.resolveImageUrl(user['avatar_url']))
-                                              : null,
-                                          child: user['avatar_url'] == null
-                                              ? Text(user['name']?[0]?.toUpperCase() ?? 'U')
-                                              : null,
-                                        ),
-                                  title: Row(
-                                    children: [
-                                      Expanded(child: Text(user['name'] ?? 'Unknown')),
-                                      // Activity status
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: _getUserActivityStatus(user['created_at'], l10n) == l10n.active 
-                                              ? Colors.green 
-                                              : Colors.grey,
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          _getUserActivityStatus(user['created_at'], l10n),
-                                          style: const TextStyle(color: Colors.white, fontSize: 10),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      if (isAdmin)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: const Text(
-                                            'ADMIN',
-                                            style: TextStyle(color: Colors.white, fontSize: 10),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(user['email'] ?? ''),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${user['habit_count'] ?? 0} ${l10n.habits.toLowerCase()} • ${user['post_count'] ?? 0} ${l10n.postsLabel.toLowerCase()}',
-                                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: _isSelectionMode
-                                      ? null
-                                      : PopupMenuButton(
-                                    itemBuilder: (context) => [
-                                      PopupMenuItem(
-                                        child: Text(isAdmin ? l10n.demoteToUser : l10n.promoteToAdmin),
-                                        onTap: () => _toggleRole(user['id'], isAdmin),
-                                      ),
-                                      PopupMenuItem(
-                                        child: Text(l10n.blockUser),
-                                        onTap: () => _blockUser(user['id'], user['name']),
-                                      ),
-                                      PopupMenuItem(
-                                        child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
-                                        onTap: () => _deleteUser(user['id'], user['name']),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-          ),
+          _buildSearchBar(l10n, isDark),
+          Expanded(child: _buildUserList(l10n, isDark)),
         ],
       ),
       floatingActionButton: _isSelectionMode
           ? null
           : FloatingActionButton.extended(
               onPressed: _showAddUserDialog,
-              icon: const Icon(Icons.person_add),
-              label: Text(l10n.addUser),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              icon: const Icon(Icons.person_add_rounded, size: 20),
+              label: Text(l10n.addUser, style: const TextStyle(fontWeight: FontWeight.w600)),
             ),
+    );
+  }
+
+  PreferredSizeWidget _buildSelectionAppBar(AppLocalizations l10n) {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.close_rounded),
+        onPressed: () {
+          setState(() {
+            _isSelectionMode = false;
+            _selectedUserIds.clear();
+          });
+        },
+      ),
+      title: Text(
+        '${_selectedUserIds.length} ${l10n.selected}',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      actions: [
+        if (_selectedUserIds.isNotEmpty)
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded),
+            tooltip: l10n.delete,
+            onPressed: _bulkDeleteUsers,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar(AppLocalizations l10n, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.grey.withValues(alpha: 0.18),
+        ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocus,
+        onChanged: _onSearchChanged,
+        style: TextStyle(fontSize: 14, color: context.textPrimary),
+        decoration: InputDecoration(
+          hintText: l10n.searchByNameEmail,
+          hintStyle: TextStyle(fontSize: 14, color: context.textSecondary.withValues(alpha: 0.6)),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Icon(LucideIcons.search, size: 20, color: context.textSecondary),
+          ),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.close_rounded, size: 18, color: context.textSecondary),
+                  onPressed: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                    _searchFocus.unfocus();
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserList(AppLocalizations l10n, bool isDark) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_filteredUsers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.users,
+              size: 56,
+              color: context.textSecondary.withValues(alpha: 0.25),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _searchController.text.isNotEmpty
+                  ? l10n.noUsersFound
+                  : l10n.noUsersYet,
+              style: TextStyle(fontSize: 15, color: context.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => _loadUsers(),
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+        itemCount: _filteredUsers.length,
+        itemBuilder: (context, index) {
+          final user = _filteredUsers[index];
+          final isAdmin = user['role'] == 'admin';
+          final userId = user['id'] as int;
+          final isSelected = _selectedUserIds.contains(userId);
+
+          return _buildUserCard(user, isAdmin, userId, isSelected, l10n, isDark);
+        },
+      ),
+    );
+  }
+
+  Widget _buildUserCard(
+    dynamic user,
+    bool isAdmin,
+    int userId,
+    bool isSelected,
+    AppLocalizations l10n,
+    bool isDark,
+  ) {
+    final name = user['name'] ?? 'Unknown';
+    final email = user['email'] ?? '';
+    final avatarUrl = user['avatar_url'] as String?;
+    final habitCount = user['habit_count'] ?? 0;
+    final postCount = user['post_count'] ?? 0;
+    final isActive = _getUserActivityStatus(user['created_at'], l10n) == l10n.active;
+    final createdDate = user['created_at']?.toString() ?? '';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: isSelected
+            ? AppColors.primary.withValues(alpha: 0.06)
+            : context.cardColor,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: () {
+            if (_isSelectionMode) {
+              setState(() {
+                if (isSelected) {
+                  _selectedUserIds.remove(userId);
+                  if (_selectedUserIds.isEmpty) {
+                    _isSelectionMode = false;
+                  }
+                } else {
+                  _selectedUserIds.add(userId);
+                }
+              });
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AdminUserDetailScreen(user: user),
+                ),
+              );
+            }
+          },
+          onLongPress: () {
+            if (!_isSelectionMode) {
+              setState(() {
+                _isSelectionMode = true;
+                _selectedUserIds.add(userId);
+              });
+            }
+          },
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primary.withValues(alpha: 0.3)
+                    : isDark
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.grey.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Row(
+              children: [
+                if (_isSelectionMode)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: Checkbox(
+                        value: isSelected,
+                        activeColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                        onChanged: (value) {
+                          setState(() {
+                            if (value == true) {
+                              _selectedUserIds.add(userId);
+                            } else {
+                              _selectedUserIds.remove(userId);
+                              if (_selectedUserIds.isEmpty) {
+                                _isSelectionMode = false;
+                              }
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: AppColors.primaryLight,
+                      backgroundImage: avatarUrl != null
+                          ? NetworkImage(ApiService.resolveImageUrl(avatarUrl))
+                          : null,
+                      child: avatarUrl == null
+                          ? Text(
+                              name[0]?.toUpperCase() ?? 'U',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            )
+                          : null,
+                    ),
+                    if (isActive)
+                      Positioned(
+                        right: 1,
+                        bottom: 1,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4CAF50),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: context.cardColor, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isAdmin)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'ADMIN',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFE53935),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        email,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: context.textSecondary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          _buildStatChip(
+                            icon: AppIcons.checkCircle,
+                            value: '$habitCount',
+                            label: l10n.habits,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildStatChip(
+                            icon: LucideIcons.fileText,
+                            value: '$postCount',
+                            label: l10n.postsLabel,
+                            isDark: isDark,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (!_isSelectionMode)
+                  PopupMenuButton<String>(
+                    padding: EdgeInsets.zero,
+                    iconSize: 20,
+                    icon: Icon(
+                      Icons.more_horiz_rounded,
+                      color: context.textSecondary.withValues(alpha: 0.5),
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 2,
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        height: 40,
+                        child: Row(
+                          children: [
+                            Icon(
+                              isAdmin ? Icons.person_outline_rounded : Icons.shield_outlined,
+                              size: 18,
+                              color: context.textSecondary,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              isAdmin ? l10n.demoteToUser : l10n.promoteToAdmin,
+                              style: TextStyle(fontSize: 14, color: context.textPrimary),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _toggleRole(user['id'], isAdmin),
+                      ),
+                      PopupMenuItem(
+                        height: 40,
+                        child: Row(
+                          children: [
+                            Icon(Icons.block_rounded, size: 18, color: context.textSecondary),
+                            const SizedBox(width: 10),
+                            Text(l10n.blockUser, style: TextStyle(fontSize: 14, color: context.textPrimary)),
+                          ],
+                        ),
+                        onTap: () => _blockUser(user['id'], name),
+                      ),
+                      PopupMenuItem(
+                        height: 40,
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline_rounded, size: 18, color: const Color(0xFFE53935)),
+                            const SizedBox(width: 10),
+                            Text(l10n.delete, style: TextStyle(fontSize: 14, color: const Color(0xFFE53935))),
+                          ],
+                        ),
+                        onTap: () => _deleteUser(user['id'], name),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip({
+    required IconData icon,
+    required String value,
+    required String label,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.grey.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: context.textSecondary.withValues(alpha: 0.7)),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: context.textPrimary,
+            ),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: context.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -294,94 +518,127 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
     final result = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(l10n.addNewUser),
-          content: SingleChildScrollView(
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: l10n.name,
-                    border: const OutlineInputBorder(),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(16),
                   ),
+                  child: const Icon(Icons.person_add_rounded, color: AppColors.primary, size: 28),
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                Text(
+                  l10n.addNewUser,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: context.textPrimary),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Nhập thông tin người dùng mới',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: context.textSecondary, height: 1.4),
+                ),
+                const SizedBox(height: 24),
+                _buildDialogField(
+                  controller: nameController,
+                  label: l10n.name,
+                  icon: Icons.person_outline_rounded,
+                ),
+                const SizedBox(height: 14),
+                _buildDialogField(
                   controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: l10n.email,
-                    border: const OutlineInputBorder(),
-                  ),
+                  label: l10n.email,
+                  icon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                 ),
-                const SizedBox(height: 16),
-                TextField(
+                const SizedBox(height: 14),
+                _buildDialogField(
                   controller: passwordController,
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    border: const OutlineInputBorder(),
-                  ),
+                  label: l10n.password,
+                  icon: Icons.lock_outline_rounded,
                   obscureText: true,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
                   value: selectedRole,
-                  decoration: InputDecoration(
-                    labelText: l10n.role,
-                    border: const OutlineInputBorder(),
+                  style: TextStyle(fontSize: 14, color: context.textPrimary),
+                  decoration: _dialogFieldDecoration(
+                    label: l10n.role,
+                    icon: Icons.admin_panel_settings_outlined,
                   ),
                   items: [
-                    DropdownMenuItem(value: 'user', child: Text(l10n.user)),
-                    DropdownMenuItem(value: 'admin', child: Text(l10n.admin)),
+                    DropdownMenuItem(value: 'user', child: Text(l10n.user, style: TextStyle(fontSize: 14, color: context.textPrimary))),
+                    DropdownMenuItem(value: 'admin', child: Text(l10n.admin, style: TextStyle(fontSize: 14, color: context.textPrimary))),
                   ],
                   onChanged: (value) {
                     setState(() => selectedRole = value ?? 'user');
                   },
                 ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: context.textSecondary,
+                          side: BorderSide(color: context.textSecondary.withValues(alpha: 0.25)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (nameController.text.isEmpty ||
+                              emailController.text.isEmpty ||
+                              passwordController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.pleaseEnterAllFields)),
+                            );
+                            return;
+                          }
+                          try {
+                            await ApiService.createUser(
+                              _token, nameController.text, emailController.text,
+                              passwordController.text, selectedRole,
+                            );
+                            if (context.mounted) Navigator.pop(context, true);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${l10n.failed}: $e')),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(l10n.create, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty ||
-                    emailController.text.isEmpty ||
-                    passwordController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.pleaseEnterAllFields)),
-                  );
-                  return;
-                }
-
-                try {
-                  await ApiService.createUser(
-                    _token,
-                    nameController.text,
-                    emailController.text,
-                    passwordController.text,
-                    selectedRole,
-                  );
-                  if (context.mounted) {
-                    Navigator.pop(context, true);
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${l10n.failed}: $e')),
-                    );
-                  }
-                }
-              },
-              child: Text(l10n.create),
-            ),
-          ],
         ),
       ),
     );
@@ -390,29 +647,68 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       _loadUsers();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.userCreated)),
+          SnackBar(
+            content: Text(l10n.userCreated),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
   }
 
+  Widget _buildDialogField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: TextStyle(fontSize: 14, color: context.textPrimary),
+      decoration: _dialogFieldDecoration(label: label, icon: icon),
+    );
+  }
+
+  InputDecoration _dialogFieldDecoration({
+    required String label,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(fontSize: 13, color: context.textSecondary),
+      prefixIcon: Icon(icon, size: 20, color: context.textSecondary),
+      filled: true,
+      fillColor: context.inputFill,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
+  }
+
   Future<void> _toggleRole(int userId, bool isCurrentlyAdmin) async {
     try {
       await ApiService.updateUserRole(
-        _token,
-        userId.toString(),
-        isCurrentlyAdmin ? 'user' : 'admin',
+        _token, userId.toString(), isCurrentlyAdmin ? 'user' : 'admin',
       );
       _loadUsers();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật role')),
+          const SnackBar(content: Text('Đã cập nhật role'), behavior: SnackBarBehavior.floating),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('Lỗi: $e'), behavior: SnackBarBehavior.floating),
         );
       }
     }
@@ -420,106 +716,219 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
   String _getUserActivityStatus(dynamic lastActivity, AppLocalizations l10n) {
     if (lastActivity == null) return l10n.inactive;
-    
     try {
       final lastDate = DateTime.parse(lastActivity.toString());
       final daysSinceLastActivity = DateTime.now().difference(lastDate).inDays;
-      
       return daysSinceLastActivity <= 7 ? l10n.active : l10n.inactive;
     } catch (e) {
       return l10n.inactive;
     }
   }
 
-  Future<void> _blockUser(int userId, String? userName) async {
-    final confirm = await showDialog<bool>(
+  Future<void> _showConfirmDialog({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required Color confirmColor,
+    required VoidCallback onConfirm,
+  }) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận chặn'),
-        content: Text('Bạn có chắc muốn chặn user "$userName"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: confirmColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.error_outline_rounded,
+                  color: confirmColor,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: context.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: context.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.textSecondary,
+                        side: BorderSide(color: context.textSecondary.withValues(alpha: 0.25)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Hủy', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: confirmColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Chặn'),
-          ),
-        ],
+        ),
       ),
     );
+    if (confirmed == true) {
+      onConfirm();
+    }
+  }
 
-    if (confirm != true || !mounted) return;
-
-    // TODO: Implement block user API
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Tính năng chặn user đang phát triển')),
+  Future<void> _blockUser(int userId, String? userName) async {
+    _showConfirmDialog(
+      title: 'Xác nhận chặn',
+      message: 'Bạn có chắc muốn chặn người dùng "$userName"?',
+      confirmLabel: 'Chặn',
+      confirmColor: Colors.orange,
+      onConfirm: () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tính năng chặn user đang phát triển'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
     );
   }
 
   Future<void> _deleteUser(int userId, String? userName) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa user "$userName"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
+    _showConfirmDialog(
+      title: 'Xác nhận xóa',
+      message: 'Bạn có chắc muốn xóa người dùng "$userName"?',
+      confirmLabel: 'Xóa',
+      confirmColor: const Color(0xFFE53935),
+      onConfirm: () async {
+        try {
+          await ApiService.deleteUser(_token, userId.toString());
+          _loadUsers();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Đã xóa user'), behavior: SnackBarBehavior.floating),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Lỗi: $e'), behavior: SnackBarBehavior.floating),
+            );
+          }
+        }
+      },
     );
-
-    if (confirm != true || !mounted) return;
-
-    try {
-      await ApiService.deleteUser(_token, userId.toString());
-      _loadUsers();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã xóa user')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
-        );
-      }
-    }
   }
 
   Future<void> _bulkDeleteUsers() async {
     final count = _selectedUserIds.length;
-    final confirm = await showDialog<bool>(
+    final title = 'Xác nhận xóa';
+    final message = 'Bạn có chắc muốn xóa $count người dùng đã chọn?';
+
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa $count người dùng đã chọn?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.delete_outline_rounded, color: Color(0xFFE53935), size: 26),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.textPrimary),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: context.textSecondary, height: 1.4),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: context.textSecondary,
+                        side: BorderSide(color: context.textSecondary.withValues(alpha: 0.25)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Hủy', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE53935),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text('Xóa tất cả', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xóa tất cả'),
-          ),
-        ],
+        ),
       ),
     );
 
-    if (confirm != true || !mounted) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       await ApiService.bulkDeleteUsers(_token, _selectedUserIds.toList());
@@ -530,13 +939,16 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       _loadUsers();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xóa $count người dùng')),
+          SnackBar(
+            content: Text('Đã xóa $count người dùng'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e')),
+          SnackBar(content: Text('Lỗi: $e'), behavior: SnackBarBehavior.floating),
         );
       }
     }
