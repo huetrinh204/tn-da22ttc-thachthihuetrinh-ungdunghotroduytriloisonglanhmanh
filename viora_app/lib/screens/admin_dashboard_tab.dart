@@ -187,7 +187,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             ),
             const SizedBox(height: 2),
             Text(
-              'Tổng quan hệ thống',
+              Localizations.localeOf(context).languageCode == 'vi' ? 'Tổng quan hệ thống' : 'System Overview',
               style: TextStyle(
                 fontSize: 13,
                 color: context.textSecondary,
@@ -437,13 +437,13 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         _buildSectionHeader(
           icon: LucideIcons.trendingUp,
           title: l10n.growthCharts,
-          subtitle: 'Theo dõi sự tăng trưởng theo thời gian',
+          subtitle: Localizations.localeOf(context).languageCode == 'vi' ? 'Theo dõi sự tăng trưởng theo thời gian' : 'Track growth over time',
         ),
         const SizedBox(height: 18),
         _buildPeriodToggle(l10n),
         const SizedBox(height: 16),
         _buildChartCard(
-          title: 'Tăng trưởng người dùng',
+          title: Localizations.localeOf(context).languageCode == 'vi' ? 'Tăng trưởng người dùng' : 'User Growth',
           icon: AppIcons.users,
           iconColor: Colors.blue,
           data: _userGrowthData,
@@ -453,7 +453,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         ),
         const SizedBox(height: 14),
         _buildChartCard(
-          title: 'Tăng trưởng bài viết',
+          title: Localizations.localeOf(context).languageCode == 'vi' ? 'Tăng trưởng bài viết' : 'Post Growth',
           icon: LucideIcons.fileText,
           iconColor: Colors.green,
           data: _postGrowthData,
@@ -718,7 +718,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         _buildSectionHeader(
           icon: LucideIcons.pieChart,
           title: l10n.dataDistribution,
-          subtitle: 'Phân bổ dữ liệu theo danh mục',
+          subtitle: Localizations.localeOf(context).languageCode == 'vi' ? 'Phân bổ dữ liệu theo danh mục' : 'Data Distribution by Category',
         ),
         const SizedBox(height: 18),
         Container(

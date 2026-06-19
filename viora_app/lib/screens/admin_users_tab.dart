@@ -543,7 +543,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Nhập thông tin người dùng mới',
+                  Localizations.localeOf(context).languageCode == 'vi' ? 'Nhập thông tin người dùng mới' : 'Enter new user information',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: context.textSecondary, height: 1.4),
                 ),
@@ -701,14 +701,15 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       );
       _loadUsers();
       if (mounted) {
+        final loc = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã cập nhật role'), behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text(loc.roleUpdated), behavior: SnackBarBehavior.floating),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text('${Localizations.localeOf(context).languageCode == 'vi' ? 'Lỗi' : 'Error'}: $e'), behavior: SnackBarBehavior.floating),
         );
       }
     }
@@ -785,7 +786,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Hủy', style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -816,14 +817,17 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
   Future<void> _blockUser(int userId, String? userName) async {
     _showConfirmDialog(
-      title: 'Xác nhận chặn',
-      message: 'Bạn có chắc muốn chặn người dùng "$userName"?',
-      confirmLabel: 'Chặn',
+      title: Localizations.localeOf(context).languageCode == 'vi' ? 'Xác nhận chặn' : 'Confirm Block',
+      message: Localizations.localeOf(context).languageCode == 'vi'
+          ? 'Bạn có chắc muốn chặn người dùng "$userName"?'
+          : 'Are you sure you want to block "$userName"?',
+      confirmLabel: Localizations.localeOf(context).languageCode == 'vi' ? 'Chặn' : 'Block',
       confirmColor: Colors.orange,
       onConfirm: () {
+        final loc = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tính năng chặn user đang phát triển'),
+          SnackBar(
+            content: Text(loc.blockFeatureInDev),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -832,10 +836,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   }
 
   Future<void> _deleteUser(int userId, String? userName) async {
+    final loc = AppLocalizations.of(context)!;
     _showConfirmDialog(
-      title: 'Xác nhận xóa',
-      message: 'Bạn có chắc muốn xóa người dùng "$userName"?',
-      confirmLabel: 'Xóa',
+      title: loc.confirmDelete,
+      message: loc.confirmDeleteUserMessage(userName ?? ''),
+      confirmLabel: loc.delete,
       confirmColor: const Color(0xFFE53935),
       onConfirm: () async {
         try {
@@ -843,13 +848,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           _loadUsers();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Đã xóa user'), behavior: SnackBarBehavior.floating),
+              SnackBar(content: Text(loc.userDeleted), behavior: SnackBarBehavior.floating),
             );
           }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Lỗi: $e'), behavior: SnackBarBehavior.floating),
+              SnackBar(content: Text('${Localizations.localeOf(context).languageCode == 'vi' ? 'Lỗi' : 'Error'}: $e'), behavior: SnackBarBehavior.floating),
             );
           }
         }
@@ -858,9 +863,10 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
   }
 
   Future<void> _bulkDeleteUsers() async {
+    final loc = AppLocalizations.of(context)!;
     final count = _selectedUserIds.length;
-    final title = 'Xác nhận xóa';
-    final message = 'Bạn có chắc muốn xóa $count người dùng đã chọn?';
+    final title = loc.confirmDelete;
+    final message = loc.confirmBulkDeleteMessage(count);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -903,7 +909,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Hủy', style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(loc.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -917,7 +923,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: const Text('Xóa tất cả', style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(loc.deleteAll, style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -940,7 +946,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Đã xóa $count người dùng'),
+            content: Text(loc.usersDeleted(count)),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -948,7 +954,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi: $e'), behavior: SnackBarBehavior.floating),
+          SnackBar(content: Text('${Localizations.localeOf(context).languageCode == 'vi' ? 'Lỗi' : 'Error'}: $e'), behavior: SnackBarBehavior.floating),
         );
       }
     }

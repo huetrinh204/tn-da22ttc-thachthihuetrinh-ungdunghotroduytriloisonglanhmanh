@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
-import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import '../models/plant_type.dart';
+import '../constants/app_icons.dart';
 import 'admin_plant_detail_screen.dart';
 
 class AdminPlantsTab extends StatefulWidget {
@@ -17,7 +19,9 @@ class AdminPlantsTab extends StatefulWidget {
 class _AdminPlantsTabState extends State<AdminPlantsTab> {
   bool _isLoading = true;
   String _token = '';
-  List<dynamic> _plants = [];
+  List<dynamic> _allPlants = [];
+  List<dynamic> _filteredPlants = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -25,21 +29,47 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
     _loadPlants();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadPlants() async {
     setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('token') ?? '';
-    
     try {
       final res = await ApiService.getAdminPlants(_token);
       if (!mounted) return;
       setState(() {
-        _plants = res['plants'] ?? [];
+        _allPlants = res['plants'] ?? [];
+        _applyFilter();
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_searchController.text == value) {
+        _applyFilter();
+      }
+    });
+  }
+
+  void _applyFilter() {
+    final query = _searchController.text.toLowerCase().trim();
+    if (query.isEmpty) {
+      _filteredPlants = List.from(_allPlants);
+    } else {
+      _filteredPlants = _allPlants.where((p) {
+        final name = (p['user_name'] as String? ?? '').toLowerCase();
+        return name.contains(query);
+      }).toList();
     }
   }
 
@@ -52,7 +82,6 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
     final loc = AppLocalizations.of(context)!;
     final plantType = PlantType.fromIdOrDefault(plantTypeId);
     final key = plantType.getStageNameKey(level);
-    // Map key → localized string
     final all = {
       'bambooLevel1': loc.bambooLevel1, 'bambooLevel2': loc.bambooLevel2,
       'bambooLevel3': loc.bambooLevel3, 'bambooLevel4': loc.bambooLevel4,
@@ -90,12 +119,9 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
 
   double _getProgressToNextLevel(int level, int experience) {
     if (level >= 15) return 1.0;
-    
     final expForCurrentLevel = _getExpForLevel(level);
     final expForNextLevel = _getExpForLevel(level + 1);
-    
     if (expForNextLevel == expForCurrentLevel) return 1.0;
-    
     final progress = (experience - expForCurrentLevel) / (expForNextLevel - expForCurrentLevel);
     return progress.clamp(0.0, 1.0);
   }
@@ -110,183 +136,323 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
-    
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const Center(child: CircularProgressIndicator());
     }
+    return Column(
+      children: [
+        _buildHeader(loc),
+        _buildSearch(loc),
+        Expanded(
+          child: _filteredPlants.isEmpty
+              ? _buildEmptyState(loc)
+              : RefreshIndicator(
+                  onRefresh: _loadPlants,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.lg,
+                    ),
+                    itemCount: _filteredPlants.length,
+                    itemBuilder: (context, index) =>
+                        _buildPlantCard(_filteredPlants[index], loc),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
 
-    if (_plants.isEmpty) {
-      return Center(
+  Widget _buildHeader(AppLocalizations loc) {
+    final count = _filteredPlants.length;
+    final total = _allPlants.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(AppIcons.sprout, color: AppColors.primary, size: 22),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                total > 0 && count != total
+                    ? '$count / $total ${loc.plants}'
+                    : '$total ${loc.plants}',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: context.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                loc.adminPlants,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: context.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearch(AppLocalizations loc) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: TextField(
+        controller: _searchController,
+        onChanged: _onSearchChanged,
+        decoration: InputDecoration(
+          hintText: loc.searchByNameEmail,
+          prefixIcon: const Icon(AppIcons.search, size: 20),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(AppIcons.close, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    _applyFilter();
+                  },
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(AppLocalizations loc) {
+    final isSearching = _searchController.text.isNotEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.park_outlined, size: 64, color: context.textSecondary),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: context.isDark
+                    ? const Color(0xFF24352E)
+                    : const Color(0xFFF0F1F3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isSearching ? AppIcons.search : AppIcons.sprout,
+                size: 40,
+                color: context.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
             Text(
-              loc.noPlantsYet,
+              isSearching ? loc.noUsersFound : loc.noPlantsYet,
               style: TextStyle(
                 fontSize: 16,
-                color: context.textSecondary,
+                fontWeight: FontWeight.w600,
+                color: context.textPrimary,
               ),
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    return RefreshIndicator(
-      onRefresh: _loadPlants,
-      color: AppColors.primary,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _plants.length,
-        itemBuilder: (context, index) {
-          final plant = _plants[index];
-          final level = plant['level'] as int? ?? 1;
-          final experience = plant['experience'] as int? ?? 0;
-          final userName = plant['user_name'] ?? 'Unknown';
-          final userId = plant['user_id']?.toString() ?? '';
-          final userAvatar = plant['user_avatar'] as String?;
-          final plantTypeId = plant['plant_type'] as String? ?? 'bamboo';
-          
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            color: context.cardColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 2,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AdminPlantDetailScreen(
-                      userId: userId,
-                      userName: userName,
+  Widget _buildPlantCard(Map<String, dynamic> plant, AppLocalizations loc) {
+    final level = plant['level'] as int? ?? 1;
+    final experience = plant['experience'] as int? ?? 0;
+    final userName = plant['user_name'] ?? 'Unknown';
+    final userId = plant['user_id']?.toString() ?? '';
+    final userAvatar = plant['user_avatar'] as String?;
+    final plantTypeId = plant['plant_type'] as String? ?? 'bamboo';
+    final progress = _getProgressToNextLevel(level, experience);
+    final plantType = PlantType.fromIdOrDefault(plantTypeId);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.isDark
+              ? const Color(0xFF2E433C)
+              : const Color(0xFFE5E7EB),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AdminPlantDetailScreen(
+                  userId: userId,
+                  userName: userName,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: Image.asset(
+                    _getPlantImagePath(level, plantTypeId),
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => Center(
+                      child: Text(
+                        plantType.emoji,
+                        style: const TextStyle(fontSize: 36),
+                      ),
                     ),
                   ),
-                );
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Plant image
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: Image.asset(
-                        _getPlantImagePath(level, plantTypeId),
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Center(
-                          child: Text(
-                            PlantType.fromIdOrDefault(plantTypeId).emoji,
-                            style: const TextStyle(fontSize: 40),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Plant info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          // User info
-                          Row(
-                            children: [
-                              if (userAvatar != null) ...[
-                                ClipOval(
-                                  child: Image.network(
-                                    ApiService.resolveImageUrl(userAvatar),
-                                    width: 24,
-                                    height: 24,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.primary,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          userName[0].toUpperCase(),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  userName,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: context.textPrimary,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                          if (userAvatar != null && userAvatar.isNotEmpty)
+                            CircleAvatar(
+                              radius: 12,
+                              backgroundImage: NetworkImage(
+                                ApiService.resolveImageUrl(userAvatar),
+                              ),
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                              child: Text(
+                                userName.isNotEmpty
+                                    ? userName[0].toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          // Plant name and level
-                          Text(
-                            '${_getPlantName(context, level, plantTypeId)} (${loc.level(level)})',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                            )
+                          else
+                            CircleAvatar(
+                              radius: 12,
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                              child: Text(
+                                userName.isNotEmpty
+                                    ? userName[0].toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '$experience ${loc.exp}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Progress bar
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: _getProgressToNextLevel(level, experience),
-                              backgroundColor: Colors.grey[300],
-                              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                              minHeight: 6,
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              userName,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: context.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.chevron_right,
-                      color: context.textSecondary,
-                    ),
-                  ],
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          Text(
+                            plantType.emoji,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _getPlantName(context, level, plantTypeId),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            loc.level(level),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: progress,
+                                backgroundColor: context.isDark
+                                    ? const Color(0xFF2E433C)
+                                    : const Color(0xFFE5E7EB),
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                minHeight: 8,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            '$experience ${loc.exp}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: AppSpacing.sm),
+                Icon(
+                  AppIcons.chevronRight,
+                  size: 20,
+                  color: context.textSecondary,
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

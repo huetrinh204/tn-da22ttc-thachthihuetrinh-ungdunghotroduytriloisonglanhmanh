@@ -4,6 +4,7 @@ import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../services/api_service.dart';
+import '../l10n/app_localizations.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -154,13 +155,13 @@ class _AdminScreenState extends State<AdminScreen>
       ),
       child: Column(
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.dashboard, color: Colors.white, size: 24),
-              SizedBox(width: 8),
+              const Icon(Icons.dashboard, color: Colors.white, size: 24),
+              const SizedBox(width: 8),
               Text(
-                'Dashboard Thống Kê',
+                Localizations.localeOf(context).languageCode == 'vi' ? 'Dashboard Thống Kê' : 'Statistics Dashboard',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -172,17 +173,17 @@ class _AdminScreenState extends State<AdminScreen>
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildStatCard('Người dùng', _stats['totalUsers']?.toString() ?? '0', Icons.people, Colors.blue),
+              _buildStatCard(AppLocalizations.of(context)!.users, _stats['totalUsers']?.toString() ?? '0', Icons.people, Colors.blue),
               const SizedBox(width: 12),
-              _buildStatCard('Bài viết', _stats['totalPosts']?.toString() ?? '0', Icons.article, Colors.orange),
+              _buildStatCard(AppLocalizations.of(context)!.posts, _stats['totalPosts']?.toString() ?? '0', Icons.article, Colors.orange),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              _buildStatCard('Bình luận', _stats['totalComments']?.toString() ?? '0', Icons.comment, Colors.green),
+              _buildStatCard(AppLocalizations.of(context)!.commentsLabel, _stats['totalComments']?.toString() ?? '0', Icons.comment, Colors.green),
               const SizedBox(width: 12),
-              _buildStatCard('Mới hôm nay', '${_stats['todayUsers'] ?? 0} users', Icons.today, Colors.purple),
+              _buildStatCard(Localizations.localeOf(context).languageCode == 'vi' ? 'Mới hôm nay' : 'New Today', '${_stats['todayUsers'] ?? 0} ${Localizations.localeOf(context).languageCode == 'vi' ? 'người dùng' : 'users'}', Icons.today, Colors.purple),
             ],
           ),
         ],
@@ -254,10 +255,10 @@ class _AdminScreenState extends State<AdminScreen>
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         indicatorPadding: const EdgeInsets.all(4),
-        tabs: const [
-          Tab(text: 'Người dùng'),
-          Tab(text: 'Bài viết'),
-          Tab(text: 'Cài đặt'),
+        tabs: [
+          Tab(text: AppLocalizations.of(context)!.users),
+          Tab(text: AppLocalizations.of(context)!.posts),
+          Tab(text: AppLocalizations.of(context)!.adminSettings),
         ],
       ),
     );
@@ -271,7 +272,7 @@ class _AdminScreenState extends State<AdminScreen>
     if (_users.isEmpty) {
       return Center(
         child: Text(
-          'Không có người dùng',
+          AppLocalizations.of(context)!.noUsersFound,
           style: TextStyle(color: context.textSecondary),
         ),
       );
@@ -487,7 +488,7 @@ class _AdminScreenState extends State<AdminScreen>
     if (_posts.isEmpty) {
       return Center(
         child: Text(
-          'Không có bài viết',
+          AppLocalizations.of(context)!.noPostsFound,
           style: TextStyle(color: context.textSecondary),
         ),
       );
