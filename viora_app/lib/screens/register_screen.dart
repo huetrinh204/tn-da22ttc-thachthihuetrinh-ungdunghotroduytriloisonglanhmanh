@@ -78,16 +78,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           // Lá bay
           const FloatingLeaves(),
 
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8, right: 16),
-                child: const LanguageFlagToggle(),
-              ),
-            ),
-          ),
-
           // Content
           SafeArea(
             child: SingleChildScrollView(
@@ -312,6 +302,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 32),
                 ],
+              ),
+            ),
+          ),
+
+          // Flag toggle — để cuối để ở trên cùng (z-index)
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8, right: 16),
+                child: const LanguageFlagToggle(),
               ),
             ),
           ),

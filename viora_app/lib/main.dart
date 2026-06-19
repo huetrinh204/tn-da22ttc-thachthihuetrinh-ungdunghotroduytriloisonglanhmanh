@@ -41,7 +41,7 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> {
   Widget? startScreen;
-  final LocaleProvider _localeProvider = LocaleProvider();
+  final LocaleProvider _localeProvider = LocaleProvider.global;
   
   // Public getter để truy cập từ bên ngoài
   LocaleProvider get localeProvider => _localeProvider;
