@@ -129,7 +129,13 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: DefaultTextStyle.merge(
+                    style: const TextStyle(
+                      decoration: TextDecoration.none,
+                      decorationColor: Colors.transparent,
+                      decorationThickness: 0,
+                    ),
+                    child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
@@ -160,21 +166,14 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                         ),
                       ),
                       const SizedBox(height: 20),
-                      DefaultTextStyle.merge(
-                        style: const TextStyle(
-                          decoration: TextDecoration.none,
-                          decorationColor: Colors.transparent,
-                          decorationThickness: 0,
-                        ),
-                        child: Text(
-                          'CHÚC MỪNG!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: context.textPrimary,
-                            letterSpacing: 0.5,
-                          ),
+                      Text(
+                        'CHÚC MỪNG!',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: context.textPrimary,
+                          letterSpacing: 0.5,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -311,7 +310,8 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                           ),
                         ),
                       ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
