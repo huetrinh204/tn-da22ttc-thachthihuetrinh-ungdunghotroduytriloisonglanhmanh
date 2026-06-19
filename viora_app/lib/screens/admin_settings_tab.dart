@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/app_confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
+import '../services/notification_service.dart';
 
 class AdminSettingsTab extends StatefulWidget {
   const AdminSettingsTab({super.key});
@@ -538,6 +539,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     );
 
     if (confirmed != true) return;
+
+    await NotificationService.cancelAll();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("token");

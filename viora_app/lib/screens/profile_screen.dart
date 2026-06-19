@@ -17,6 +17,7 @@ import 'followers_list_screen.dart';
 import 'user_profile_screen.dart';
 import '../providers/locale_provider.dart';
 import '../utils/habit_icon_mapper.dart';
+import '../services/notification_service.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -207,6 +208,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     
     if (confirmed != true) return;
     
+    await NotificationService.cancelAll();
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("token");
     // Không xóa onboarding_done — giữ lại để lần sau login không phải onboard lại

@@ -390,6 +390,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final metricController = TextEditingController();
     String? metricUnit;
     String? metricLabel;
+    String metricHint = l10n.enterNumberOptional;
 
     // Xác định metric theo category
     switch (category) {
@@ -398,8 +399,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
         metricUnit = l10n.unitMl;
         break;
       case "exercise":
-        metricLabel = l10n.metricDistance;
-        metricUnit = l10n.unitM;
+        metricLabel = 'Thời gian (Phút)';
+        metricUnit = 'phút';
+        metricHint = 'Nhập số phút';
         break;
       case "sleep":
         metricLabel = l10n.metricSleepMinutes;
@@ -473,7 +475,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 style: TextStyle(color: ctx.textPrimary),
                 decoration: InputDecoration(
-                  hintText: l10n.enterNumberOptional,
+                  hintText: metricHint,
                   hintStyle: TextStyle(color: ctx.textSecondary.withValues(alpha: 0.6), fontSize: 14),
                   suffixText: metricUnit,
                   filled: true,
