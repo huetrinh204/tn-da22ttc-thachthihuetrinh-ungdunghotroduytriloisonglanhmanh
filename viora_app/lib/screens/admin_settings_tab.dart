@@ -6,6 +6,7 @@ import '../theme/theme_extensions.dart';
 import '../screens/login_screen.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
+import '../widgets/app_confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
 
 class AdminSettingsTab extends StatefulWidget {
@@ -522,20 +523,17 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.logout),
-        content: Text(l10n.logoutConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.no),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(l10n.yes),
-          ),
-        ],
+      builder: (ctx) => AppConfirmDialog(
+        icon: Icons.logout,
+        iconColor: Colors.red,
+        iconBackgroundColor: Colors.red.withValues(alpha: 0.1),
+        title: l10n.logout,
+        content: l10n.logoutConfirm,
+        cancelText: l10n.no,
+        confirmText: l10n.yes,
+        confirmColor: Colors.red,
+        onCancel: () => Navigator.pop(ctx, false),
+        onConfirm: () => Navigator.pop(ctx, true),
       ),
     );
 
@@ -814,8 +812,6 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Container(
@@ -1074,24 +1070,19 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     Future.delayed(const Duration(milliseconds: 100), () async {
       final confirmed = await showDialog<bool>(
         context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(_isVietnamese ? 'Xóa thông điệp' : 'Delete Message'),
-          content: Text(
-            _isVietnamese
-                ? 'Bạn có chắc chắn muốn xóa thông điệp này?'
-                : 'Are you sure you want to delete this message?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(_isVietnamese ? 'Hủy' : 'Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text(_isVietnamese ? 'Xóa' : 'Delete'),
-            ),
-          ],
+        builder: (ctx) => AppConfirmDialog(
+          icon: Icons.delete_outline_rounded,
+          iconColor: Colors.red,
+          iconBackgroundColor: Colors.red.withValues(alpha: 0.1),
+          title: _isVietnamese ? 'Xóa thông điệp' : 'Delete Message',
+          content: _isVietnamese
+              ? 'Bạn có chắc chắn muốn xóa thông điệp này?'
+              : 'Are you sure you want to delete this message?',
+          cancelText: _isVietnamese ? 'Hủy' : 'Cancel',
+          confirmText: _isVietnamese ? 'Xóa' : 'Delete',
+          confirmColor: Colors.red,
+          onCancel: () => Navigator.pop(ctx, false),
+          onConfirm: () => Navigator.pop(ctx, true),
         ),
       );
 

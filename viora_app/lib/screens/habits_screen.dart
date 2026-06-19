@@ -7,9 +7,11 @@ import '../services/notification_inbox_store.dart';
 import '../services/notification_service.dart';
 import '../navigation/app_navigation.dart';
 import '../widgets/achievement_popup.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/all_habits_completed_dialog.dart';
 import '../widgets/points_fly_animation.dart';
 import '../widgets/habit_icon.dart';
+import '../widgets/app_confirm_dialog.dart';
+import '../widgets/app_snackbar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
@@ -23,6 +25,7 @@ class HabitsScreen extends StatefulWidget {
   final GlobalKey? addCoachKey;
   final GlobalKey? listCoachKey;
   final Future<void> Function()? onHabitCheckInCompleted;
+  final VoidCallback? onHabitDeleted;
 
   const HabitsScreen({
     super.key,
@@ -30,6 +33,7 @@ class HabitsScreen extends StatefulWidget {
     this.addCoachKey,
     this.listCoachKey,
     this.onHabitCheckInCompleted,
+    this.onHabitDeleted,
   });
 
   @override
@@ -63,7 +67,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     loadHabits();
   }
 
-  void loadHabits() async {
+  Future<void> loadHabits() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString("token") ?? "";
 
@@ -201,9 +205,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
     }
 
     await widget.onHabitCheckInCompleted?.call();
-    
+
     // Refresh habits from server to ensure accuracy
-    loadHabits();
+    await loadHabits();
+
+    // Show celebration if all habits completed today
+    if (mounted && habits.isNotEmpty && habits.every((h) => h["is_completed"] == 1)) {
+      await AllHabitsCompletedDialog.show(context);
+    }
 
   }
 
@@ -263,7 +272,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(l10n.afterFirstHabitTitle),
         content: Text(l10n.afterFirstHabitBody),
         actions: [
@@ -306,7 +314,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(l10n.firstCheckInTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -408,8 +415,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
     }
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: ctx.cardColor,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Column(
@@ -548,230 +553,73 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
   void handleDelete(int habitId) async {
     await ApiService.deleteHabit(token, habitId);
+    await NotificationService.cancelHabitReminders(habitId);
     setState(() => habits.removeWhere((h) => h["id"] == habitId));
+    // Notify parent to refresh plant data (GrowScreen + Dashboard)
+    widget.onHabitDeleted?.call();
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    AppSnackbar.showSuccess(context, l10n.habitDeletedSuccess);
   }
 
-  void showEditHabitSheet(Map habit) {
+  void showEditHabitSheet(Map habit) async {
     final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController(text: habit["name"]?.toString() ?? '');
-    String selectedCategory = habit["category"]?.toString() ?? "other";
-    String selectedIcon = habit["icon"]?.toString() ?? "⭐";
     final habitId = habit["id"] as int;
-    final icons = ["⭐", "🏃", "🥗", "💧", "😴", "🧘", "📚", "🎯", "💪", "🌿"];
 
-    TimeOfDay reminderTime = const TimeOfDay(hour: 8, minute: 0);
-    bool reminderEnabled = habit["reminder_time"] != null;
-    if (habit["reminder_time"] != null) {
-      final parts = habit["reminder_time"].toString().split(':');
-      if (parts.length >= 2) {
-        final h = int.tryParse(parts[0]) ?? 8;
-        final m = int.tryParse(parts[1]) ?? 0;
-        reminderTime = TimeOfDay(hour: h, minute: m);
-      }
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.editHabit,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: ctx.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: nameController,
-                style: TextStyle(color: ctx.textPrimary),
-                decoration: InputDecoration(
-                  labelText: l10n.habitName,
-                  filled: true,
-                  fillColor: ctx.inputFill,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                children: categories.map((c) {
-                  final id = c["id"] as String;
-                  final selected = selectedCategory == id;
-                  return ChoiceChip(
-                    label: Text("${c["icon"]} ${c["label"]}"),
-                    selected: selected,
-                    onSelected: (_) =>
-                        setSheetState(() => selectedCategory = id),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                children: icons.map((icon) {
-                  return ChoiceChip(
-                    label: HabitIcon(
-                      iconString: icon,
-                      size: 20,
-                      color: selectedIcon == icon ? AppColors.primary : null,
-                    ),
-                    selected: selectedIcon == icon,
-                    onSelected: (_) => setSheetState(() => selectedIcon = icon),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.habitReminders,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: ctx.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: () async {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: reminderTime,
-                        builder: (context, child) {
-                          return MediaQuery(
-                            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-                            child: Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: ColorScheme.light(
-                                  primary: AppColors.primary,
-                                  onPrimary: Colors.white,
-                                  onSurface: context.textPrimary,
-                                ),
-                              ),
-                              child: child!,
-                            ),
-                          );
-                        },
-                      );
-                      if (time != null) {
-                        setSheetState(() => reminderTime = time);
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ctx.inputFill,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            '${reminderTime.hour.toString().padLeft(2, '0')}:${reminderTime.minute.toString().padLeft(2, '0')}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.access_time,
-                            size: 18,
-                            color: AppColors.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Switch(
-                    value: reminderEnabled,
-                    onChanged: (value) => setSheetState(() => reminderEnabled = value),
-                    activeColor: Colors.white,
-                    activeTrackColor: AppColors.primary,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    if (nameController.text.trim().isEmpty) return;
-                    Navigator.pop(ctx);
-                    final reminderTimeStr = '${reminderTime.hour}:${reminderTime.minute}';
-                    final res = await ApiService.updateHabit(
-                      token: token,
-                      habitId: habitId,
-                      name: nameController.text.trim(),
-                      category: selectedCategory,
-                      icon: selectedIcon,
-                      reminderTime: reminderTimeStr,
-                      reminderEnabled: reminderEnabled,
-                    );
-                    if (!mounted) return;
-                    if (res["message"] == null ||
-                        res["message"] == "Habit updated") {
-                      if (reminderEnabled) {
-                        final isCompleted = habit["is_completed"] == 1;
-                        if (isCompleted) {
-                          await NotificationService.cancelHabitReminders(habitId);
-                        } else {
-                          await NotificationService.scheduleHabitReminders(
-                            habitId: habitId,
-                            habitName: nameController.text.trim(),
-                            reminderTime: reminderTimeStr,
-                          );
-                        }
-                      } else {
-                        await NotificationService.cancelHabitReminders(habitId);
-                      }
-                      loadHabits();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.habitUpdated),
-                          backgroundColor: AppColors.success,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: Text(l10n.save),
-                ),
-              ),
-            ],
-          ),
-        ),
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddHabitScreen(initialHabit: habit),
       ),
     );
+
+    if (result == null || !mounted) return;
+
+    final habitData = result as Map<String, dynamic>;
+    final reminderEnabled = habitData['reminder_enabled'] as bool? ?? false;
+    final reminderTimeStr = habitData['reminder_time'] as String?;
+
+    final res = await ApiService.updateHabit(
+      token: token,
+      habitId: habitId,
+      name: habitData['name'],
+      category: habitData['category'],
+      icon: habitData['icon'],
+      reminderTime: reminderTimeStr,
+      reminderEnabled: reminderEnabled,
+      targetCount: (habitData['daily_goal'] as double?)?.toInt(),
+    );
+
+    if (!mounted) return;
+
+    if (res["message"] == null || res["message"] == "Habit updated") {
+      if (reminderEnabled && reminderTimeStr != null) {
+        final isCompleted = habit["is_completed"] == 1;
+        if (isCompleted) {
+          await NotificationService.cancelHabitReminders(habitId);
+        } else {
+          await NotificationService.scheduleHabitReminders(
+            habitId: habitId,
+            habitName: habitData['name'],
+            reminderTime: reminderTimeStr,
+          );
+        }
+      } else {
+        await NotificationService.cancelHabitReminders(habitId);
+      }
+      loadHabits();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.habitUpdated),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } else {
+      AppSnackbar.showError(
+        context,
+        res['message']?.toString() ?? l10n.failed,
+      );
+    }
   }
 
   void showAddHabitSheet() async {
@@ -1097,93 +945,17 @@ class _HabitsScreenState extends State<HabitsScreen> {
       confirmDismiss: (_) async {
         return await showDialog(
           context: context,
-          builder: (dialogCtx) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            backgroundColor: context.cardColor,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: AppColors.error,
-                      size: 36,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    l10n.deleteHabit,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: context.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.confirmDeleteHabit(habit["name"]),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: context.textSecondary,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(dialogCtx, false),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: Colors.grey.shade300),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          child: Text(
-                            l10n.cancel,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.pop(dialogCtx, true),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.error,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          child: Text(
-                            l10n.delete,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          builder: (dialogCtx) => AppConfirmDialog(
+            icon: Icons.delete_outline_rounded,
+            iconColor: AppColors.error,
+            iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
+            title: l10n.deleteHabit,
+            content: l10n.confirmDeleteHabit(habit["name"]),
+            cancelText: l10n.cancel,
+            confirmText: l10n.delete,
+            confirmColor: AppColors.error,
+            onCancel: () => Navigator.pop(dialogCtx, false),
+            onConfirm: () => Navigator.pop(dialogCtx, true),
           ),
         );
       },
@@ -1284,6 +1056,68 @@ class _HabitsScreenState extends State<HabitsScreen> {
                             handleCheckIn(habitId, isCompleted);
                           },
                     child: actionButton,
+                  ),
+                  const SizedBox(width: 8),
+                  PopupMenuButton<String>(
+                    icon: Icon(
+                      Icons.more_vert_rounded,
+                      color: context.textSecondary,
+                      size: 22,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        showEditHabitSheet(habit);
+                      } else if (value == 'delete') {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogCtx) => AppConfirmDialog(
+                            icon: Icons.delete_outline_rounded,
+                            iconColor: AppColors.error,
+                            iconBackgroundColor: AppColors.error.withValues(alpha: 0.1),
+                            title: l10n.deleteHabit,
+                            content: l10n.confirmDeleteHabit(habit["name"] ?? ""),
+                            cancelText: l10n.cancel,
+                            confirmText: l10n.delete,
+                            confirmColor: AppColors.error,
+                            onCancel: () => Navigator.pop(dialogCtx, false),
+                            onConfirm: () => Navigator.pop(dialogCtx, true),
+                          ),
+                        );
+                        if (confirm == true) {
+                          handleDelete(habitId);
+                        }
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 18, color: context.textPrimary),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.editHabit,
+                              style: TextStyle(color: context.textPrimary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.delete,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

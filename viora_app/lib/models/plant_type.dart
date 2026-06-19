@@ -77,7 +77,7 @@ class PlantType {
     descriptionKey: 'plantDescSunflower',
     emoji: '🌻',
     assetFolder: 'assets/images/tree/huongduong/',
-    maxStages: 16,
+    maxStages: 15,
     useNumberedFiles: true,
   );
 

@@ -54,9 +54,10 @@ async function checkAndSendAutoReminders() {
     }
 
     const setting = settings[0];
-    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const currentHour = vietnamTime.getUTCHours();
+    const currentMinute = vietnamTime.getUTCMinutes();
 
     // Parse morning time
     if (setting.send_morning === 1 && setting.morning_time) {
@@ -83,10 +84,11 @@ async function checkAndSendAutoReminders() {
 // Kiểm tra từng user xem có đến giờ nhắc không → gửi FCM push
 async function checkAndSendPersonalReminders() {
   try {
-    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const today = now.toISOString().split("T")[0];
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const currentHour = vietnamTime.getUTCHours();
+    const currentMinute = vietnamTime.getUTCMinutes();
+    const today = vietnamTime.toISOString().split("T")[0];
 
     // Lấy users có FCM token và giờ nhắc khớp với giờ hiện tại
     const [users]: any = await pool.query(
@@ -122,7 +124,9 @@ async function checkAndSendPersonalReminders() {
         if (total === 0) continue;
 
         const [doneRows]: any = await pool.query(
-          "SELECT COUNT(*) as done FROM habit_logs WHERE user_id = ? AND log_date = ?",
+          `SELECT COUNT(*) as done FROM habit_logs hl
+           INNER JOIN habits h ON hl.habit_id = h.id AND h.is_active = 1
+           WHERE hl.user_id = ? AND hl.log_date = ?`,
           [user.id, today]
         );
         const done = doneRows[0].done;
@@ -185,7 +189,9 @@ async function sendEveningEmails() {
       if (total === 0) continue;
 
       const [doneRows]: any = await pool.query(
-        "SELECT COUNT(*) as done FROM habit_logs WHERE user_id = ? AND log_date = ?",
+        `SELECT COUNT(*) as done FROM habit_logs hl
+         INNER JOIN habits h ON hl.habit_id = h.id AND h.is_active = 1
+         WHERE hl.user_id = ? AND hl.log_date = ?`,
         [user.id, today]
       );
       const done = doneRows[0].done;
@@ -219,10 +225,11 @@ async function sendEveningEmails() {
  */
 async function checkAndSendHabitReminders() {
   try {
-    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const today = now.toISOString().split("T")[0];
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const currentHour = vietnamTime.getUTCHours();
+    const currentMinute = vietnamTime.getUTCMinutes();
+    const today = vietnamTime.toISOString().split("T")[0];
 
     // Lấy tất cả habits có reminder_time, chưa hoàn thành hôm nay, và user có fcm_token
     const [habits]: any = await pool.query(
@@ -295,11 +302,12 @@ async function checkProgressiveWilting() {
     `);
 
     for (const user of users) {
-      // Check if user completed any habit yesterday
+      // Check if user completed any active habit yesterday
       const [logs]: any = await pool.query(
         `SELECT COUNT(*) as count 
-         FROM habit_logs 
-         WHERE user_id = ? AND log_date = ?`,
+         FROM habit_logs hl
+         INNER JOIN habits h ON hl.habit_id = h.id AND h.is_active = 1
+         WHERE hl.user_id = ? AND hl.log_date = ?`,
         [user.user_id, yesterday]
       );
 

@@ -2013,6 +2013,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addHabitButton => 'Add Habit';
 
   @override
+  String get habitDeletedSuccess => 'Habit deleted';
+
+  @override
   String get addHabitDailyGoal => 'DAILY GOAL';
 
   @override
@@ -2045,4 +2048,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addHabitQuoteAuthor => '— Jim Rohn';
+
+  @override
+  String get allCompletedTitle => 'Outstanding! 🎉';
+
+  @override
+  String get allCompletedBody => 'You\'ve completed all your habits today.';
+
+  @override
+  String get allCompletedSubtitle =>
+      'Keep it up to keep your plant thriving! 🌱';
+
+  @override
+  String get allCompletedContinue => 'Awesome!';
 }

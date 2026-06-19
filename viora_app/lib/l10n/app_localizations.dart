@@ -3932,6 +3932,12 @@ abstract class AppLocalizations {
   /// **'Thêm thói quen'**
   String get addHabitButton;
 
+  /// No description provided for @habitDeletedSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xóa thói quen'**
+  String get habitDeletedSuccess;
+
   /// No description provided for @addHabitDailyGoal.
   ///
   /// In vi, this message translates to:
@@ -3997,6 +4003,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'— Jim Rohn'**
   String get addHabitQuoteAuthor;
+
+  /// No description provided for @allCompletedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất sắc! 🎉'**
+  String get allCompletedTitle;
+
+  /// No description provided for @allCompletedBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đã hoàn thành tất cả thói quen hôm nay.'**
+  String get allCompletedBody;
+
+  /// No description provided for @allCompletedSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hãy duy trì để cây luôn xanh tốt nhé! 🌱'**
+  String get allCompletedSubtitle;
+
+  /// No description provided for @allCompletedContinue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuyệt vời!'**
+  String get allCompletedContinue;
 }
 
 class _AppLocalizationsDelegate

@@ -34,6 +34,14 @@ class HabitIconMapper {
         return LucideIcons.utensils; // Eating/Utensils
       case '⚖️':
         return LucideIcons.scale; // Weight/Balance
+      case '✏️':
+        return LucideIcons.pencil; // Other/Custom
+      case '🚶':
+        return LucideIcons.footprints; // Walking
+      case '🥦':
+        return LucideIcons.apple; // Vegetables/Healthy eating
+      case '📝':
+        return LucideIcons.fileEdit; // Notes/Writing
       default:
         return LucideIcons.circle; // Default fallback
     }

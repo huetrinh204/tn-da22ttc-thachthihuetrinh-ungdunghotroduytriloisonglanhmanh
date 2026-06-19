@@ -75,15 +75,17 @@ export async function buildUserContext(userId: number, dbPool = pool): Promise<U
       [userId]
     ) as any;
 
-    // Query completed today
+    // Query completed today (only active habits)
     const [completedRows] = await dbPool.query(
-      "SELECT COUNT(*) as completed FROM habit_logs WHERE user_id = ? AND DATE(log_date) = CURDATE()",
+      `SELECT COUNT(*) as completed FROM habit_logs hl
+       INNER JOIN habits h ON hl.habit_id = h.id AND h.is_active = 1
+       WHERE hl.user_id = ? AND DATE(hl.log_date) = CURDATE()`,
       [userId]
     ) as any;
 
-    // Query total habits for today
+    // Query active habits for today
     const [totalRows] = await dbPool.query(
-      "SELECT COUNT(*) as total FROM habits WHERE user_id = ?",
+      "SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_active = 1",
       [userId]
     ) as any;
 

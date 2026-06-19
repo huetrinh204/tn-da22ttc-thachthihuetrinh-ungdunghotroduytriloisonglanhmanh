@@ -7,6 +7,7 @@ import '../services/chat_history_store.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../constants/app_icons.dart';
+import '../widgets/app_confirm_dialog.dart';
 
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({super.key});
@@ -144,20 +145,17 @@ class _AiChatScreenState extends State<AiChatScreen>
   Future<void> _clearHistory() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Xóa lịch sử'),
-        content: const Text('Bạn có chắc muốn xóa toàn bộ lịch sử hội thoại?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hủy'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Xóa'),
-          ),
-        ],
+      builder: (ctx) => AppConfirmDialog(
+        icon: Icons.delete_outline_rounded,
+        iconColor: Colors.red,
+        iconBackgroundColor: Colors.red.withValues(alpha: 0.1),
+        title: 'Xóa lịch sử',
+        content: 'Bạn có chắc muốn xóa toàn bộ lịch sử hội thoại?',
+        cancelText: 'Hủy',
+        confirmText: 'Xóa',
+        confirmColor: Colors.red,
+        onCancel: () => Navigator.pop(ctx, false),
+        onConfirm: () => Navigator.pop(ctx, true),
       ),
     );
     if (confirm == true) {

@@ -961,6 +961,7 @@
   "noHabitsCompletedToday": "Chưa có thói quen nào hoàn thành hôm nay 🌱",
   "addHabitToStart": "Hãy thêm thói quen mới để bắt đầu nhé! 🌱",
   "addHabitButton": "Thêm thói quen",
+  "habitDeletedSuccess": "Đã xóa thói quen",
 
   "addHabitDailyGoal": "MỤC TIÊU MỖI NGÀY",
   "addHabitCategory": "DANH MỤC",
@@ -972,5 +973,10 @@
   "addHabitUnitCalories": "calo",
   "addHabitEnterName": "Vui lòng nhập tên thói quen",
   "addHabitQuote": "\"Kỷ luật là cầu nối giữa mục tiêu và thành tựu.\"",
-  "addHabitQuoteAuthor": "— Jim Rohn"
+  "addHabitQuoteAuthor": "— Jim Rohn",
+
+  "allCompletedTitle": "Xuất sắc! 🎉",
+  "allCompletedBody": "Bạn đã hoàn thành tất cả thói quen hôm nay.",
+  "allCompletedSubtitle": "Hãy duy trì để cây luôn xanh tốt nhé! 🌱",
+  "allCompletedContinue": "Tuyệt vời!"
 }

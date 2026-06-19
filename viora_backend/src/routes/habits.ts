@@ -477,34 +477,17 @@ router.get("/plant", authMiddleware, async (req: any, res) => {
   }
 });
 
-// helper: cập nhật plant experience và level
+// helper: cập nhật plant experience và level (mỗi habit hoàn thành = +1 EXP)
 async function updatePlant(userId: number, today: string): Promise<number> {
-  // Đếm tổng habits active
-  const [habitRows]: any = await pool.query(
-    "SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_active = 1",
-    [userId]
-  );
-  const totalHabits = habitRows[0].total;
-  console.log(`[Plant] userId=${userId} totalHabits=${totalHabits}`);
-  if (totalHabits === 0) return 0;
-
-  // Đếm habits đã check-in hôm nay
+  // Đếm habits đã hoàn thành hôm nay (chỉ tính active habits, is_completed = 1)
   const [doneRows]: any = await pool.query(
-    `SELECT COUNT(*) as done FROM habit_logs 
-     WHERE user_id = ? AND log_date = ?`,
+    `SELECT COUNT(*) as done FROM habit_logs hl
+     INNER JOIN habits h ON hl.habit_id = h.id
+     WHERE hl.user_id = ? AND hl.log_date = ? AND h.is_active = 1 AND hl.is_completed = 1`,
     [userId, today]
   );
-  const doneToday = doneRows[0].done;
-  console.log(`[Plant] doneToday=${doneToday} today=${today}`);
-
-  // Tính điểm theo tỉ lệ hoàn thành
-  const ratio = doneToday / totalHabits;
-  let points = 0;
-  if (ratio >= 1.0) points = 3;
-  else if (ratio >= 0.5) points = 2;
-  else if (ratio > 0) points = 1;
-
-  console.log(`[Plant] ratio=${ratio} points=${points}`);
+  const points = doneRows[0].done;
+  console.log(`[Plant] userId=${userId} completedToday=${points} today=${today}`);
   if (points === 0) return 0;
 
   // Lấy hoặc tạo plant
@@ -525,7 +508,7 @@ async function updatePlant(userId: number, today: string): Promise<number> {
 
   const plant = plantRows[0];
 
-  // Chỉ cộng điểm 1 lần/ngày — convert về string để so sánh đúng
+  // Chỉ cộng điểm 1 lần/ngày
   const lastWatered = plant.last_watered
     ? (plant.last_watered instanceof Date
         ? plant.last_watered.toISOString().split("T")[0]
@@ -541,8 +524,7 @@ async function updatePlant(userId: number, today: string): Promise<number> {
 
   const newExp = plant.experience + points;
 
-  // Hệ thống 15 level mới
-  // Ngưỡng: 0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525
+  // Hệ thống 15 level
   const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
   let newLevel = 1;
   for (let i = thresholds.length - 1; i >= 0; i--) {
@@ -564,7 +546,7 @@ async function updatePlant(userId: number, today: string): Promise<number> {
   return points;
 }
 
-// Helper: Recalculate plant experience from scratch based on all habit logs
+// Helper: Recalculate plant experience from scratch (mỗi habit hoàn thành = +1 EXP)
 async function recalculatePlantExperience(userId: number) {
   try {
     console.log(`[Recalculate] Starting for userId=${userId}`);
@@ -578,66 +560,38 @@ async function recalculatePlantExperience(userId: number) {
     if (activeHabits[0].count === 0) {
       // No active habits, reset plant to initial state
       await pool.query(
-        `UPDATE plants SET experience = 0, level = 1, last_watered = NULL WHERE user_id = ?`,
+        `UPDATE plants SET experience = 0, level = 1, last_watered = NULL,
+         days_without_checkin = 0, is_wilted = 0, last_penalty_date = NULL
+         WHERE user_id = ?`,
         [userId]
       );
       console.log(`[Recalculate] No active habits, reset plant to level 1 with 0 exp`);
       return;
     }
 
-    // Get all unique dates where user checked in habits
-    const [logDates]: any = await pool.query(
-      `SELECT DISTINCT log_date FROM habit_logs WHERE user_id = ? ORDER BY log_date ASC`,
+    // Sum all completed logs for active habits
+    const [expRows]: any = await pool.query(
+      `SELECT COUNT(*) as total FROM habit_logs hl
+       INNER JOIN habits h ON hl.habit_id = h.id
+       WHERE hl.user_id = ? AND h.is_active = 1 AND hl.is_completed = 1`,
       [userId]
     );
+    const totalExp = expRows[0].total;
+    console.log(`[Recalculate] totalExp=${totalExp}`);
 
-    if (logDates.length === 0) {
-      // No logs, reset plant to initial state
-      await pool.query(
-        `UPDATE plants SET experience = 0, level = 1, last_watered = NULL WHERE user_id = ?`,
-        [userId]
-      );
-      console.log(`[Recalculate] No logs found, reset plant to level 1`);
-      return;
-    }
-
-    let totalExp = 0;
-
-    // For each date, calculate points based on completion ratio
-    for (const row of logDates) {
-      const date = row.log_date instanceof Date
-        ? row.log_date.toISOString().split("T")[0]
-        : String(row.log_date).split("T")[0];
-
-      // Count total active habits that existed on that date (currently active habits only)
-      const [habitRows]: any = await pool.query(
-        `SELECT COUNT(*) as total FROM habits 
-         WHERE user_id = ? AND is_active = 1 AND created_at <= ?`,
-        [userId, date + ' 23:59:59']
-      );
-      const totalHabits = habitRows[0].total;
-
-      if (totalHabits === 0) continue;
-
-      // Count completed habits on that date (only count logs for currently active habits)
-      const [doneRows]: any = await pool.query(
-        `SELECT COUNT(*) as done FROM habit_logs hl
-         INNER JOIN habits h ON hl.habit_id = h.id
-         WHERE hl.user_id = ? AND hl.log_date = ? AND h.is_active = 1`,
-        [userId, date]
-      );
-      const doneToday = doneRows[0].done;
-
-      // Calculate points based on ratio
-      const ratio = doneToday / totalHabits;
-      let points = 0;
-      if (ratio >= 1.0) points = 3;
-      else if (ratio >= 0.5) points = 2;
-      else if (ratio > 0) points = 1;
-
-      totalExp += points;
-      console.log(`[Recalculate] Date=${date}, done=${doneToday}/${totalHabits}, points=${points}, totalExp=${totalExp}`);
-    }
+    // Get last completed date for last_watered
+    const [lastLogRows]: any = await pool.query(
+      `SELECT hl.log_date FROM habit_logs hl
+       INNER JOIN habits h ON hl.habit_id = h.id
+       WHERE hl.user_id = ? AND h.is_active = 1 AND hl.is_completed = 1
+       ORDER BY hl.log_date DESC LIMIT 1`,
+      [userId]
+    );
+    const lastWatered = lastLogRows.length > 0
+      ? (lastLogRows[0].log_date instanceof Date
+          ? lastLogRows[0].log_date.toISOString().split("T")[0]
+          : String(lastLogRows[0].log_date).split("T")[0])
+      : null;
 
     // Calculate new level
     const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
@@ -648,12 +602,6 @@ async function recalculatePlantExperience(userId: number) {
         break;
       }
     }
-
-    // Get last watered date
-    const lastDate = logDates[logDates.length - 1].log_date;
-    const lastWatered = lastDate instanceof Date
-      ? lastDate.toISOString().split("T")[0]
-      : String(lastDate).split("T")[0];
 
     // Update plant
     await pool.query(

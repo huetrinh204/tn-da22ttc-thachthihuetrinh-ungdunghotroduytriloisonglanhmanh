@@ -451,7 +451,7 @@ class _PlantScreenState extends State<PlantScreen>
                       children: [
                         Row(
                           children: [
-                            Icon(AppIcons.infoCircle, size: 20, color: context.textGreen),
+                            Icon(AppIcons.trendingUp, size: 20, color: context.textGreen),
                             const SizedBox(width: 8),
                             Text(AppLocalizations.of(context)!.howToEarnPoints,
                                 style: TextStyle(
@@ -461,9 +461,15 @@ class _PlantScreenState extends State<PlantScreen>
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildTip(AppIcons.checkCircle, AppColors.success, AppLocalizations.of(context)!.earnTip1, AppLocalizations.of(context)!.earnReward1),
-                        _buildTip(AppIcons.checkCircle, AppColors.success, AppLocalizations.of(context)!.earnTip2, AppLocalizations.of(context)!.earnReward2),
-                        _buildTip(AppIcons.trophy, Colors.amber, AppLocalizations.of(context)!.earnTip3, AppLocalizations.of(context)!.earnReward3),
+                        _buildTip(AppIcons.zap, AppColors.success, AppLocalizations.of(context)!.earnTip1, AppLocalizations.of(context)!.earnReward1),
+                        const Divider(height: 1, indent: 28),
+                        const SizedBox(height: 8),
+                        _buildTip(AppIcons.trendingUp, const Color(0xFFFB8C00), AppLocalizations.of(context)!.earnTip2, AppLocalizations.of(context)!.earnReward2),
+                        const Divider(height: 1, indent: 28),
+                        const SizedBox(height: 8),
+                        _buildTip(AppIcons.star, Colors.amber, AppLocalizations.of(context)!.earnTip3, AppLocalizations.of(context)!.earnReward3),
+                        const Divider(height: 1, indent: 28),
+                        const SizedBox(height: 8),
                         _buildTip(AppIcons.warning, AppColors.error, AppLocalizations.of(context)!.earnTip4, AppLocalizations.of(context)!.earnReward4),
                       ],
                     ),
@@ -773,23 +779,36 @@ class _PlantScreenState extends State<PlantScreen>
   }
 
   Widget _buildTip(IconData icon, Color iconColor, String text, String reward) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-              child: Text(text,
-                  style: TextStyle(fontSize: 13, color: context.textGreenLight))),
-          const SizedBox(width: 8),
-          Text(reward,
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: iconColor, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(text,
+              style: TextStyle(fontSize: 13, color: context.textGreenLight)),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(reward,
               style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: context.textGreen)),
-        ],
-      ),
+                  color: iconColor)),
+        ),
+      ],
     );
   }
 }

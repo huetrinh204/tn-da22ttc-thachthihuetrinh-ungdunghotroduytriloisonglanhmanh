@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../services/flow_prefs.dart';
@@ -7,6 +8,8 @@ import '../data/starter_habit_templates.dart';
 import '../l10n/app_localizations.dart';
 import 'home_screen.dart';
 import '../theme/theme_extensions.dart';
+import '../utils/habit_icon_mapper.dart';
+import '../models/plant_type.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -794,8 +797,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(g["icon"] as String,
-                                style: const TextStyle(fontSize: 30)),
+                            Icon(
+                              HabitIconMapper.getIconData(g["icon"]),
+                              size: 30,
+                              color: isSelected
+                                  ? const Color(0xFFC62828)
+                                  : const Color(0xFF1F2937),
+                            ),
                             const SizedBox(height: 8),
                             Text(g["label"] as String,
                                 textAlign: TextAlign.center,
@@ -913,8 +921,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           ),
                           child: Row(
                             children: [
-                              Text(opt.icon,
-                                  style: const TextStyle(fontSize: 26)),
+                              Icon(
+                                HabitIconMapper.getIconData(opt.icon),
+                                color: const Color(0xFF2E7D32),
+                                size: 26,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -960,9 +971,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       child: Column(
         children: [
           const SizedBox(height: 8),
-          Text(l10n.onboardingChoosePlant + " 🌿",
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(l10n.onboardingChoosePlant,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold,
+                       color: Colors.white)),
+              const SizedBox(width: 8),
+              Icon(LucideIcons.sprout, color: Colors.white, size: 28),
+            ],
+          ),
           const SizedBox(height: 6),
           Text(l10n.onboardingPlantGrowWithHabits,
               style: const TextStyle(color: Colors.white70, fontSize: 14)),
@@ -998,10 +1016,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(p["emoji"] as String,
-                                style: const TextStyle(fontSize: 48)),
+                            Image.asset(
+                              PlantType.fromIdOrDefault(p["id"] as String).getAssetPath(
+                                PlantType.fromIdOrDefault(p["id"] as String).maxStages
+                              ),
+                              width: 72,
+                              height: 72,
+                              fit: BoxFit.contain,
+                            ),
                             const SizedBox(height: 8),
                             Text(p["name"] as String,
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -1009,14 +1034,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                                       ? const Color(0xFF00695C)
                                       : Colors.black87,
                                 )),
-                            const SizedBox(height: 4),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(p["desc"] as String,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Colors.grey)),
-                            ),
                           ],
                         ),
                       ),
@@ -1032,7 +1049,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                   child: Row(
                     children: [
-                      const Text("💡", style: TextStyle(fontSize: 18)),
+                      const Icon(Icons.lightbulb_outline, color: Color(0xFF2E7D32), size: 18),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -1088,7 +1105,7 @@ class _BubblePainter extends CustomPainter {
       final x = (b[0] as double) * size.width;
       final baseY = (b[1] as double) * size.height;
       final r = b[2] as double;
-      final colorIdx = (b[3] as double).toInt();
+      final colorIdx = b[3] as int;
       final speed = b[4] as double;
 
       // Float up and down

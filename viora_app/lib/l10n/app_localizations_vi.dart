@@ -2014,6 +2014,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get addHabitButton => 'Thêm thói quen';
 
   @override
+  String get habitDeletedSuccess => 'Đã xóa thói quen';
+
+  @override
   String get addHabitDailyGoal => 'MỤC TIÊU MỖI NGÀY';
 
   @override
@@ -2046,4 +2049,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get addHabitQuoteAuthor => '— Jim Rohn';
+
+  @override
+  String get allCompletedTitle => 'Xuất sắc! 🎉';
+
+  @override
+  String get allCompletedBody => 'Bạn đã hoàn thành tất cả thói quen hôm nay.';
+
+  @override
+  String get allCompletedSubtitle => 'Hãy duy trì để cây luôn xanh tốt nhé! 🌱';
+
+  @override
+  String get allCompletedContinue => 'Tuyệt vời!';
 }

@@ -4,7 +4,8 @@ import '../l10n/app_localizations.dart';
 import '../theme/theme_extensions.dart';
 
 class AddHabitScreen extends StatefulWidget {
-  const AddHabitScreen({super.key});
+  final Map? initialHabit;
+  const AddHabitScreen({super.key, this.initialHabit});
 
   @override
   State<AddHabitScreen> createState() => _AddHabitScreenState();
@@ -17,6 +18,30 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   double _dailyGoal = 2000;
   TimeOfDay _reminderTime = const TimeOfDay(hour: 8, minute: 0);
   bool _reminderEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialHabit != null) {
+      final habit = widget.initialHabit!;
+      _nameController.text = habit['name']?.toString() ?? '';
+      _selectedCategory = habit['category']?.toString() ?? 'hydration';
+      _selectedIcon = habit['icon']?.toString() ?? '💧';
+      _dailyGoal = double.tryParse(habit['target_count']?.toString() ?? '') ?? 1.0;
+      
+      _reminderEnabled = habit['reminder_enabled'] == 1 || 
+                         habit['reminder_enabled'] == true || 
+                         habit['reminder_time'] != null;
+      if (habit['reminder_time'] != null) {
+        final parts = habit['reminder_time'].toString().split(':');
+        if (parts.length >= 2) {
+          final h = int.tryParse(parts[0]) ?? 8;
+          final m = int.tryParse(parts[1]) ?? 0;
+          _reminderTime = TimeOfDay(hour: h, minute: m);
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -38,7 +63,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          l10n.addNewHabit,
+          widget.initialHabit != null ? l10n.editHabit : l10n.addNewHabit,
           style: const TextStyle(
             color: Color(0xFF1E352F),
             fontSize: 18,

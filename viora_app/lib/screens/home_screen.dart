@@ -37,6 +37,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int? _levelUpFromLevel;
   int? _levelUpToLevel;
   String _globalPlantType = "bamboo";
+  int _growScreenVersion = 0; // increments to force GrowScreen rebuild after habit changes
 
   @override
   void initState() {
@@ -133,6 +134,15 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await _checkAndShowGlobalPlantLevelUp();
   }
 
+  /// Called when any habit is deleted – forces GrowScreen to reload and
+  /// refreshes the Dashboard so the plant card shows the updated XP.
+  void _onHabitDeleted() {
+    setState(() => _growScreenVersion++);
+    if (_dashboardKey.currentState != null) {
+      _dashboardKey.currentState!._loadData();
+    }
+  }
+
   void switchToTab(int index) {
     _onTabTapped(AppTabs.normalize(index));
   }
@@ -142,11 +152,14 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       case AppTabs.today:
         return _DashboardTab(key: _dashboardKey);
       case AppTabs.habits:
-        return HabitsScreen(onHabitCheckInCompleted: _onHabitCheckInCompleted);
+        return HabitsScreen(
+          onHabitCheckInCompleted: _onHabitCheckInCompleted,
+          onHabitDeleted: _onHabitDeleted,
+        );
       case AppTabs.community:
         return const CommunityScreen();
       case AppTabs.grow:
-        return const GrowScreen();
+        return GrowScreen(key: ValueKey('grow_$_growScreenVersion'));
       case AppTabs.me:
         return const ProfileScreen();
       case AppTabs.aiChat:
@@ -393,7 +406,6 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(l10n.afterOnboardingNoHabitsTitle),
           content: Text(l10n.afterOnboardingNoHabitsBody),
           actions: [
@@ -430,7 +442,6 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(l10n.streakBrokenTitle),
           content: Text(l10n.streakBrokenBody),
           actions: [

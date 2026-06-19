@@ -113,6 +113,24 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14, fontFamily: AppTypography.fontFamily),
     ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titleTextStyle: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+        fontFamily: AppTypography.fontFamily,
+      ),
+      contentTextStyle: const TextStyle(
+        fontSize: 15,
+        color: AppColors.textSecondary,
+        fontFamily: AppTypography.fontFamily,
+        height: 1.45,
+      ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+    ),
   );
 
   static ThemeData get dark => ThemeData(
@@ -190,6 +208,24 @@ class AppTheme {
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       hintStyle: const TextStyle(color: Color(0xFF6B7280), fontSize: 14, fontFamily: AppTypography.fontFamily),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColorsCompat.darkCard,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titleTextStyle: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+        fontFamily: AppTypography.fontFamily,
+      ),
+      contentTextStyle: const TextStyle(
+        fontSize: 15,
+        color: Color(0xFF9CA3AF), // textSecondary
+        fontFamily: AppTypography.fontFamily,
+        height: 1.45,
+      ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
     ),
   );
 }

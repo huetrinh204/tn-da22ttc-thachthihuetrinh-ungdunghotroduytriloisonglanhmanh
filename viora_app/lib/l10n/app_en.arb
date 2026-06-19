@@ -961,6 +961,7 @@
   "noHabitsCompletedToday": "No habits completed today 🌱",
   "addHabitToStart": "Add a new habit to get started! 🌱",
   "addHabitButton": "Add Habit",
+  "habitDeletedSuccess": "Habit deleted",
 
   "addHabitDailyGoal": "DAILY GOAL",
   "addHabitCategory": "CATEGORY",
@@ -972,5 +973,10 @@
   "addHabitUnitCalories": "cal",
   "addHabitEnterName": "Please enter habit name",
   "addHabitQuote": "\"Discipline is the bridge between goals and accomplishment.\"",
-  "addHabitQuoteAuthor": "— Jim Rohn"
+  "addHabitQuoteAuthor": "— Jim Rohn",
+
+  "allCompletedTitle": "Outstanding! 🎉",
+  "allCompletedBody": "You've completed all your habits today.",
+  "allCompletedSubtitle": "Keep it up to keep your plant thriving! 🌱",
+  "allCompletedContinue": "Awesome!"
 }
