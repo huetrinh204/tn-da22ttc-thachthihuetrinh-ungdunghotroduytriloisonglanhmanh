@@ -539,6 +539,24 @@ class ApiService {
     }
   }
 
+  // ================= COMMUNITY - GET SINGLE POST =================
+  static Future<Map<String, dynamic>> getPostById(
+    String token,
+    String postId,
+  ) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/community/posts/$postId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"post": null, "message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"post": null, "message": "Network error"};
+    }
+  }
+
   // ================= COMMUNITY - CREATE POST =================
   static Future<Map<String, dynamic>> createPost({
     required String token,
@@ -991,6 +1009,71 @@ class ApiService {
       await http.put(
         Uri.parse("$baseUrl/community/notifications/read-all"),
         headers: {"Authorization": "Bearer $token"},
+      );
+    } catch (_) {}
+  }
+
+  // ================= COMMUNITY - DELETE NOTIFICATION =================
+  static Future<Map<String, dynamic>> deleteNotification(
+      String token, String notificationId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/community/notifications/$notificationId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - DELETE NOTIFICATIONS (batch) =================
+  static Future<Map<String, dynamic>> deleteNotifications(
+      String token, List<String> ids) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/notifications/delete-batch"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"ids": ids}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - DELETE ALL READ NOTIFICATIONS =================
+  static Future<Map<String, dynamic>> deleteReadNotifications(String token) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/community/notifications/read-all"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= SAVE USER LANGUAGE =================
+  static Future<void> updateUserLanguage(String token, String languageCode) async {
+    try {
+      await http.put(
+        Uri.parse("$baseUrl/auth/user/language"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"language": languageCode}),
       );
     } catch (_) {}
   }

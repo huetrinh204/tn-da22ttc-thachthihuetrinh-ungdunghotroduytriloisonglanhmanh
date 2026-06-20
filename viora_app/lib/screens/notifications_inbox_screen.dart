@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/app_snackbar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
@@ -23,6 +24,26 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
   bool _isLoading = true;
   String? _error;
 
+  // Search
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  // Multi-select
+  bool _selectMode = false;
+  final Set<String> _selectedIds = {};
+
+  List<CommunityNotification> get _filtered {
+    if (_searchQuery.isEmpty) return _notifications;
+    final q = _searchQuery.toLowerCase();
+    return _notifications.where((n) {
+      if (n.userName.toLowerCase().contains(q)) return true;
+      if (n.content?.toLowerCase().contains(q) ?? false) return true;
+      if (n.title?.toLowerCase().contains(q) ?? false) return true;
+      if (n.body?.toLowerCase().contains(q) ?? false) return true;
+      return false;
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -30,12 +51,17 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
     _markAllAsRead();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _markAllAsRead() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token") ?? "";
     if (token.isNotEmpty) {
       await ApiService.markAllNotificationsAsRead(token);
-      // Lưu timestamp để badge biết đây là "đã xem"
       await prefs.setString(
         'notifications_last_seen_at',
         DateTime.now().toUtc().toIso8601String(),
@@ -78,7 +104,65 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
     await ApiService.markNotificationAsRead(token, notificationId);
   }
 
+  void _toggleSelectMode() {
+    setState(() {
+      _selectMode = !_selectMode;
+      if (!_selectMode) _selectedIds.clear();
+    });
+  }
+
+  void _toggleSelected(String id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+        if (_selectedIds.isEmpty) _selectMode = false;
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    if (_selectedIds.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+
+    final ids = _selectedIds.toList();
+    await ApiService.deleteNotifications(token, ids);
+
+    setState(() {
+      _notifications.removeWhere((n) => ids.contains(n.id));
+      _selectedIds.clear();
+      _selectMode = false;
+    });
+  }
+
+  Future<void> _deleteReadNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+
+    final readIds =
+        _notifications.where((n) => n.isRead).map((n) => n.id).toList();
+
+    if (readIds.isEmpty) {
+      if (mounted) AppSnackbar.showError(context, 'Không có thông báo đã đọc');
+      return;
+    }
+
+    await ApiService.deleteNotifications(token, readIds);
+
+    setState(() {
+      _notifications.removeWhere((n) => readIds.contains(n.id));
+    });
+  }
+
   void _handleNotificationTap(CommunityNotification notif) async {
+    if (_selectMode) {
+      _toggleSelected(notif.id);
+      return;
+    }
+
     if (!notif.isRead) {
       _markAsRead(notif.id);
       setState(() {
@@ -103,37 +187,57 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
       });
     }
 
-    // Navigate based on notification type
     if (notif.type == 'warning') {
-      // Admin warning - just show dialog or stay in notifications
-      // User can see the warning message already in the notification
-      return;
+      if (notif.postId != null) {
+        await _navigateToPost(notif.postId!, notif);
+      }
     } else if (notif.type == 'follow') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => UserProfileScreen(
-            userId: notif.userId,
-            userName: notif.userName,
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => UserProfileScreen(
+              userId: notif.userId,
+              userName: notif.userName,
+            ),
           ),
-        ),
-      );
+        );
+      }
     } else if (notif.type == 'like' || notif.type == 'comment') {
       if (notif.postId != null) {
-        // Load post and navigate
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString("token") ?? "";
-        
-        // Fetch post details from API
-        final response = await ApiService.getPosts(token, limit: 100);
-        final posts = (response["posts"] as List? ?? [])
-            .map((j) => Post.fromJson(j as Map<String, dynamic>))
-            .toList();
-        
-        final post = posts.firstWhere(
-          (p) => p.id == notif.postId,
-          orElse: () => Post(
-            id: notif.postId!,
+        await _navigateToPost(notif.postId!, notif);
+      }
+    }
+  }
+
+  Future<void> _navigateToPost(String postId, CommunityNotification notif) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+
+    try {
+      final response = await ApiService.getPostById(token, postId);
+      final postJson = response["post"];
+      if (postJson != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PostDetailScreen(
+              post: Post.fromJson(postJson as Map<String, dynamic>),
+            ),
+          ),
+        );
+        return;
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    AppSnackbar.showError(context, 'Không thể tải bài viết');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PostDetailScreen(
+          post: Post(
+            id: postId,
             userId: notif.userId,
             userName: notif.userName,
             userAvatar: notif.userAvatar,
@@ -146,18 +250,9 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
             createdAt: DateTime.now(),
             daysStreak: null,
           ),
-        );
-        
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PostDetailScreen(post: post),
-            ),
-          );
-        }
-      }
-    }
+        ),
+      ),
+    );
   }
 
   @override
@@ -169,67 +264,156 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
       appBar: VioraAppBar(
         title: l10n.notificationsTitle,
         showBack: true,
-      ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline,
-                          size: 48, color: context.textSecondary),
-                      const SizedBox(height: 16),
-                      Text(_error!,
-                          style: TextStyle(color: context.textSecondary)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadNotifications,
-                        child: Text(l10n.retry),
-                      ),
-                    ],
+        actions: _isLoading || _error != null
+            ? null
+            : [
+                if (_selectMode)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _toggleSelectMode,
+                  )
+                else ...[
+                  IconButton(
+                    icon: const Icon(Icons.delete_sweep),
+                    tooltip: 'Xóa thông báo đã đọc',
+                    onPressed: _deleteReadNotifications,
                   ),
-                )
-              : _notifications.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("🔔", style: TextStyle(fontSize: 64)),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.noNotifications,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: context.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.noNotificationsHint,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: context.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadNotifications,
-                      color: AppColors.primary,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _notifications.length,
-                        itemBuilder: (context, index) {
-                          return _buildNotificationItem(_notifications[index]);
-                        },
-                      ),
+                  IconButton(
+                    icon: const Icon(Icons.checklist),
+                    tooltip: 'Chọn nhiều',
+                    onPressed: _toggleSelectMode,
+                  ),
+                ],
+              ],
+      ),
+      body: Column(
+        children: [
+          // Search bar
+          if (_notifications.isNotEmpty && _error == null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm thông báo...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: context.inputFill,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                ),
+                onChanged: (v) => setState(() => _searchQuery = v),
+              ),
+            ),
+
+          // Delete selected banner
+          if (_selectMode && _selectedIds.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.error.withValues(alpha: 0.1),
+              child: Row(
+                children: [
+                  Text(
+                    'Đã chọn ${_selectedIds.length}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
                     ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _deleteSelected,
+                    icon: const Icon(Icons.delete, color: AppColors.error),
+                    label: const Text(
+                      'Xóa',
+                      style: TextStyle(color: AppColors.error),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Body
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  )
+                : _error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline,
+                                size: 48, color: context.textSecondary),
+                            const SizedBox(height: 16),
+                            Text(_error!,
+                                style: TextStyle(color: context.textSecondary)),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadNotifications,
+                              child: Text(l10n.retry),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _filtered.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text("🔔", style: TextStyle(fontSize: 64)),
+                                const SizedBox(height: 16),
+                                Text(
+                                  _searchQuery.isNotEmpty
+                                      ? 'Không tìm thấy thông báo'
+                                      : l10n.noNotifications,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: context.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _searchQuery.isNotEmpty
+                                      ? 'Thử từ khóa khác'
+                                      : l10n.noNotificationsHint,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: context.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadNotifications,
+                            color: AppColors.primary,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _filtered.length,
+                              itemBuilder: (context, index) =>
+                                  _buildNotificationItem(_filtered[index]),
+                            ),
+                          ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -267,26 +451,56 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
         message = notif.content ?? '';
     }
 
+    final isSelected = _selectedIds.contains(notif.id);
+
     return GestureDetector(
       onTap: () => _handleNotificationTap(notif),
+      onLongPress: _selectMode ? null : _toggleSelectMode,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.only(
+          left: _selectMode ? 8 : 12,
+          top: 12,
+          right: 12,
+          bottom: 12,
+        ),
         decoration: BoxDecoration(
-          color: notif.isRead
-              ? context.cardColor
-              : AppColors.primary.withValues(alpha: 0.05),
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : notif.isRead
+                  ? context.cardColor
+                  : AppColors.primary.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: notif.isRead
-                ? context.infoBoxBorder
-                : AppColors.primary.withValues(alpha: 0.2),
-            width: 1,
+            color: isSelected
+                ? AppColors.primary
+                : notif.isRead
+                    ? context.infoBoxBorder
+                    : AppColors.primary.withValues(alpha: 0.2),
+            width: isSelected ? 1.5 : 1,
           ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Checkbox in select mode
+            if (_selectMode)
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: SizedBox(
+                  width: 40,
+                  height: 48,
+                  child: Center(
+                    child: Icon(
+                      isSelected
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank,
+                      color: isSelected ? AppColors.primary : context.textSecondary,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ),
             // Avatar
             Container(
               width: 48,

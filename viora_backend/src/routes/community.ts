@@ -103,6 +103,7 @@ function mapPostRow(row: any, currentUserId: number, req?: any) {
     is_following: Boolean(row.is_following),
     is_followed_back: Boolean(row.is_followed_back),
     is_own_post: Number(row.user_id) === currentUserId,
+    is_warned: Boolean(row.is_warned),
   };
 }
 
@@ -133,6 +134,7 @@ const POST_SELECT = `
     p.hashtags,
     p.challenge_name,
     p.days_streak,
+    p.is_warned,
     p.created_at,
     (SELECT COUNT(*) FROM community_post_likes pl WHERE pl.post_id = p.id) AS like_count,
     (SELECT COUNT(*) FROM community_comments cc WHERE cc.post_id = p.id) AS comment_count,
@@ -200,6 +202,23 @@ router.get("/posts", authMiddleware, async (req: any, res: Response) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error", posts: [] });
+  }
+});
+
+// ================= GET SINGLE POST =================
+router.get("/posts/:postId", authMiddleware, async (req: any, res: Response) => {
+  const postId = parseInt(req.params.postId, 10);
+  const userId = req.user.id;
+
+  if (isNaN(postId)) return res.status(400).json({ message: "Invalid post id" });
+
+  try {
+    const post = await fetchPostById(postId, userId, req);
+    if (!post) return res.status(404).json({ message: "Post not found" });
+    res.json({ post });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -942,12 +961,9 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
 
     // Add user notifications (admin warnings)
     for (const row of userNotifRows) {
-      let payload = null;
-      try {
-        payload = row.payload ? JSON.parse(row.payload) : null;
-      } catch (e) {
-        // Ignore parse errors
-      }
+      const payload = row.payload && typeof row.payload === 'string'
+        ? JSON.parse(row.payload)
+        : row.payload;
 
       notifications.push({
         id: `user_notif_${row.id}`,
@@ -970,7 +986,18 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-    res.json({ notifications: notifications.slice(0, 50) });
+    // Filter out hidden notifications
+    const [hiddenRows]: any = await pool.query(
+      "SELECT notification_id FROM user_hidden_notifications WHERE user_id = ?",
+      [userId]
+    );
+    const hiddenSet = new Set(hiddenRows.map((r: any) => r.notification_id));
+
+    res.json({
+      notifications: notifications
+        .filter((n: any) => !hiddenSet.has(n.id))
+        .slice(0, 50)
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error", notifications: [] });
@@ -1016,6 +1043,84 @@ router.put("/notifications/read-all", authMiddleware, async (req: any, res: Resp
   }
 });
 
+// ================= DELETE NOTIFICATION (hide or delete) =================
+router.delete("/notifications/:notificationId", authMiddleware, async (req: any, res: Response) => {
+  const userId = req.user.id;
+  const { notificationId } = req.params;
+
+  try {
+    if (notificationId.startsWith('user_notif_')) {
+      const actualId = notificationId.replace('user_notif_', '');
+      await pool.query(
+        "DELETE FROM user_notifications WHERE id = ? AND user_id = ?",
+        [actualId, userId]
+      );
+    } else {
+      // For community notifications (like/comment/follow), hide them
+      await pool.query(
+        "INSERT IGNORE INTO user_hidden_notifications (user_id, notification_id) VALUES (?, ?)",
+        [userId, notificationId]
+      );
+    }
+    res.json({ message: "Notification deleted" });
+  } catch (error) {
+    console.error("Delete notification error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= DELETE NOTIFICATIONS (batch) =================
+router.post("/notifications/delete-batch", authMiddleware, async (req: any, res: Response) => {
+  const userId = req.user.id;
+  const { ids } = req.body;
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "ids must be a non-empty array" });
+  }
+
+  try {
+    const userNotifIds = ids.filter((id: string) => id.startsWith('user_notif_'))
+      .map((id: string) => id.replace('user_notif_', ''));
+    const communityIds = ids.filter((id: string) => !id.startsWith('user_notif_'));
+
+    if (userNotifIds.length > 0) {
+      await pool.query(
+        `DELETE FROM user_notifications WHERE id IN (${userNotifIds.map(() => '?').join(',')}) AND user_id = ?`,
+        [...userNotifIds, userId]
+      );
+    }
+
+    for (const communityId of communityIds) {
+      await pool.query(
+        "INSERT IGNORE INTO user_hidden_notifications (user_id, notification_id) VALUES (?, ?)",
+        [userId, communityId]
+      );
+    }
+
+    res.json({ message: `${ids.length} notification(s) deleted` });
+  } catch (error) {
+    console.error("Batch delete notifications error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= DELETE ALL READ NOTIFICATIONS =================
+router.delete("/notifications/read-all", authMiddleware, async (req: any, res: Response) => {
+  const userId = req.user.id;
+
+  try {
+    // Delete read user_notifications
+    const [result]: any = await pool.query(
+      "DELETE FROM user_notifications WHERE user_id = ? AND is_read = 1",
+      [userId]
+    );
+    res.json({ message: "Read notifications deleted", deleted: result.affectedRows });
+  } catch (error) {
+    console.error("Delete read notifications error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 async function ensureCommunitySchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS community_posts (
@@ -1026,6 +1131,7 @@ async function ensureCommunitySchema() {
       hashtags JSON,
       challenge_name VARCHAR(100),
       days_streak INT,
+      is_warned TINYINT(1) DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
@@ -1080,6 +1186,24 @@ async function ensureCommunitySchema() {
       PRIMARY KEY (follower_id, following_id),
       FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Add is_warned column if missing (for existing tables)
+  try {
+    await pool.query(
+      "ALTER TABLE community_posts ADD COLUMN is_warned TINYINT(1) DEFAULT 0"
+    );
+  } catch (_) {}
+
+  // Table to track hidden/deleted notifications (user choice)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_hidden_notifications (
+      user_id INT NOT NULL,
+      notification_id VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, notification_id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
 }

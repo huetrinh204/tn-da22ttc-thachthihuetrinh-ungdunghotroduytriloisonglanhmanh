@@ -59,6 +59,8 @@ const avatarUpload = multer({
 
 // Ensure avatar_url column exists
 pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500)").catch(() => {});
+// Ensure language column exists (MySQL 8.0+ supports IF NOT EXISTS)
+pool.query("ALTER TABLE users ADD COLUMN language VARCHAR(10) DEFAULT 'vi'").catch(() => {});
 
 // ================= REGISTER =================
 router.post("/register", async (req, res) => {
@@ -396,6 +398,25 @@ router.post("/fcm-token", async (req, res) => {
     await pool.query("UPDATE users SET fcm_token = ? WHERE id = ?",
       [fcm_token, decoded.id]);
     res.json({ message: "FCM token saved" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= SAVE USER LANGUAGE =================
+router.put("/user/language", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Unauthorized" });
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const { language } = req.body;
+    if (!language || !['vi', 'en'].includes(language)) {
+      return res.status(400).json({ message: "Invalid language code" });
+    }
+    await pool.query("UPDATE users SET language = ? WHERE id = ?",
+      [language, decoded.id]);
+    res.json({ message: "Language saved" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

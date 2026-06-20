@@ -22,127 +22,129 @@ class PostCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return Stack(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: context.cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Avatar
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      post.userName[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          post.userName[0].toUpperCase(),
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Name & time
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    const SizedBox(width: 12),
+                    // Name & time
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            children: [
+                              Text(
+                                post.userName,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                              // Following/Friend badge
+                              if (!post.isOwnPost && post.isFollowing) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: post.isFollowing && post.isFollowedBack
+                                        ? AppColors.success.withValues(alpha: 0.1)
+                                        : Colors.grey.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    post.isFollowing && post.isFollowedBack
+                                        ? l10n.friends
+                                        : l10n.followingUser,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: post.isFollowing && post.isFollowedBack
+                                          ? AppColors.success
+                                          : Colors.grey.shade600,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
                           Text(
-                            post.userName,
+                            _formatTime(post.createdAt, l10n),
                             style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: context.textPrimary,
+                              fontSize: 12,
+                              color: context.textSecondary,
                             ),
                           ),
-                          // Following/Friend badge
-                          if (!post.isOwnPost && post.isFollowing) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: post.isFollowing && post.isFollowedBack
-                                    ? AppColors.success.withValues(alpha: 0.1)
-                                    : Colors.grey.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                post.isFollowing && post.isFollowedBack
-                                    ? l10n.friends
-                                    : l10n.followingUser,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: post.isFollowing && post.isFollowedBack
-                                      ? AppColors.success
-                                      : Colors.grey.shade600,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        ],
+                      ),
+                    ),
+                    // Streak badge
+                    if (post.daysStreak != null && post.daysStreak! > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(AppIcons.streak, color: AppColors.warning, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${post.daysStreak} ${l10n.days}",
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.warning,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _formatTime(post.createdAt, l10n),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.textSecondary,
                         ),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-                // Streak badge
-                if (post.daysStreak != null && post.daysStreak! > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(AppIcons.streak, color: AppColors.warning, size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          "${post.daysStreak} ${l10n.days}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.warning,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
+              ),
           
           // Content
           if (post.content.isNotEmpty)
@@ -229,8 +231,27 @@ class PostCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+    // Warning badge overlay — chỉ chủ bài viết thấy
+    if (post.isOwnPost && post.isWarned)
+      Positioned(
+        top: 12,
+        right: 12,
+        child: Tooltip(
+          message: 'Bài viết đã bị cảnh báo vi phạm',
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: const BoxDecoration(
+              color: AppColors.error,
+              shape: BoxShape.circle,
+            ),
+            child: const Text('⚠️', style: TextStyle(fontSize: 16)),
+          ),
+        ),
+      ),
+  ],
+);
+}
 
   Widget _buildActionIcon(
     BuildContext context, {

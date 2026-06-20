@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,7 @@ import 'screens/onboarding_screen.dart';
 import 'services/notification_service.dart';
 import 'services/onboarding_gate.dart';
 import 'services/fcm_service.dart';
+import 'navigation/app_navigation.dart';
 import 'theme/app_theme.dart';
 import 'providers/locale_provider.dart';
 import 'l10n/app_localizations.dart';
@@ -17,6 +19,10 @@ import 'l10n/app_localizations.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  if (message.data.isNotEmpty) {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('pending_deep_link', jsonEncode(message.data));
+  }
 }
 
 void main() async {
@@ -58,11 +64,32 @@ class MyAppState extends State<MyApp> {
 
     if (token != null) {
       final needsOnboarding = await OnboardingGate.needsOnboarding(token);
-      setState(() => startScreen =
-          needsOnboarding ? const OnboardingScreen() : const HomeScreen());
+      setState(() {
+        startScreen =
+            needsOnboarding ? const OnboardingScreen() : const HomeScreen();
+      });
+      if (!needsOnboarding) {
+        _checkPendingDeepLink();
+      }
     } else {
       setState(() => startScreen = const LoginScreen());
     }
+  }
+
+  void _checkPendingDeepLink() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('pending_deep_link');
+    if (raw == null) return;
+    await prefs.remove('pending_deep_link');
+
+    try {
+      final data = Map<String, String>.from(jsonDecode(raw));
+      if (data.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          AppNavigation.handleFcmDeepLink(data);
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -85,6 +112,7 @@ class MyAppState extends State<MyApp> {
           Locale('vi'),
           Locale('en'),
         ],
+        navigatorKey: AppNavigation.navigatorKey,
         home: startScreen ??
             const Scaffold(
               body: Center(child: CircularProgressIndicator()),

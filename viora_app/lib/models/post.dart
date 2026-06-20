@@ -15,6 +15,7 @@ class Post {
   final bool isFollowing; // Current user is following post author
   final bool isFollowedBack; // Post author is following current user back
   final bool isOwnPost; // Post belongs to current user
+  final bool isWarned; // Post has been warned by admin
 
   Post({
     required this.id,
@@ -33,6 +34,7 @@ class Post {
     this.isFollowing = false,
     this.isFollowedBack = false,
     this.isOwnPost = false,
+    this.isWarned = false,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -57,6 +59,7 @@ class Post {
       isFollowing: json['is_following'] ?? false,
       isFollowedBack: json['is_followed_back'] ?? false,
       isOwnPost: json['is_own_post'] ?? false,
+      isWarned: json['is_warned'] ?? false,
     );
   }
 
@@ -78,6 +81,7 @@ class Post {
       'is_following': isFollowing,
       'is_followed_back': isFollowedBack,
       'is_own_post': isOwnPost,
+      'is_warned': isWarned,
     };
   }
 
@@ -98,6 +102,7 @@ class Post {
     bool? isFollowing,
     bool? isFollowedBack,
     bool? isOwnPost,
+    bool? isWarned,
   }) {
     return Post(
       id: id ?? this.id,
@@ -116,6 +121,7 @@ class Post {
       isFollowing: isFollowing ?? this.isFollowing,
       isFollowedBack: isFollowedBack ?? this.isFollowedBack,
       isOwnPost: isOwnPost ?? this.isOwnPost,
+      isWarned: isWarned ?? this.isWarned,
     );
   }
 }

@@ -9,6 +9,9 @@ dotenv.config();
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 
+// Ensure language column exists (for email localization)
+pool.query("ALTER TABLE users ADD COLUMN language VARCHAR(10) DEFAULT 'vi'").catch(() => {});
+
 // Auth middleware
 function authMiddleware(req: any, res: Response, next: () => void) {
   const authHeader = req.headers.authorization;
@@ -260,7 +263,7 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
 
     // Get post and user info
     const [posts]: any = await pool.query(
-      "SELECT p.*, u.name, u.email FROM community_posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
+      "SELECT p.*, u.name, u.email, u.language FROM community_posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
       [postId]
     );
 
@@ -269,6 +272,12 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
     }
 
     const post = posts[0];
+
+    // Mark post as warned
+    await pool.query(
+      "UPDATE community_posts SET is_warned = 1 WHERE id = ?",
+      [postId]
+    );
 
     // Create in-app notification using user_notifications table
     await pool.query(
@@ -294,11 +303,13 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
       }
     });
 
+    const isVietnamese = (post.language || 'vi') === 'vi';
+
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: post.email,
-      subject: 'Cảnh báo vi phạm - Viora',
-      html: `
+      subject: isVietnamese ? 'Cảnh báo vi phạm - Viora' : 'Content Warning - Viora',
+      html: isVietnamese ? `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #ff9800;">⚠️ Cảnh báo vi phạm nội dung</h2>
           <p>Xin chào <strong>${post.name}</strong>,</p>
@@ -313,6 +324,22 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
           <p>Vui lòng tuân thủ các quy định cộng đồng để tránh bị khóa tài khoản.</p>
           <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
           <p style="color: #666; font-size: 14px;">Trân trọng,<br>Đội ngũ Viora</p>
+        </div>
+      ` : `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #ff9800;">⚠️ Content Violation Warning</h2>
+          <p>Hello <strong>${post.name}</strong>,</p>
+          <p>Your post has violated Viora's community guidelines.</p>
+          <div style="background-color: #fff3e0; padding: 15px; border-left: 4px solid #ff9800; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Reason:</strong> ${reason}</p>
+          </div>
+          <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Post content:</strong></p>
+            <p style="margin: 10px 0 0 0;">${post.content || '(No text content)'}</p>
+          </div>
+          <p>Please adhere to community guidelines to avoid account suspension.</p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
+          <p style="color: #666; font-size: 14px;">Best regards,<br>The Viora Team</p>
         </div>
       `
     };

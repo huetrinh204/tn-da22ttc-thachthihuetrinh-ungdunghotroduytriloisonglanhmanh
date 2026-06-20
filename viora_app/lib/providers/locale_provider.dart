@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class LocaleProvider extends ChangeNotifier {
   static LocaleProvider? _globalInstance;
@@ -19,14 +20,12 @@ class LocaleProvider extends ChangeNotifier {
     final languageCode = prefs.getString('language_code');
     
     if (languageCode != null) {
-      // User has manually selected a language
       _locale = Locale(languageCode);
     } else {
-      // Auto-detect device language
-      // Default to Vietnamese if device language is not supported
       _locale = const Locale('vi');
     }
     notifyListeners();
+    _syncToBackend();
   }
 
   Future<void> setLocale(Locale locale) async {
@@ -37,6 +36,15 @@ class LocaleProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', locale.languageCode);
+    _syncToBackend();
+  }
+
+  Future<void> _syncToBackend() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    if (token.isNotEmpty) {
+      await ApiService.updateUserLanguage(token, _locale.languageCode);
+    }
   }
 
   void clearLocale() {

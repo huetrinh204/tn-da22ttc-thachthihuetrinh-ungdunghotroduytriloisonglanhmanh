@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,12 +22,21 @@ class FcmService {
       await _localNotif.initialize(
         const InitializationSettings(android: android, iOS: ios),
         onDidReceiveNotificationResponse: (response) {
-          final tab = response.payload;
-          if (tab != null) {
-            final index = int.tryParse(tab.toString());
-            if (index != null) AppNavigation.switchToTab(index);
+          final payload = response.payload;
+          if (payload != null) {
+            try {
+              final data = Map<String, String>.from(jsonDecode(payload));
+              AppNavigation.handleFcmDeepLink(data);
+            } catch (_) {
+              final tab = int.tryParse(payload);
+              if (tab != null) {
+                AppNavigation.switchToTab(tab);
+              } else {
+                AppNavigation.openCommunity();
+              }
+            }
           } else {
-            AppNavigation.openHabits();
+            AppNavigation.openCommunity();
           }
         },
       );
@@ -70,14 +80,14 @@ class FcmService {
         _showLocalNotification(message);
       });
 
-      // Xử lý khi user tap notification (app background)
+      // Xử lý khi user tap notification (app background/terminated)
       FirebaseMessaging.onMessageOpenedApp.listen((message) {
-        final tab = message.data['tab'];
-        if (tab != null) {
-          final index = int.tryParse(tab.toString());
-          if (index != null) AppNavigation.switchToTab(index);
+        if (message.data.isNotEmpty) {
+          AppNavigation.handleFcmDeepLink(
+            Map<String, String>.from(message.data),
+          );
         } else {
-          AppNavigation.openHabits();
+          AppNavigation.openCommunity();
         }
       });
     } catch (e) {
@@ -97,11 +107,14 @@ class FcmService {
     final notification = message.notification;
     if (notification == null) return;
 
+    final data = message.data;
+    final payload = data.isNotEmpty ? jsonEncode(data) : null;
+
     await _localNotif.show(
       message.hashCode,
       notification.title,
       notification.body,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'viora_fcm',
           'FCM Notifications',
@@ -118,6 +131,7 @@ class FcmService {
           presentBadge: true,
         ),
       ),
+      payload: payload,
     );
   }
 }

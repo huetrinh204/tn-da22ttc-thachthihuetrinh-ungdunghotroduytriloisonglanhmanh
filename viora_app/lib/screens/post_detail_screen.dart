@@ -592,6 +592,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 ],
               ),
             ),
+          // Warning icon — chỉ chủ bài viết thấy
+          if (_post.isOwnPost && _post.isWarned) ...[
+            const SizedBox(width: 8),
+            Tooltip(
+              message: 'Bài viết đã bị cảnh báo vi phạm',
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text('⚠️', style: TextStyle(fontSize: 16)),
+              ),
+            ),
+          ],
         ],
       ),
     );

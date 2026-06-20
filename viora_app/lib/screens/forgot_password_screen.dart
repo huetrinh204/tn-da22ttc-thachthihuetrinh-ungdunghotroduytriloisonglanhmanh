@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../widgets/app_snackbar.dart';
 import 'login_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_typography.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/theme_extensions.dart';
 
@@ -18,7 +22,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _newPassCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
 
-  int _step = 1; // 1: nhap email, 2: nhap OTP + mat khau moi
+  int _step = 1;
   bool isLoading = false;
   bool obscureNew = true;
   bool obscureConfirm = true;
@@ -90,7 +94,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -100,18 +104,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         title: Text(
           l10n.forgotPasswordTitle,
-          style: const TextStyle(
-              color: Color(0xFF1B5E20),
-              fontWeight: FontWeight.bold,
-              fontSize: 18),
+          style: AppTypography.headingMedium.copyWith(
+            color: AppColors.primary,
+            fontSize: 18,
+          ),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Step indicator
             Row(
               children: [
                 _buildStep(1, l10n.stepEmail),
@@ -119,15 +122,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: Container(
                     height: 2,
                     color: _step >= 2
-                        ? const Color(0xFF4CAF50)
-                        : const Color(0xFFE0E0E0),
+                        ? AppColors.primary
+                        : AppColors.border,
                   ),
                 ),
                 _buildStep(2, l10n.stepConfirm),
               ],
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: AppSpacing.xxxl),
 
             if (_step == 1) ..._buildStep1(),
             if (_step == 2) ..._buildStep2(),
@@ -145,24 +148,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFF4CAF50) : const Color(0xFFE0E0E0),
+            color: isActive ? AppColors.primary : AppColors.border,
             shape: BoxShape.circle,
           ),
           child: Center(
             child: Text(
               "$step",
               style: TextStyle(
-                color: isActive ? Colors.white : Colors.grey,
+                color: isActive ? Colors.white : context.textSecondary,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
         const SizedBox(height: 4),
-        Text(label,
-            style: TextStyle(
-                fontSize: 11,
-                color: isActive ? const Color(0xFF4CAF50) : Colors.grey)),
+        Text(
+          label,
+          style: AppTypography.caption.copyWith(
+            color: isActive ? AppColors.primary : context.textSecondary,
+          ),
+        ),
       ],
     );
   }
@@ -172,15 +177,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return [
       Text(
         l10n.enterYourEmail,
-        style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1B5E20)),
+        style: AppTypography.headingMedium.copyWith(
+          color: AppColors.primary,
+        ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: AppSpacing.sm),
       Text(
         l10n.weWillSendOtp,
-        style: const TextStyle(fontSize: 14, color: Colors.grey),
+        style: AppTypography.bodySecondary,
       ),
       const SizedBox(height: 28),
       TextField(
@@ -188,7 +192,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         keyboardType: TextInputType.emailAddress,
         decoration: _inputDeco(l10n.enterYourEmail, Icons.email_outlined),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: AppSpacing.xxl),
       SizedBox(
         width: double.infinity,
         height: 50,
@@ -202,8 +206,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: CircularProgressIndicator(
                       color: Colors.white, strokeWidth: 2.5))
               : Text(l10n.sendOtp,
-                  style:
-                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: AppTypography.title.copyWith(
+                    color: Colors.white,
+                    fontSize: 16,
+                  )),
         ),
       ),
     ];
@@ -214,54 +220,53 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     return [
       Text(
         l10n.resetPassword,
-        style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1B5E20)),
+        style: AppTypography.headingMedium.copyWith(
+          color: AppColors.primary,
+        ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: AppSpacing.sm),
       Text(
         l10n.enterOtpSentTo(_email),
-        style: const TextStyle(fontSize: 14, color: Colors.grey),
+        style: AppTypography.bodySecondary,
       ),
       const SizedBox(height: 28),
 
-      // OTP input
       TextField(
         controller: _otpCtrl,
         keyboardType: TextInputType.number,
         maxLength: 6,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 8,
-            color: Color(0xFF1B5E20)),
+        style: AppTypography.headingLarge.copyWith(
+          color: AppColors.primary,
+          letterSpacing: 8,
+          fontSize: 24,
+        ),
         decoration: InputDecoration(
           hintText: "000000",
-          hintStyle: const TextStyle(
-              color: Colors.grey, letterSpacing: 8, fontSize: 24),
+          hintStyle: AppTypography.headingLarge.copyWith(
+            color: context.textSecondary,
+            letterSpacing: 8,
+            fontSize: 24,
+          ),
           counterText: "",
           filled: true,
-          fillColor: const Color(0xFFF1F8E9),
+          fillColor: AppColors.primaryLight,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            borderSide: BorderSide(color: AppColors.primary),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFC8E6C9)),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide:
-                const BorderSide(color: Color(0xFF4CAF50), width: 2),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
           ),
         ),
       ),
-      const SizedBox(height: 20),
+      const SizedBox(height: AppSpacing.xl),
 
-      // New password
       TextField(
         controller: _newPassCtrl,
         obscureText: obscureNew,
@@ -273,15 +278,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 obscureNew
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
-                color: Colors.grey,
+                color: context.textSecondary,
                 size: 20),
             onPressed: () => setState(() => obscureNew = !obscureNew),
           ),
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: AppSpacing.lg),
 
-      // Confirm password
       TextField(
         controller: _confirmPassCtrl,
         obscureText: obscureConfirm,
@@ -293,14 +297,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 obscureConfirm
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
-                color: Colors.grey,
+                color: context.textSecondary,
                 size: 20),
             onPressed: () =>
                 setState(() => obscureConfirm = !obscureConfirm),
           ),
         ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: AppSpacing.xxl),
 
       SizedBox(
         width: double.infinity,
@@ -315,16 +319,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   child: CircularProgressIndicator(
                       color: Colors.white, strokeWidth: 2.5))
               : Text(l10n.resetPassword,
-                  style:
-                      const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: AppTypography.title.copyWith(
+                    color: Colors.white,
+                    fontSize: 16,
+                  )),
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: AppSpacing.lg),
       Center(
         child: TextButton(
           onPressed: () => setState(() => _step = 1),
-          child: Text(l10n.resendOtp,
-              style: const TextStyle(color: Color(0xFF4CAF50))),
+          child: Text(
+            l10n.resendOtp,
+            style: AppTypography.bodySecondary.copyWith(
+              color: AppColors.primary,
+            ),
+          ),
         ),
       ),
     ];
@@ -333,33 +343,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   InputDecoration _inputDeco(String hint, IconData icon, {Widget? suffix}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+      hintStyle: AppTypography.bodySecondary.copyWith(fontSize: 14),
       prefixIcon: Icon(icon, color: context.textSecondary, size: 20),
       suffixIcon: suffix,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: context.inputFill,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 1.5),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
       contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 14),
     );
   }
 
   ButtonStyle _btnStyle() => ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF4CAF50),
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
       );
 }

@@ -8,6 +8,10 @@ import 'onboarding_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../widgets/floating_leaves.dart';
 import '../widgets/app_snackbar.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_typography.dart';
 import '../theme/theme_extensions.dart';
 import '../services/onboarding_gate.dart';
 import 'forgot_password_screen.dart';
@@ -63,20 +67,18 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", token);
-      
+
       // Check if user is admin
       final profileRes = await ApiService.getProfile(token);
       final userRole = profileRes['user']?['role'] as String?;
-      
+
       if (userRole == 'admin') {
-        // Admin goes to AdminHomeScreen
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
         );
       } else {
-        // Regular user goes to normal flow
         final needsOnboarding = await OnboardingGate.needsOnboarding(token);
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -119,20 +121,17 @@ class _LoginScreenState extends State<LoginScreen> {
         }
         await prefs.setString("token", token);
         final isNewUser = res["isNewUser"] == true;
-        
-        // Check if user is admin
+
         final profileRes = await ApiService.getProfile(token);
         final userRole = profileRes['user']?['role'] as String?;
-        
+
         if (userRole == 'admin') {
-          // Admin goes to AdminHomeScreen
           if (!mounted) return;
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const AdminHomeScreen()),
           );
         } else {
-          // Regular user goes to normal flow
           final needsOnboarding = await OnboardingGate.needsOnboarding(
             token,
             isNewUser: isNewUser,
@@ -158,21 +157,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background phủ toàn màn hình
           Image.asset(
             'assets/images/dangnhap.png',
             fit: BoxFit.cover,
             alignment: Alignment.topCenter,
           ),
 
-          // Lá bay
           const FloatingLeaves(),
 
-          // Content
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -180,38 +177,34 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const SizedBox(height: 48),
 
-                  // Logo only
                   Image.asset('assets/images/logo.png', height: 90),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
 
-                  // Quote dưới logo
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      AppLocalizations.of(context)!.quote.replaceAll(r'\n', '\n'),
+                      l10n.quote.replaceAll(r'\n', '\n'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: AppTypography.bodySecondary.copyWith(
                         fontSize: 13,
-                        color: Color(0xFF1B5E20),
+                        color: context.textGreen,
                         fontStyle: FontStyle.italic,
-                        fontWeight: FontWeight.w400,
                         height: 1.6,
                       ),
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppSpacing.xxxl),
 
-                  // Form card
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.88),
-                      borderRadius: BorderRadius.circular(24),
+                      color: context.cardColor.withValues(alpha: 0.88),
+                      borderRadius: BorderRadius.circular(AppRadius.xl),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withValues(alpha: 0.08),
                           blurRadius: 24,
                           offset: const Offset(0, 8),
                         ),
@@ -222,52 +215,48 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Center(
                           child: Text(
-                            AppLocalizations.of(context)!.loginTitle,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1B5E20),
+                            l10n.loginTitle,
+                            style: AppTypography.headingMedium.copyWith(
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: AppSpacing.xxl),
 
-                        // EMAIL
-                        Text(AppLocalizations.of(context)!.email,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87)),
-                        const SizedBox(height: 8),
+                        Text(l10n.email,
+                            style: AppTypography.captionBold.copyWith(
+                              color: context.textPrimary,
+                              fontSize: 13,
+                            )),
+                        const SizedBox(height: AppSpacing.sm),
                         TextField(
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: _inputDecoration(
-                              AppLocalizations.of(context)!.enterEmail, Icons.email_outlined),
+                              l10n.enterEmail, Icons.email_outlined),
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
 
-                        // PASSWORD
-                        Text(AppLocalizations.of(context)!.password,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87)),
-                        const SizedBox(height: 8),
+                        Text(l10n.password,
+                            style: AppTypography.captionBold.copyWith(
+                              color: context.textPrimary,
+                              fontSize: 13,
+                            )),
+                        const SizedBox(height: AppSpacing.sm),
                         TextField(
                           controller: passwordController,
                           obscureText: obscurePassword,
                           decoration: _inputDecoration(
-                            AppLocalizations.of(context)!.enterPassword,
+                            l10n.enterPassword,
                             Icons.lock_outline,
                             suffix: IconButton(
                               icon: Icon(
                                 obscurePassword
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: Colors.grey,
+                                color: context.textSecondary,
                                 size: 20,
                               ),
                               onPressed: () => setState(
@@ -276,7 +265,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                        // Quên mật khẩu
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -292,27 +280,28 @@ class _LoginScreenState extends State<LoginScreen> {
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                             child: Text(
-                              AppLocalizations.of(context)!.forgotPasswordQuestion,
-                              style: const TextStyle(
-                                  color: Color(0xFF4CAF50), fontSize: 13),
+                              l10n.forgotPasswordQuestion,
+                              style: AppTypography.bodySecondary.copyWith(
+                                color: AppColors.primary,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
 
-                        // LOGIN BUTTON
                         SizedBox(
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
                             onPressed: isLoading ? null : handleLogin,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(AppRadius.sm),
                               ),
                             ),
                             child: isLoading
@@ -323,35 +312,34 @@ class _LoginScreenState extends State<LoginScreen> {
                                         color: Colors.white, strokeWidth: 2.5),
                                   )
                                 : Text(
-                                    AppLocalizations.of(context)!.login,
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600),
+                                    l10n.login,
+                                    style: AppTypography.title.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
                                   ),
                           ),
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
 
-                        // DIVIDER
                         Row(
                           children: [
-                            const Expanded(child: Divider()),
+                            Expanded(child: Divider(color: AppColors.border)),
                             Padding(
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(AppLocalizations.of(context)!.or,
-                                  style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 13)),
+                              child: Text(l10n.or,
+                                  style: AppTypography.caption.copyWith(
+                                    color: context.textSecondary,
+                                  )),
                             ),
-                            const Expanded(child: Divider()),
+                            Expanded(child: Divider(color: AppColors.border)),
                           ],
                         ),
 
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
 
-                        // GOOGLE button
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(
@@ -359,28 +347,29 @@ class _LoginScreenState extends State<LoginScreen> {
                             icon: Image.network(
                               'https://www.google.com/favicon.ico',
                               height: 18,
-                              errorBuilder: (_, __, ___) => const Icon(
+                              errorBuilder: (_, _, _) => Icon(
                                   Icons.login,
                                   size: 18,
-                                  color: Colors.black54),
+                                  color: context.textSecondary),
                             ),
                             label: Text(
-                              AppLocalizations.of(context)!.loginWithGoogle,
-                              style: const TextStyle(
-                                  fontSize: 13, color: Colors.black87),
+                              l10n.loginWithGoogle,
+                              style: AppTypography.body.copyWith(
+                                fontSize: 13,
+                                color: context.textPrimary,
+                              ),
                             ),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              side: const BorderSide(color: Color(0xFFDDDDDD)),
+                              side: BorderSide(color: AppColors.border),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(AppRadius.sm)),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.xl),
 
-                        // REGISTER LINK
                         Center(
                           child: GestureDetector(
                             onTap: () => Navigator.push(
@@ -390,15 +379,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             child: RichText(
                               text: TextSpan(
-                                text: AppLocalizations.of(context)!.noAccount,
-                                style: const TextStyle(
-                                    color: Colors.grey, fontSize: 13),
+                                text: l10n.noAccount,
+                                style: AppTypography.bodySecondary.copyWith(
+                                  fontSize: 13,
+                                ),
                                 children: [
                                   TextSpan(
-                                    text: AppLocalizations.of(context)!.registerNow,
-                                    style: const TextStyle(
-                                      color: Color(0xFF4CAF50),
-                                      fontWeight: FontWeight.w600,
+                                    text: l10n.registerNow,
+                                    style: AppTypography.captionBold.copyWith(
+                                      color: AppColors.primary,
+                                      fontSize: 13,
                                     ),
                                   ),
                                 ],
@@ -410,13 +400,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: AppSpacing.xxxl),
                 ],
               ),
             ),
           ),
 
-          // Flag toggle — để cuối để ở trên cùng (z-index)
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,
@@ -435,22 +424,22 @@ class _LoginScreenState extends State<LoginScreen> {
       {Widget? suffix}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+      hintStyle: AppTypography.bodySecondary.copyWith(fontSize: 14),
       prefixIcon: Icon(icon, color: context.textSecondary, size: 20),
       suffixIcon: suffix,
       filled: true,
-      fillColor: Colors.white,
+      fillColor: context.inputFill,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF4CAF50), width: 1.5),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
