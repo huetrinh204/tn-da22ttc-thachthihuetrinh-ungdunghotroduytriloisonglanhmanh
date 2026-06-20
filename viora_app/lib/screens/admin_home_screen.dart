@@ -8,6 +8,7 @@ import 'admin_users_tab.dart';
 import 'admin_posts_tab.dart';
 import 'admin_plants_tab.dart';
 import 'admin_settings_tab.dart';
+import 'admin_ai_assistant_tab.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -19,17 +20,22 @@ class AdminHomeScreen extends StatefulWidget {
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _currentIndex = 0;
   
-  late final List<Widget> _tabsWithCallback;
+  List<Widget> _tabsWithCallback = [];
 
   @override
   void initState() {
     super.initState();
+    _initTabs();
+  }
+
+  void _initTabs() {
     _tabsWithCallback = [
       AdminDashboardTab(onNavigateToTab: switchTab),
       const AdminUsersTab(),
       const AdminPostsTab(),
       const AdminPlantsTab(),
       const AdminSettingsTab(),
+      const AdminAiAssistantTab(),
     ];
   }
 
@@ -40,6 +46,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
+    // Auto-reinit tabs if stale (hot reload fix)
+    if (_tabsWithCallback.length < 6) {
+      _initTabs();
+    }
+    if (_currentIndex >= _tabsWithCallback.length) {
+      _currentIndex = 0;
+    }
     
     return Scaffold(
       appBar: VioraAppBar(
@@ -73,6 +87,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             icon: const Icon(AppIcons.settings),
             label: l10n.settings,
           ),
+          BottomNavigationBarItem(
+            icon: const Icon(AppIcons.aiChat),
+            label: 'AI',
+          ),
         ],
       ),
     );
@@ -90,6 +108,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         return l10n.adminPlants;
       case 4:
         return l10n.adminSettings;
+      case 5:
+        return Localizations.localeOf(context).languageCode == 'vi' ? 'Trợ lý AI' : 'AI Assistant';
       default:
         return l10n.admin;
     }

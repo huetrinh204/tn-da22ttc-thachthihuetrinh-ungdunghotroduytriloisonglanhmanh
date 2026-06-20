@@ -29,6 +29,15 @@ export interface UserContext {
   currentStreak: number;
 }
 
+export interface AdminContext {
+  totalUsers: number;
+  totalPosts: number;
+  totalComments: number;
+  newUsersToday: number;
+  totalActiveHabits: number;
+  recentReports: number;
+}
+
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 
 function authMiddleware(req: any, res: Response, next: () => void) {
@@ -104,6 +113,34 @@ export async function buildUserContext(userId: number, dbPool = pool): Promise<U
   }
 }
 
+export async function buildAdminContext(dbPool = pool): Promise<AdminContext> {
+  try {
+    const [[{ totalUsers }]]: any = await dbPool.query(
+      "SELECT COUNT(*) as totalUsers FROM users"
+    );
+    const [[{ totalPosts }]]: any = await dbPool.query(
+      "SELECT COUNT(*) as totalPosts FROM community_posts"
+    );
+    const [[{ totalComments }]]: any = await dbPool.query(
+      "SELECT COUNT(*) as totalComments FROM community_comments"
+    );
+    const [[{ newUsersToday }]]: any = await dbPool.query(
+      "SELECT COUNT(*) as newUsersToday FROM users WHERE DATE(created_at) = CURDATE()"
+    );
+    const [[{ totalActiveHabits }]]: any = await dbPool.query(
+      "SELECT COUNT(*) as totalActiveHabits FROM habits WHERE is_active = 1"
+    );
+    const [[{ recentReports }]]: any = await dbPool.query(
+      "SELECT COUNT(*) as recentReports FROM user_notifications WHERE type = 'warning' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
+    );
+
+    return { totalUsers, totalPosts, totalComments, newUsersToday, totalActiveHabits, recentReports };
+  } catch (err) {
+    console.error("[AI] Failed to build admin context:", err);
+    return { totalUsers: 0, totalPosts: 0, totalComments: 0, newUsersToday: 0, totalActiveHabits: 0, recentReports: 0 };
+  }
+}
+
 // ─── Context Formatter ────────────────────────────────────────────────────────
 
 export function formatContextText(ctx: UserContext, language: string = 'vi'): string {
@@ -152,6 +189,59 @@ RULES:
     : `\nTHÔNG TIN NGƯỜI DÙNG:\n${formatContextText(ctx, 'vi')}\n\nHãy cá nhân hóa lời khuyên dựa trên thông tin trên.`;
 
   return staticPrompt + contextSection;
+}
+
+export function formatAdminContextText(ctx: AdminContext, language: string = 'vi'): string {
+  if (language === 'en') {
+    return [
+      `Total users: ${ctx.totalUsers}`,
+      `New users today: ${ctx.newUsersToday}`,
+      `Total posts: ${ctx.totalPosts}`,
+      `Total comments: ${ctx.totalComments}`,
+      `Active habits: ${ctx.totalActiveHabits}`,
+      `Warnings (7 days): ${ctx.recentReports}`,
+    ].join("\n");
+  }
+  return [
+    `Tổng người dùng: ${ctx.totalUsers}`,
+    `Người dùng mới hôm nay: ${ctx.newUsersToday}`,
+    `Tổng bài viết: ${ctx.totalPosts}`,
+    `Tổng bình luận: ${ctx.totalComments}`,
+    `Thói quen đang hoạt động: ${ctx.totalActiveHabits}`,
+    `Cảnh báo (7 ngày): ${ctx.recentReports}`,
+  ].join("\n");
+}
+
+export function buildAdminSystemPrompt(ctx: AdminContext, language: string = 'vi'): string {
+  const langInstruction = language === 'en'
+    ? 'Always reply in English, friendly and professional.'
+    : 'Luôn trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.';
+
+  const prompt = language === 'en'
+    ? `You are Viora Admin Assistant — an AI that helps administrators manage the Viora platform.
+You have access to real-time platform statistics. Use them to answer admin questions accurately.
+
+RULES:
+- ${langInstruction}
+- Keep responses concise, under 300 words
+- When discussing statistics, provide numbers and trends
+- If you don't have specific data, suggest what the admin can check
+- Only answer questions related to platform management, users, content moderation, and analytics`
+    : `Bạn là Trợ lý Quản trị Viora — một AI hỗ trợ quản trị viên quản lý nền tảng Viora.
+Bạn có quyền truy cập vào thống kê nền tảng thời gian thực. Hãy dùng chúng để trả lời chính xác.
+
+NGUYÊN TẮC:
+- ${langInstruction}
+- Giữ câu trả lời ngắn gọn, dưới 300 từ
+- Khi thảo luận thống kê, đưa ra số liệu và xu hướng
+- Nếu thiếu dữ liệu, gợi ý admin kiểm tra thêm
+- Chỉ trả lời câu hỏi liên quan đến quản lý nền tảng, người dùng, kiểm duyệt nội dung và phân tích`;
+
+  const contextSection = language === 'en'
+    ? `\nPLATFORM STATISTICS:\n${formatAdminContextText(ctx, 'en')}\n\nUse these stats to answer admin questions. For trends, suggest what to look for.`
+    : `\nTHỐNG KÊ NỀN TẢNG:\n${formatAdminContextText(ctx, 'vi')}\n\nDùng những số liệu này để trả lời câu hỏi của admin. Về xu hướng, hãy gợi ý admin nên kiểm tra gì thêm.`;
+
+  return prompt + contextSection;
 }
 
 // ─── Gemini Client ────────────────────────────────────────────────────────────
@@ -246,17 +336,26 @@ router.post("/chat", authMiddleware, async (req: any, res: Response) => {
     : [];
 
   try {
-    const userCtx = await buildUserContext(userId);
+    const [roleRows]: any = await pool.query(
+      "SELECT role, language FROM users WHERE id = ?",
+      [userId]
+    );
+    const isAdmin = roleRows[0]?.role === 'admin';
     let userLang = language;
     if (!userLang || !['vi', 'en'].includes(userLang)) {
-      const [langRows]: any = await pool.query(
-        "SELECT language FROM users WHERE id = ?",
-        [userId]
-      );
-      userLang = langRows[0]?.language || 'vi';
+      userLang = roleRows[0]?.language || 'vi';
     }
-    const systemPrompt = buildSystemPrompt(userCtx, userLang);
-    const reply = await callGemini(systemPrompt, message.trim(), conversationHistory);
+
+    let reply: string;
+    if (isAdmin) {
+      const adminCtx = await buildAdminContext();
+      const systemPrompt = buildAdminSystemPrompt(adminCtx, userLang);
+      reply = await callGemini(systemPrompt, message.trim(), conversationHistory);
+    } else {
+      const userCtx = await buildUserContext(userId);
+      const systemPrompt = buildSystemPrompt(userCtx, userLang);
+      reply = await callGemini(systemPrompt, message.trim(), conversationHistory);
+    }
 
     return res.status(200).json({ reply });
   } catch (err: any) {

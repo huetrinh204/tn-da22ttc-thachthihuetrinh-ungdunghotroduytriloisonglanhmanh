@@ -8,7 +8,7 @@ import '../theme/app_theme.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
-import 'admin_screen.dart';
+import 'admin_home_screen.dart';
 import 'login_screen.dart';
 import 'achievements_screen.dart';
 import 'stats_screen.dart';
@@ -737,7 +737,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const AdminScreen(),
+                              builder: (_) => const AdminHomeScreen(),
                             ),
                           );
                         },
