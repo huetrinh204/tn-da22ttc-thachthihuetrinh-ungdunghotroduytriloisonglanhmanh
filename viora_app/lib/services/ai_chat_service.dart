@@ -17,6 +17,7 @@ class AiChatService {
     required String token,
     required String message,
     required List<ChatMessage> history,
+    String language = 'vi',
   }) async {
     // Map chat history to backend format
     final historyPayload = history.map((m) => {
@@ -34,6 +35,7 @@ class AiChatService {
         body: jsonEncode({
           'message': message,
           'history': historyPayload,
+          'language': language,
         }),
       ).timeout(const Duration(seconds: 30));
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
+import '../providers/locale_provider.dart';
 import '../services/ai_chat_service.dart';
 import '../services/chat_history_store.dart';
 import '../theme/app_theme.dart';
@@ -86,6 +87,7 @@ class _AiChatScreenState extends State<AiChatScreen>
         token: token,
         message: text,
         history: history,
+        language: LocaleProvider.global.locale.languageCode,
       );
 
       if (!mounted) return;

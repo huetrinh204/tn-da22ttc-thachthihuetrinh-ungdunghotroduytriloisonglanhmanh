@@ -106,11 +106,22 @@ export async function buildUserContext(userId: number, dbPool = pool): Promise<U
 
 // ─── Context Formatter ────────────────────────────────────────────────────────
 
-export function formatContextText(ctx: UserContext): string {
+export function formatContextText(ctx: UserContext, language: string = 'vi'): string {
   const habitsList =
     ctx.habits.length > 0
       ? ctx.habits.map((h) => `• ${h.name} (${h.category})`).join("\n")
-      : "Chưa có thói quen nào.";
+      : language === 'en'
+        ? "No habits yet."
+        : "Chưa có thói quen nào.";
+
+  if (language === 'en') {
+    return [
+      `User name: ${ctx.userName || "You"}`,
+      `Current streak: ${ctx.currentStreak} days`,
+      `Today's progress: ${ctx.completedToday}/${ctx.totalToday} habits completed`,
+      `Habit list:\n${habitsList}`,
+    ].join("\n");
+  }
 
   return [
     `Tên người dùng: ${ctx.userName || "Bạn"}`,
@@ -122,17 +133,23 @@ export function formatContextText(ctx: UserContext): string {
 
 // ─── System Prompt Builder ────────────────────────────────────────────────────
 
-export function buildSystemPrompt(ctx: UserContext): string {
-  const staticPrompt = `Bạn là Viora Coach — một huấn luyện viên lối sống lành mạnh thân thiện, tích cực và khoa học.
-Bạn hỗ trợ người dùng cải thiện sức khỏe thể chất và tinh thần thông qua thói quen hàng ngày.
+export function buildSystemPrompt(ctx: UserContext, language: string = 'vi'): string {
+  const langInstruction = language === 'en'
+    ? 'Always reply in English, friendly and non-judgmental.'
+    : 'Luôn trả lời bằng tiếng Việt, thân thiện và không phán xét';
 
-NGUYÊN TẮC:
-- Luôn trả lời bằng tiếng Việt, thân thiện và không phán xét
-- Giữ câu trả lời ngắn gọn, tối đa 300 từ
-- Khi phù hợp, đưa ra ít nhất 1 bước hành động cụ thể
-- Nếu câu hỏi ngoài phạm vi sức khỏe, dinh dưỡng, thói quen lành mạnh — lịch sự từ chối và gợi ý quay lại chủ đề phù hợp`;
+  const staticPrompt = `You are Viora Coach — a friendly, positive, and science-based healthy lifestyle coach.
+You help users improve their physical and mental health through daily habits.
 
-  const contextSection = `\nTHÔNG TIN NGƯỜI DÙNG:\n${formatContextText(ctx)}\n\nHãy cá nhân hóa lời khuyên dựa trên thông tin trên.`;
+RULES:
+- ${langInstruction}
+- Keep responses short, under 300 words
+- When appropriate, provide at least 1 specific action step
+- If the question is outside health, nutrition, or healthy habits — politely decline and steer back to relevant topics`;
+
+  const contextSection = language === 'en'
+    ? `\nUSER INFO:\n${formatContextText(ctx, 'en')}\n\nPersonalize your advice based on the above info.`
+    : `\nTHÔNG TIN NGƯỜI DÙNG:\n${formatContextText(ctx, 'vi')}\n\nHãy cá nhân hóa lời khuyên dựa trên thông tin trên.`;
 
   return staticPrompt + contextSection;
 }
@@ -202,9 +219,10 @@ export async function callGemini(
 // ─── POST /ai/chat ────────────────────────────────────────────────────────────
 
 router.post("/chat", authMiddleware, async (req: any, res: Response) => {
-  const { message, history } = req.body as {
+  const { message, history, language } = req.body as {
     message?: string;
     history?: ConversationTurn[];
+    language?: string;
   };
 
   // Validate message
@@ -229,7 +247,15 @@ router.post("/chat", authMiddleware, async (req: any, res: Response) => {
 
   try {
     const userCtx = await buildUserContext(userId);
-    const systemPrompt = buildSystemPrompt(userCtx);
+    let userLang = language;
+    if (!userLang || !['vi', 'en'].includes(userLang)) {
+      const [langRows]: any = await pool.query(
+        "SELECT language FROM users WHERE id = ?",
+        [userId]
+      );
+      userLang = langRows[0]?.language || 'vi';
+    }
+    const systemPrompt = buildSystemPrompt(userCtx, userLang);
     const reply = await callGemini(systemPrompt, message.trim(), conversationHistory);
 
     return res.status(200).json({ reply });
