@@ -289,7 +289,7 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
         'Cảnh báo vi phạm nội dung',
         `Bài viết của bạn vi phạm quy định cộng đồng: ${reason}`,
         '⚠️',
-        JSON.stringify({ post_id: postId, reason: reason }),
+        JSON.stringify({ post_id: postId, reason: reason, reported_by: req.user.id }),
         0
       ]
     );

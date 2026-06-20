@@ -965,12 +965,33 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
         ? JSON.parse(row.payload)
         : row.payload;
 
+      // Resolve admin avatar (from reported_by or fallback to any admin)
+      let adminAvatar: string | null = null;
+      const reportedBy = payload?.reported_by;
+      if (reportedBy) {
+        const [adminRows]: any = await pool.query(
+          "SELECT avatar_url FROM users WHERE id = ?",
+          [reportedBy]
+        );
+        if (adminRows.length > 0) {
+          adminAvatar = resolveAvatar(adminRows[0].avatar_url);
+        }
+      }
+      if (!adminAvatar) {
+        const [fallbackRows]: any = await pool.query(
+          "SELECT avatar_url FROM users WHERE role = 'admin' AND avatar_url IS NOT NULL LIMIT 1"
+        );
+        if (fallbackRows.length > 0) {
+          adminAvatar = resolveAvatar(fallbackRows[0].avatar_url);
+        }
+      }
+
       notifications.push({
         id: `user_notif_${row.id}`,
         type: row.type, // 'warning' for admin warnings
         actor_id: "admin",
         actor_name: "Viora Admin",
-        actor_avatar: null,
+        actor_avatar: adminAvatar,
         title: row.title,
         body: row.body,
         emoji: row.emoji,

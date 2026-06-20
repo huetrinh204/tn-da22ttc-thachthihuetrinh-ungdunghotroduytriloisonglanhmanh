@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/locale_provider.dart';
 import '../theme/app_theme.dart';
@@ -30,6 +31,13 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
   String _token = '';
   bool _isMessagesExpanded = false;
 
+  // Admin profile
+  String _adminName = '';
+  String _adminEmail = '';
+  String? _adminAvatarUrl;
+  bool _isLoadingProfile = true;
+  bool _isUploadingAvatar = false;
+
   bool get _isVietnamese => LocaleProvider.global.locale.languageCode == 'vi';
 
   String t(String vi, String en) => _isVietnamese ? vi : en;
@@ -37,7 +45,46 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
   @override
   void initState() {
     super.initState();
+    _loadAdminProfile();
     _loadReminderData();
+  }
+
+  Future<void> _loadAdminProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    if (token.isEmpty) return;
+    final res = await ApiService.getProfile(token);
+    if (res['user'] != null) {
+      setState(() {
+        _adminName = res['user']['name'] ?? '';
+        _adminEmail = res['user']['email'] ?? '';
+        _adminAvatarUrl = res['user']['avatar_url'] as String?;
+        _isLoadingProfile = false;
+      });
+    } else {
+      setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+    setState(() => _isUploadingAvatar = true);
+    final res = await ApiService.uploadAvatar(_token, picked.path);
+    setState(() => _isUploadingAvatar = false);
+    if (res['avatar_url'] != null) {
+      final resolved = ApiService.resolveImageUrl(res['avatar_url'] as String);
+      setState(() => _adminAvatarUrl = resolved);
+      if (mounted) AppSnackbar.showSuccess(context, 'Avatar updated');
+    } else {
+      if (mounted) AppSnackbar.showError(context, 'Failed to update avatar');
+    }
   }
 
   Future<void> _loadReminderData() async {
@@ -117,6 +164,8 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       ),
       children: [
         _buildHeader(l10n),
+        _buildAdminProfileCard(l10n),
+        const SizedBox(height: AppSpacing.xxl),
         _buildAutoReminderSection(),
         const SizedBox(height: AppSpacing.xxl),
         _buildReminderMessagesSection(),
@@ -161,6 +210,137 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 style: TextStyle(fontSize: 13, color: context.textSecondary),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Admin Profile ─────────────────────────────────────
+
+  Widget _buildAdminProfileCard(AppLocalizations l10n) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primaryDark, AppColors.primary, Color(0xFF00845F)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: _isUploadingAvatar ? null : _pickAndUploadAvatar,
+            child: Stack(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.3),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
+                  ),
+                  child: _isUploadingAvatar
+                      ? const Center(
+                          child: SizedBox(
+                            width: 28, height: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: Colors.white,
+                            ),
+                          ),
+                        )
+                      : _adminAvatarUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                _adminAvatarUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Text(
+                                    _adminName.isNotEmpty ? _adminName[0].toUpperCase() : 'A',
+                                    style: const TextStyle(
+                                      fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                _adminName.isNotEmpty ? _adminName[0].toUpperCase() : 'A',
+                                style: const TextStyle(
+                                  fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white,
+                                ),
+                              ),
+                            ),
+                ),
+                if (!_isUploadingAvatar)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 1.5),
+                      ),
+                      child: const Icon(Icons.camera_alt, size: 14, color: AppColors.primary),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.admin,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                if (_isLoadingProfile)
+                  const SizedBox(
+                    width: 20, height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                else ...[
+                  Text(
+                    _adminName,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _adminEmail,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
