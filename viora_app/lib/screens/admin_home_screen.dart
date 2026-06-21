@@ -6,7 +6,7 @@ import '../constants/app_icons.dart';
 import 'admin_dashboard_tab.dart';
 import 'admin_users_tab.dart';
 import 'admin_posts_tab.dart';
-import 'admin_plants_tab.dart';
+import 'admin_habits_tab.dart';
 import 'admin_settings_tab.dart';
 import 'admin_ai_assistant_tab.dart';
 
@@ -33,7 +33,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       AdminDashboardTab(onNavigateToTab: switchTab),
       const AdminUsersTab(),
       const AdminPostsTab(),
-      const AdminPlantsTab(),
+      const AdminHabitsTab(),
       const AdminSettingsTab(),
       const AdminAiAssistantTab(),
     ];
@@ -75,8 +75,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             label: l10n.postsLabel,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(AppIcons.sprout),
-            label: l10n.plants,
+            icon: const Icon(AppIcons.habits),
+            label: l10n.habitsLabel,
           ),
           BottomNavigationBarItem(
             icon: const Icon(AppIcons.settings),
@@ -100,7 +100,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       case 2:
         return l10n.adminPosts;
       case 3:
-        return l10n.adminPlants;
+        return l10n.adminHabits;
       case 4:
         return l10n.adminSettings;
       case 5:

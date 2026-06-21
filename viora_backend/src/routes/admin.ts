@@ -199,7 +199,7 @@ router.get("/posts", authMiddleware, adminMiddleware, async (req: any, res: Resp
     
     let query = `
       SELECT 
-        p.id, p.content, p.image_url, p.hashtags, p.created_at, p.user_id,
+        p.id, p.content, p.image_url, p.hashtags, p.created_at, p.user_id, p.is_warned, p.edited_after_warn,
         u.name as user_name, u.email as user_email, u.avatar_url as user_avatar,
         (SELECT COUNT(*) FROM community_post_likes WHERE post_id = p.id) as like_count,
         (SELECT COUNT(*) FROM community_comments WHERE post_id = p.id) as comment_count
@@ -229,7 +229,12 @@ router.get("/posts", authMiddleware, adminMiddleware, async (req: any, res: Resp
         break;
     }
 
-    const [posts]: any = await pool.query(query, params);
+    const [rows]: any = await pool.query(query, params);
+    const posts = rows.map((row: any) => ({
+      ...row,
+      is_warned: Boolean(row.is_warned),
+      edited_after_warn: Boolean(row.edited_after_warn),
+    }));
 
     res.json({ posts });
   } catch (error) {
@@ -364,6 +369,117 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
   }
 });
 
+// ================= UNWARN POST =================
+router.put("/posts/:postId/unwarn", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { postId } = req.params;
+
+    const [posts]: any = await pool.query(
+      "SELECT user_id FROM community_posts WHERE id = ?",
+      [postId]
+    );
+    if (!posts.length) return res.status(404).json({ message: "Post not found" });
+
+    await pool.query("UPDATE community_posts SET is_warned = 0, edited_after_warn = 0 WHERE id = ?", [postId]);
+
+    // Notify user that their post has been unflagged
+    await pool.query(
+      `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+      [
+        posts[0].user_id,
+        'warning_cleared',
+        'Đã gỡ cảnh báo bài viết',
+        'Bài viết của bạn đã được xem xét và gỡ cảnh báo. Bài viết đã hiển thị lại trên cộng đồng.',
+        '✅',
+        JSON.stringify({ post_id: postId }),
+      ]
+    );
+
+    res.json({ message: "Post unwarned successfully" });
+  } catch (error) {
+    console.error("Unwarn post error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= APPROVE POST (after user edit) =================
+router.put("/posts/:postId/approve", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { postId } = req.params;
+
+    const [posts]: any = await pool.query(
+      "SELECT user_id, edited_after_warn FROM community_posts WHERE id = ?",
+      [postId]
+    );
+    if (!posts.length) return res.status(404).json({ message: "Post not found" });
+
+    await pool.query(
+      "UPDATE community_posts SET is_warned = 0, edited_after_warn = 0 WHERE id = ?",
+      [postId]
+    );
+
+    // Notify user that their edited post has been approved
+    await pool.query(
+      `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+      [
+        posts[0].user_id,
+        'warning_cleared',
+        'Bài viết đã được phê duyệt',
+        'Bài viết sau khi chỉnh sửa của bạn đã được quản trị viên phê duyệt và hiển thị lại trên cộng đồng.',
+        '✅',
+        JSON.stringify({ post_id: postId }),
+      ]
+    );
+
+    res.json({ message: "Post approved successfully" });
+  } catch (error) {
+    console.error("Approve post error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= REJECT POST (delete after user edit fails review) =================
+router.delete("/posts/:postId/reject", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason || String(reason).trim() === "") {
+      return res.status(400).json({ message: "Reason is required" });
+    }
+
+    const [posts]: any = await pool.query(
+      "SELECT p.user_id, u.name, u.email, u.language FROM community_posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
+      [postId]
+    );
+    if (!posts.length) return res.status(404).json({ message: "Post not found" });
+
+    // Delete post
+    await pool.query("DELETE FROM community_posts WHERE id = ?", [postId]);
+
+    // Notify user that their post has been rejected and deleted
+    await pool.query(
+      `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+      [
+        posts[0].user_id,
+        'warning',
+        'Bài viết đã bị xóa vì vi phạm',
+        `Bài viết của bạn đã bị xóa vì: ${String(reason).trim()}`,
+        '⚠️',
+        JSON.stringify({ post_id: postId, reason: String(reason).trim() }),
+      ]
+    );
+
+    res.json({ message: "Post rejected and deleted" });
+  } catch (error) {
+    console.error("Reject post error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // ================= COMMENT MANAGEMENT =================
 
 // Get all comments with user and post info
@@ -410,6 +526,8 @@ router.get("/stats", authMiddleware, adminMiddleware, async (req: any, res: Resp
     const [commentStats]: any = await pool.query("SELECT COUNT(*) as total_comments FROM community_comments");
     const [todayUsers]: any = await pool.query("SELECT COUNT(*) as today_users FROM users WHERE DATE(created_at) = CURDATE()");
     const [todayPosts]: any = await pool.query("SELECT COUNT(*) as today_posts FROM community_posts WHERE DATE(created_at) = CURDATE()");
+    const [habitStats]: any = await pool.query("SELECT COUNT(*) as total_habits FROM habits WHERE is_active = 1");
+    const [activeUsers]: any = await pool.query("SELECT COUNT(DISTINCT user_id) as active_users FROM habit_logs WHERE log_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
 
     res.json({
       totalUsers: userStats[0].total_users,
@@ -417,6 +535,8 @@ router.get("/stats", authMiddleware, adminMiddleware, async (req: any, res: Resp
       totalComments: commentStats[0].total_comments,
       todayUsers: todayUsers[0].today_users,
       todayPosts: todayPosts[0].today_posts,
+      totalHabits: habitStats[0].total_habits,
+      activeUsers: activeUsers[0].active_users,
     });
   } catch (error) {
     console.error("Get stats error:", error);
@@ -538,6 +658,151 @@ router.get("/growth", authMiddleware, adminMiddleware, async (req: any, res: Res
     });
   } catch (error) {
     console.error("Get growth data error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= HABIT MANAGEMENT =================
+
+// Get all habits with user info
+router.get("/habits", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { search, category } = req.query;
+    let sql = `
+      SELECT 
+        h.id, h.user_id, h.name, h.category, h.icon, h.color, h.frequency,
+        h.target_count, h.current_streak, h.longest_streak, h.is_active, h.created_at,
+        u.name as user_name, u.email as user_email, u.avatar_url as user_avatar
+      FROM habits h
+      JOIN users u ON h.user_id = u.id
+    `;
+    const params: any[] = [];
+    const conditions: string[] = [];
+
+    if (search) {
+      conditions.push("(h.name LIKE ? OR u.name LIKE ?)");
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    if (category) {
+      conditions.push("h.category = ?");
+      params.push(category);
+    }
+
+    if (conditions.length > 0) {
+      sql += " WHERE " + conditions.join(" AND ");
+    }
+
+    sql += " ORDER BY h.created_at DESC LIMIT 200";
+
+    const [habits]: any = await pool.query(sql, params);
+    res.json({ habits });
+  } catch (error) {
+    console.error("Get admin habits error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get habit category statistics (for dashboard)
+router.get("/habits/categories", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const [categories]: any = await pool.query(`
+      SELECT 
+        h.category,
+        COUNT(*) as total_habits,
+        COUNT(DISTINCT h.user_id) as total_users,
+        SUM(h.current_streak) as total_streak
+      FROM habits h
+      WHERE h.is_active = 1
+      GROUP BY h.category
+      ORDER BY total_habits DESC
+    `);
+
+    const [total]: any = await pool.query(
+      "SELECT COUNT(*) as total FROM habits WHERE is_active = 1"
+    );
+
+    res.json({ categories, totalHabits: total[0].total });
+  } catch (error) {
+    console.error("Get habit categories error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get habit trends (completion data over time for dashboard)
+router.get("/habits/trends", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const period = (req.query.period as string) || 'weekly';
+    const days = period === 'weekly' ? 7 : 30;
+
+    // Daily completion counts
+    const [dailyCompletions]: any = await pool.query(`
+      SELECT 
+        DATE(hl.log_date) as date,
+        COUNT(*) as total_completions,
+        COUNT(DISTINCT hl.user_id) as active_users
+      FROM habit_logs hl
+      WHERE hl.log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      GROUP BY DATE(hl.log_date)
+      ORDER BY DATE(hl.log_date) ASC
+    `, [days]);
+
+    // Category breakdown for the period
+    const [categoryBreakdown]: any = await pool.query(`
+      SELECT 
+        h.category,
+        COUNT(hl.id) as completions
+      FROM habit_logs hl
+      JOIN habits h ON hl.habit_id = h.id
+      WHERE hl.log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      GROUP BY h.category
+      ORDER BY completions DESC
+    `, [days]);
+
+    // Top habits (most completed)
+    const [topHabits]: any = await pool.query(`
+      SELECT 
+        h.name, h.category, h.icon, h.color,
+        COUNT(hl.id) as completions,
+        COUNT(DISTINCT hl.user_id) as users_count
+      FROM habit_logs hl
+      JOIN habits h ON hl.habit_id = h.id
+      WHERE hl.log_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      GROUP BY hl.habit_id
+      ORDER BY completions DESC
+      LIMIT 10
+    `, [days]);
+
+    // Fill missing dates
+    const fillDates = (data: any[], daysCount: number) => {
+      const result: any[] = [];
+      const today = new Date();
+      const dataMap = new Map();
+      data.forEach((row: any) => {
+        const dateStr = new Date(row.date).toISOString().split('T')[0];
+        dataMap.set(dateStr, row);
+      });
+      for (let i = daysCount - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const existing = dataMap.get(dateStr);
+        result.push({
+          date: dateStr,
+          total_completions: existing ? Number(existing.total_completions) : 0,
+          active_users: existing ? Number(existing.active_users) : 0,
+        });
+      }
+      return result;
+    };
+
+    res.json({
+      dailyCompletions: fillDates(dailyCompletions, days),
+      categoryBreakdown,
+      topHabits,
+      period,
+    });
+  } catch (error) {
+    console.error("Get habit trends error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

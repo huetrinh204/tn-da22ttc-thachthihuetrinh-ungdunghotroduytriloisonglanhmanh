@@ -7,7 +7,7 @@ class ApiService {
   static const bool _isPhysicalDevice = false;
 
   static const String baseUrl = _isPhysicalDevice
-      ? "http://192.168.1.5:3000"
+      ? "http://192.168.1.3:3000"
       : "http://10.0.2.2:3000";
 
   // Helper method to resolve image URLs
@@ -588,6 +588,36 @@ class ApiService {
 
       final response = await http.post(
         Uri.parse("$baseUrl/community/posts"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(body),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  static Future<Map<String, dynamic>> updatePost({
+    required String token,
+    required String postId,
+    required String content,
+    String? imageUrl,
+    List<String>? hashtags,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        "content": content,
+      };
+      if (imageUrl != null) body["image_url"] = imageUrl;
+      if (hashtags != null && hashtags.isNotEmpty) body["hashtags"] = hashtags;
+
+      final response = await http.put(
+        Uri.parse("$baseUrl/community/posts/$postId"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
@@ -1293,6 +1323,61 @@ class ApiService {
     }
   }
 
+  // Unwarn a post (admin only)
+  static Future<Map<String, dynamic>> unwarnPost(String token, String postId) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/posts/$postId/unwarn"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      throw Exception(data["message"] ?? "Failed to unwarn post");
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Approve an edited warned post (admin only)
+  static Future<Map<String, dynamic>> approvePost(String token, String postId) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/posts/$postId/approve"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      throw Exception(data["message"] ?? "Failed to approve post");
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Reject an edited warned post (admin only) — delete + notify
+  static Future<Map<String, dynamic>> rejectPost(String token, String postId, String reason) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/admin/posts/$postId/reject"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({"reason": reason}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      throw Exception(data["message"] ?? "Failed to reject post");
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // Get all comments for admin
   static Future<Map<String, dynamic>> getAdminComments(String token) async {
     try {
@@ -1350,6 +1435,56 @@ class ApiService {
       return {"message": data["message"] ?? "Failed", "plant": null, "history": []};
     } catch (e) {
       return {"message": "Network error", "plant": null, "history": []};
+    }
+  }
+
+  // Get all habits (admin)
+  static Future<Map<String, dynamic>> getAdminHabits(String token, {String? search, String? category}) async {
+    try {
+      var url = "$baseUrl/admin/habits";
+      final params = <String>[];
+      if (search != null && search.isNotEmpty) params.add("search=$search");
+      if (category != null && category.isNotEmpty) params.add("category=$category");
+      if (params.isNotEmpty) url += "?${params.join('&')}";
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "habits": []};
+    } catch (e) {
+      return {"message": "Network error", "habits": []};
+    }
+  }
+
+  // Get habit category statistics (admin dashboard)
+  static Future<Map<String, dynamic>> getAdminHabitCategories(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/habits/categories"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed", "categories": []};
+    } catch (e) {
+      return {"message": "Network error", "categories": []};
+    }
+  }
+
+  // Get habit trends (admin dashboard)
+  static Future<Map<String, dynamic>> getAdminHabitTrends(String token, {String period = 'weekly'}) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/habits/trends?period=$period"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
     }
   }
 

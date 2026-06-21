@@ -923,6 +923,8 @@
   "cactusLevel11": "Xương rồng hoa đẹp",
   "cactusLevel12": "Xương rồng kiên cường",
   "cactusLevel13": "Xương rồng hoàn hảo",
+  "cactusLevel14": "Xương rồng thần thánh",
+  "cactusLevel15": "Xương rồng huyền thoại",
   
   "sakuraLevel1": "Hạt anh đào",
   "sakuraLevel2": "Mầm anh đào",
@@ -938,6 +940,7 @@
   "sakuraLevel12": "Cây anh đào hoa rực rỡ",
   "sakuraLevel13": "Cây anh đào hoa đầy cành",
   "sakuraLevel14": "Cây anh đào hoàn hảo",
+  "sakuraLevel15": "Cây anh đào huyền thoại",
   
   "sunflowerLevel1": "Hạt hướng dương",
   "sunflowerLevel2": "Hạt nảy mầm",
@@ -978,5 +981,58 @@
   "allCompletedTitle": "Xuất sắc! 🎉",
   "allCompletedBody": "Bạn đã hoàn thành tất cả thói quen hôm nay.",
   "allCompletedSubtitle": "Hãy duy trì để cây luôn xanh tốt nhé! 🌱",
-  "allCompletedContinue": "Tuyệt vời!"
+  "allCompletedContinue": "Tuyệt vời!",
+
+  "habitTrends": "Xu hướng thói quen",
+  "popularHabitCategories": "Phân loại thói quen phổ biến",
+  "topCompletedHabits": "Top thói quen được hoàn thành nhiều nhất",
+  "adminSearchHint": "Tìm thói quen hoặc người dùng...",
+  "adminManageHabits": "Quản lý thói quen người dùng",
+  "lastWatered": "Tưới lần cuối",
+  "noPlants": "Không có cây nào",
+  "all": "Tất cả",
+  "adminHabits": "Quản lý thói quen",
+  "warned": "Đã cảnh báo",
+  "pending": "Chờ duyệt",
+  "pendingApproval": "Chờ phê duyệt",
+  "hasBeenWarned": "Đã bị cảnh báo",
+  "approve": "Duyệt",
+  "reject": "Từ chối",
+  "removeWarning": "Gỡ cảnh báo",
+  "warnedPostsCount": "{count} bài viết bị cảnh báo",
+  "@warnedPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingPostsCount": "{count} bài chờ duyệt",
+  "@pendingPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminPostsStatus": "{posts} · {warnedCount} bị cảnh báo · {pendingCount} chờ duyệt",
+  "@adminPostsStatus": {
+    "placeholders": {
+      "posts": { "type": "String" },
+      "warnedCount": { "type": "int" },
+      "pendingCount": { "type": "int" }
+    }
+  },
+  "dismissWarningHint": "Nhấn \"Gỡ cảnh báo\" để xét duyệt",
+  "approveRejectHint": "Phê duyệt hoặc từ chối bài viết đã chỉnh sửa",
+  "noPendingPosts": "Không có bài viết chờ duyệt",
+  "noWarnedPosts": "Không có bài viết bị cảnh báo",
+  "rejectPost": "Từ chối bài viết",
+  "rejectPostMessage": "Bài viết này sẽ bị xóa và người dùng sẽ nhận được thông báo kèm lý do.",
+  "rejectReason": "Lý do từ chối",
+  "rejectReasonHint": "Nhập lý do...",
+  "removeWarningConfirm": "Bài viết này sẽ được hiển thị lại trên cộng đồng. Xác nhận gỡ cảnh báo?",
+  "postApproved": "Đã phê duyệt bài viết",
+  "postRejectedDeleted": "Đã từ chối và xóa bài viết",
+  "postWarningRemoved": "Đã gỡ cảnh báo bài viết"
 }

@@ -177,13 +177,18 @@ router.get("/posts", authMiddleware, async (req: any, res: Response) => {
         WHERE p.user_id IN (
           SELECT following_id FROM user_follows WHERE follower_id = ?
         ) AND p.post_type = 'normal'
+        AND (p.is_warned = 0 OR p.user_id = ?)
       `;
-      params.push(userId);
+      params.push(userId, userId);
     } else if (type === "achievements") {
-      sql += ` WHERE p.post_type = 'achievement'`;
+      sql += ` WHERE p.post_type = 'achievement'
+        AND (p.is_warned = 0 OR p.user_id = ?)`;
+      params.push(userId);
     } else {
       // trending — chỉ bài normal
-      sql += ` WHERE p.post_type = 'normal'`;
+      sql += ` WHERE p.post_type = 'normal'
+        AND (p.is_warned = 0 OR p.user_id = ?)`;
+      params.push(userId);
     }
 
     if (type === "trending") {
@@ -297,6 +302,68 @@ router.delete("/posts/:postId", authMiddleware, async (req: any, res: Response) 
     }
 
     res.json({ message: "Deleted" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ================= UPDATE POST =================
+router.put("/posts/:postId", authMiddleware, async (req: any, res: Response) => {
+  const postId = parseInt(req.params.postId, 10);
+  const userId = req.user.id;
+  const { content, image_url, hashtags } = req.body;
+
+  if (isNaN(postId)) {
+    return res.status(400).json({ message: "Invalid post id" });
+  }
+
+  if (!content || String(content).trim() === "") {
+    return res.status(400).json({ message: "Content is required" });
+  }
+
+  try {
+    const [rows]: any = await pool.query(
+      "SELECT user_id, is_warned FROM community_posts WHERE id = ?",
+      [postId]
+    );
+    if (!rows.length) return res.status(404).json({ message: "Post not found" });
+    if (rows[0].user_id !== userId) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    const wasWarned = Boolean(rows[0].is_warned);
+
+    const hashtagsJson = hashtags && Array.isArray(hashtags) ? JSON.stringify(hashtags) : null;
+
+    await pool.query(
+      `UPDATE community_posts SET content = ?, image_url = ?, hashtags = ?, edited_after_warn = ? WHERE id = ?`,
+      [String(content).trim(), image_url || null, hashtagsJson, wasWarned ? 1 : 0, postId]
+    );
+
+    // If post was warned, notify all admins that user edited it
+    if (wasWarned) {
+      const [adminRows]: any = await pool.query(
+        "SELECT id FROM users WHERE role = 'admin'"
+      );
+      for (const admin of adminRows) {
+        await pool.query(
+          `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+          [
+            admin.id,
+            'post_edited',
+            'Người dùng đã chỉnh sửa bài viết bị cảnh báo',
+            `Bài viết #${postId} đã được người dùng chỉnh sửa sau khi bị cảnh báo. Vui lòng kiểm tra lại nội dung.`,
+            '✏️',
+            JSON.stringify({ post_id: postId, user_id: userId }),
+          ]
+        );
+      }
+    }
+
+    const post = await fetchPostById(postId, userId, req);
+    res.json({ post });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
@@ -723,8 +790,10 @@ router.get("/users/:userId/posts", authMiddleware, async (req: any, res: Respons
 
   try {
     const [rows]: any = await pool.query(
-      `${POST_SELECT} WHERE p.user_id = ? ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
-      [currentUserId, currentUserId, currentUserId, targetUserId, limit, offset]
+      `${POST_SELECT} WHERE p.user_id = ?
+       AND (p.is_warned = 0 OR ? = p.user_id)
+       ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
+      [currentUserId, currentUserId, currentUserId, targetUserId, currentUserId, limit, offset]
     );
     const posts = rows.map((row: any) => mapPostRow(row, currentUserId, req));
     res.json({ posts, page, limit });
@@ -759,8 +828,9 @@ router.get("/search", authMiddleware, async (req: any, res: Response) => {
     // Search posts by content or hashtag
     const [postRows]: any = await pool.query(
       `${POST_SELECT} WHERE (p.content LIKE ? OR JSON_SEARCH(p.hashtags, 'one', ?) IS NOT NULL)
+       AND (p.is_warned = 0 OR p.user_id = ?)
        ORDER BY p.created_at DESC LIMIT 20`,
-      [currentUserId, currentUserId, currentUserId, `%${q}%`, `%${q}%`]
+      [currentUserId, currentUserId, currentUserId, `%${q}%`, `%${q}%`, currentUserId]
     );
     const posts = postRows.map((row: any) => mapPostRow(row, currentUserId, req));
 
@@ -1214,6 +1284,13 @@ async function ensureCommunitySchema() {
   try {
     await pool.query(
       "ALTER TABLE community_posts ADD COLUMN is_warned TINYINT(1) DEFAULT 0"
+    );
+  } catch (_) {}
+
+  // Add edited_after_warn column if missing
+  try {
+    await pool.query(
+      "ALTER TABLE community_posts ADD COLUMN edited_after_warn TINYINT(1) DEFAULT 0"
     );
   } catch (_) {}
 

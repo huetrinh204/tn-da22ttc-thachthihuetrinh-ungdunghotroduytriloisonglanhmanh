@@ -243,6 +243,56 @@ class _CommunityScreenState extends State<CommunityScreen>
     }
   }
 
+  void _editPost(Post post) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePostScreen(existingPost: post),
+      ),
+    );
+    if (result == true) {
+      _refreshPosts();
+    }
+  }
+
+  Future<void> _deletePost(Post post) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xóa bài viết'),
+        content: const Text('Bạn có chắc muốn xóa bài viết này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    final res = await ApiService.deletePost(token, post.id);
+
+    if (!mounted) return;
+    if (res["message"] == null || res["message"] == "Deleted") {
+      _refreshPosts();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res["message"] as String? ?? 'Xóa thất bại'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
   void _navigateToPostDetail(Post post) async {
     final deleted = await Navigator.push<bool>(
       context,
@@ -756,7 +806,41 @@ class _CommunityScreenState extends State<CommunityScreen>
                     ),
                   ),
                 ),
-                if (_canFollow(post.userId))
+                if (post.isOwnPost)
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, size: 20, color: context.textSecondary),
+                    padding: EdgeInsets.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'edit') _editPost(post);
+                      if (value == 'delete') _deletePost(post);
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text('Chỉnh sửa'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                            SizedBox(width: 8),
+                            Text('Xóa', style: TextStyle(color: AppColors.error)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                else if (_canFollow(post.userId))
                   _buildFollowButton(post.userId),
                 if (post.daysStreak != null && post.daysStreak! > 0) ...[
                   if (_canFollow(post.userId)) const SizedBox(width: 8),

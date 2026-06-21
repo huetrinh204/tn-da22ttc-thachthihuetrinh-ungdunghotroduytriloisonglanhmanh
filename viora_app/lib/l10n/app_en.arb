@@ -923,6 +923,8 @@
   "cactusLevel11": "Beautiful cactus",
   "cactusLevel12": "Resilient cactus",
   "cactusLevel13": "Perfect cactus",
+  "cactusLevel14": "Divine cactus",
+  "cactusLevel15": "Legendary cactus",
   
   "sakuraLevel1": "Sakura seed",
   "sakuraLevel2": "Sakura sprout",
@@ -938,6 +940,7 @@
   "sakuraLevel12": "Radiant sakura",
   "sakuraLevel13": "Magnificent sakura",
   "sakuraLevel14": "Perfect sakura",
+  "sakuraLevel15": "Legendary sakura",
   
   "sunflowerLevel1": "Sunflower seed",
   "sunflowerLevel2": "Germinating seed",
@@ -978,5 +981,58 @@
   "allCompletedTitle": "Outstanding! 🎉",
   "allCompletedBody": "You've completed all your habits today.",
   "allCompletedSubtitle": "Keep it up to keep your plant thriving! 🌱",
-  "allCompletedContinue": "Awesome!"
+  "allCompletedContinue": "Awesome!",
+
+  "habitTrends": "Habit Trends",
+  "popularHabitCategories": "Popular Habit Categories",
+  "topCompletedHabits": "Top Most Completed Habits",
+  "adminSearchHint": "Search habits or users...",
+  "adminManageHabits": "Manage user habits",
+  "lastWatered": "Last watered",
+  "noPlants": "No plants",
+  "all": "All",
+  "adminHabits": "Manage Habits",
+  "warned": "Warned",
+  "pending": "Pending",
+  "pendingApproval": "Pending approval",
+  "hasBeenWarned": "Has been warned",
+  "approve": "Approve",
+  "reject": "Reject",
+  "removeWarning": "Remove warning",
+  "warnedPostsCount": "{count} warned posts",
+  "@warnedPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingPostsCount": "{count} pending posts",
+  "@pendingPostsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "adminPostsStatus": "{posts} · {warnedCount} warned · {pendingCount} pending",
+  "@adminPostsStatus": {
+    "placeholders": {
+      "posts": { "type": "String" },
+      "warnedCount": { "type": "int" },
+      "pendingCount": { "type": "int" }
+    }
+  },
+  "dismissWarningHint": "Tap \"Remove warning\" to review",
+  "approveRejectHint": "Approve or reject edited post",
+  "noPendingPosts": "No pending posts",
+  "noWarnedPosts": "No warned posts",
+  "rejectPost": "Reject post",
+  "rejectPostMessage": "This post will be deleted and the user will be notified with the reason.",
+  "rejectReason": "Rejection reason",
+  "rejectReasonHint": "Enter reason...",
+  "removeWarningConfirm": "This post will be visible again in the community. Confirm remove warning?",
+  "postApproved": "Post approved",
+  "postRejectedDeleted": "Post rejected and deleted",
+  "postWarningRemoved": "Warning removed"
 }

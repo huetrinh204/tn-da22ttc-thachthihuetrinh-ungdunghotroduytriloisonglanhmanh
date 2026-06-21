@@ -122,6 +122,16 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
     });
   }
 
+  void _toggleSelectAll() {
+    setState(() {
+      if (_selectedIds.length == _filtered.length) {
+        _selectedIds.clear();
+      } else {
+        _selectedIds.addAll(_filtered.map((n) => n.id));
+        _selectMode = true;
+      }
+    });
+  }
   Future<void> _deleteSelected() async {
     if (_selectedIds.isEmpty) return;
 
@@ -267,11 +277,23 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
         actions: _isLoading || _error != null
             ? null
             : [
-                if (_selectMode)
+                if (_selectMode) ...[
+                  IconButton(
+                    icon: const Icon(Icons.select_all),
+                    tooltip: 'Chọn tất cả',
+                    onPressed: _toggleSelectAll,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    tooltip: 'Xóa đã chọn',
+                    onPressed:
+                        _selectedIds.isNotEmpty ? _deleteSelected : null,
+                  ),
                   IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: _toggleSelectMode,
-                  )
+                  ),
+                ]
                 else ...[
                   IconButton(
                     icon: const Icon(Icons.delete_sweep),

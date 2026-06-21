@@ -1908,6 +1908,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cactusLevel13 => 'Xương rồng hoàn hảo';
 
   @override
+  String get cactusLevel14 => 'Xương rồng thần thánh';
+
+  @override
+  String get cactusLevel15 => 'Xương rồng huyền thoại';
+
+  @override
   String get sakuraLevel1 => 'Hạt anh đào';
 
   @override
@@ -1948,6 +1954,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get sakuraLevel14 => 'Cây anh đào hoàn hảo';
+
+  @override
+  String get sakuraLevel15 => 'Cây anh đào huyền thoại';
 
   @override
   String get sunflowerLevel1 => 'Hạt hướng dương';
@@ -2061,4 +2070,106 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get allCompletedContinue => 'Tuyệt vời!';
+
+  @override
+  String get habitTrends => 'Xu hướng thói quen';
+
+  @override
+  String get popularHabitCategories => 'Phân loại thói quen phổ biến';
+
+  @override
+  String get topCompletedHabits => 'Top thói quen được hoàn thành nhiều nhất';
+
+  @override
+  String get adminSearchHint => 'Tìm thói quen hoặc người dùng...';
+
+  @override
+  String get adminManageHabits => 'Quản lý thói quen người dùng';
+
+  @override
+  String get lastWatered => 'Tưới lần cuối';
+
+  @override
+  String get noPlants => 'Không có cây nào';
+
+  @override
+  String get all => 'Tất cả';
+
+  @override
+  String get adminHabits => 'Quản lý thói quen';
+
+  @override
+  String get warned => 'Đã cảnh báo';
+
+  @override
+  String get pending => 'Chờ duyệt';
+
+  @override
+  String get pendingApproval => 'Chờ phê duyệt';
+
+  @override
+  String get hasBeenWarned => 'Đã bị cảnh báo';
+
+  @override
+  String get approve => 'Duyệt';
+
+  @override
+  String get reject => 'Từ chối';
+
+  @override
+  String get removeWarning => 'Gỡ cảnh báo';
+
+  @override
+  String warnedPostsCount(int count) {
+    return '$count bài viết bị cảnh báo';
+  }
+
+  @override
+  String pendingPostsCount(int count) {
+    return '$count bài chờ duyệt';
+  }
+
+  @override
+  String adminPostsStatus(String posts, int warnedCount, int pendingCount) {
+    return '$posts · $warnedCount bị cảnh báo · $pendingCount chờ duyệt';
+  }
+
+  @override
+  String get dismissWarningHint => 'Nhấn \"Gỡ cảnh báo\" để xét duyệt';
+
+  @override
+  String get approveRejectHint =>
+      'Phê duyệt hoặc từ chối bài viết đã chỉnh sửa';
+
+  @override
+  String get noPendingPosts => 'Không có bài viết chờ duyệt';
+
+  @override
+  String get noWarnedPosts => 'Không có bài viết bị cảnh báo';
+
+  @override
+  String get rejectPost => 'Từ chối bài viết';
+
+  @override
+  String get rejectPostMessage =>
+      'Bài viết này sẽ bị xóa và người dùng sẽ nhận được thông báo kèm lý do.';
+
+  @override
+  String get rejectReason => 'Lý do từ chối';
+
+  @override
+  String get rejectReasonHint => 'Nhập lý do...';
+
+  @override
+  String get removeWarningConfirm =>
+      'Bài viết này sẽ được hiển thị lại trên cộng đồng. Xác nhận gỡ cảnh báo?';
+
+  @override
+  String get postApproved => 'Đã phê duyệt bài viết';
+
+  @override
+  String get postRejectedDeleted => 'Đã từ chối và xóa bài viết';
+
+  @override
+  String get postWarningRemoved => 'Đã gỡ cảnh báo bài viết';
 }

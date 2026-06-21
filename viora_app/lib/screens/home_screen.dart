@@ -330,6 +330,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   bool profileIncomplete = false;
   int unreadNotificationsCount = 0;
   List _todayHabits = [];
+  List _notifications = [];
   String _token = '';
 
   // Plant data
@@ -371,11 +372,12 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     // Load community notifications unread count
     final notificationsRes = await ApiService.getNotifications(_token);
     int unread = 0;
+    List notifList = [];
     if (notificationsRes["notifications"] != null) {
-      final notifs = notificationsRes["notifications"] as List;
+      notifList = notificationsRes["notifications"] as List;
       final lastSeenStr = prefs.getString('notifications_last_seen_at');
       final lastSeen = lastSeenStr != null ? DateTime.tryParse(lastSeenStr) : null;
-      for (final n in notifs) {
+      for (final n in notifList) {
         final isRead = (n['is_read'] as int? ?? 0) == 1;
         if (isRead) continue;
         // For community notifs (like/comment/follow), check against last seen timestamp
@@ -396,6 +398,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       longestStreak = streakRes["streak"]?["longest_streak"] ?? 0;
       profileIncomplete = incomplete;
       unreadNotificationsCount = unread;
+      _notifications = notifList;
 
       _todayHabits = habitsRes["habits"] as List? ?? [];
       totalToday = _todayHabits.length;
@@ -614,6 +617,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
 
                 // Plant card
                 _buildPlantCard(),
+                const SizedBox(height: 16),
+
+                // Community section
+                _buildCommunitySection(),
                 const SizedBox(height: 16),
 
                 // Today's Habits section
@@ -905,7 +912,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      l10n.today,
+                      '${l10n.habits} ${l10n.today.toLowerCase()}',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -1041,6 +1048,172 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCommunitySection() {
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppColors.darkSurface : AppColors.surface;
+
+    final recent = _notifications.take(3).toList();
+
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => AppNavigation.openCommunity(),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(AppIcons.community,
+                        color: AppColors.primary, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    l10n.community,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: context.textPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (unreadNotificationsCount > 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$unreadNotificationsCount',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              if (recent.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      'Chưa có hoạt động nào từ cộng đồng',
+                      style: TextStyle(color: context.textSecondary),
+                    ),
+                  ),
+                )
+              else ...[
+                const SizedBox(height: 12),
+                ...recent.map((n) => _buildNotifItem(n)),
+              ],
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Xem thêm trong Cộng đồng',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_ios,
+                      size: 12, color: AppColors.primary),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotifItem(Map n) {
+    final type = n['type'] as String? ?? 'like';
+    final userName = (n['actor_name'] ?? n['user_name']) as String? ?? 'Unknown';
+
+    IconData icon;
+    Color iconColor;
+    String message;
+
+    switch (type) {
+      case 'like':
+        icon = Icons.favorite;
+        iconColor = Colors.red;
+        message = '$userName đã thích bài viết của bạn';
+      case 'comment':
+        icon = Icons.chat_bubble_outline;
+        iconColor = AppColors.primary;
+        message = '$userName đã bình luận về bài viết của bạn';
+      case 'follow':
+        icon = Icons.person_add;
+        iconColor = Colors.blue;
+        message = '$userName đã theo dõi bạn';
+      case 'warning':
+        icon = Icons.warning_amber;
+        iconColor = Colors.orange;
+        message = n['title'] as String? ?? 'Cảnh báo từ quản trị viên';
+      case 'post_edited':
+        icon = Icons.edit;
+        iconColor = AppColors.primary;
+        message = n['title'] as String? ?? 'Người dùng đã chỉnh sửa bài viết';
+      case 'warning_cleared':
+        icon = Icons.check_circle;
+        iconColor = AppColors.success;
+        message = n['title'] as String? ?? 'Đã gỡ cảnh báo bài viết';
+      default:
+        icon = Icons.notifications;
+        iconColor = AppColors.primary;
+        message = 'Hoạt động mới từ $userName';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                fontSize: 13,
+                color: context.textPrimary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

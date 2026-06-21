@@ -3722,6 +3722,18 @@ abstract class AppLocalizations {
   /// **'Xương rồng hoàn hảo'**
   String get cactusLevel13;
 
+  /// No description provided for @cactusLevel14.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng thần thánh'**
+  String get cactusLevel14;
+
+  /// No description provided for @cactusLevel15.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xương rồng huyền thoại'**
+  String get cactusLevel15;
+
   /// No description provided for @sakuraLevel1.
   ///
   /// In vi, this message translates to:
@@ -3805,6 +3817,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Cây anh đào hoàn hảo'**
   String get sakuraLevel14;
+
+  /// No description provided for @sakuraLevel15.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây anh đào huyền thoại'**
+  String get sakuraLevel15;
 
   /// No description provided for @sunflowerLevel1.
   ///
@@ -4027,6 +4045,192 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tuyệt vời!'**
   String get allCompletedContinue;
+
+  /// No description provided for @habitTrends.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xu hướng thói quen'**
+  String get habitTrends;
+
+  /// No description provided for @popularHabitCategories.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phân loại thói quen phổ biến'**
+  String get popularHabitCategories;
+
+  /// No description provided for @topCompletedHabits.
+  ///
+  /// In vi, this message translates to:
+  /// **'Top thói quen được hoàn thành nhiều nhất'**
+  String get topCompletedHabits;
+
+  /// No description provided for @adminSearchHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tìm thói quen hoặc người dùng...'**
+  String get adminSearchHint;
+
+  /// No description provided for @adminManageHabits.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý thói quen người dùng'**
+  String get adminManageHabits;
+
+  /// No description provided for @lastWatered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tưới lần cuối'**
+  String get lastWatered;
+
+  /// No description provided for @noPlants.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có cây nào'**
+  String get noPlants;
+
+  /// No description provided for @all.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả'**
+  String get all;
+
+  /// No description provided for @adminHabits.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý thói quen'**
+  String get adminHabits;
+
+  /// No description provided for @warned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cảnh báo'**
+  String get warned;
+
+  /// No description provided for @pending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ duyệt'**
+  String get pending;
+
+  /// No description provided for @pendingApproval.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ phê duyệt'**
+  String get pendingApproval;
+
+  /// No description provided for @hasBeenWarned.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã bị cảnh báo'**
+  String get hasBeenWarned;
+
+  /// No description provided for @approve.
+  ///
+  /// In vi, this message translates to:
+  /// **'Duyệt'**
+  String get approve;
+
+  /// No description provided for @reject.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get reject;
+
+  /// No description provided for @removeWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gỡ cảnh báo'**
+  String get removeWarning;
+
+  /// No description provided for @warnedPostsCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} bài viết bị cảnh báo'**
+  String warnedPostsCount(int count);
+
+  /// No description provided for @pendingPostsCount.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} bài chờ duyệt'**
+  String pendingPostsCount(int count);
+
+  /// No description provided for @adminPostsStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'{posts} · {warnedCount} bị cảnh báo · {pendingCount} chờ duyệt'**
+  String adminPostsStatus(String posts, int warnedCount, int pendingCount);
+
+  /// No description provided for @dismissWarningHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhấn \"Gỡ cảnh báo\" để xét duyệt'**
+  String get dismissWarningHint;
+
+  /// No description provided for @approveRejectHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phê duyệt hoặc từ chối bài viết đã chỉnh sửa'**
+  String get approveRejectHint;
+
+  /// No description provided for @noPendingPosts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có bài viết chờ duyệt'**
+  String get noPendingPosts;
+
+  /// No description provided for @noWarnedPosts.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có bài viết bị cảnh báo'**
+  String get noWarnedPosts;
+
+  /// No description provided for @rejectPost.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối bài viết'**
+  String get rejectPost;
+
+  /// No description provided for @rejectPostMessage.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết này sẽ bị xóa và người dùng sẽ nhận được thông báo kèm lý do.'**
+  String get rejectPostMessage;
+
+  /// No description provided for @rejectReason.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lý do từ chối'**
+  String get rejectReason;
+
+  /// No description provided for @rejectReasonHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập lý do...'**
+  String get rejectReasonHint;
+
+  /// No description provided for @removeWarningConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bài viết này sẽ được hiển thị lại trên cộng đồng. Xác nhận gỡ cảnh báo?'**
+  String get removeWarningConfirm;
+
+  /// No description provided for @postApproved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã phê duyệt bài viết'**
+  String get postApproved;
+
+  /// No description provided for @postRejectedDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối và xóa bài viết'**
+  String get postRejectedDeleted;
+
+  /// No description provided for @postWarningRemoved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gỡ cảnh báo bài viết'**
+  String get postWarningRemoved;
 }
 
 class _AppLocalizationsDelegate

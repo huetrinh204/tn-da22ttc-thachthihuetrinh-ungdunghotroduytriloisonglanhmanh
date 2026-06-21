@@ -3,22 +3,38 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import '../services/api_service.dart';
+import '../models/post.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
+import '../constants/app_icons.dart';
 import '../l10n/app_localizations.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  const CreatePostScreen({super.key});
+  final Post? existingPost;
+
+  const CreatePostScreen({super.key, this.existingPost});
 
   @override
   State<CreatePostScreen> createState() => _CreatePostScreenState();
 }
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
-  final TextEditingController _contentController = TextEditingController();
+  late final TextEditingController _contentController;
   File? _selectedImage;
+  String? _existingImageUrl;
   bool _isPosting = false;
+
+  bool get _isEditing => widget.existingPost != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _contentController = TextEditingController(
+      text: widget.existingPost?.content ?? '',
+    );
+    _existingImageUrl = widget.existingPost?.imageUrl;
+  }
 
   @override
   void dispose() {
@@ -38,6 +54,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
+        _existingImageUrl = null;
       });
     }
   }
@@ -45,13 +62,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   void _removeImage() {
     setState(() {
       _selectedImage = null;
+      _existingImageUrl = null;
     });
   }
 
   Future<void> _publishPost() async {
     final content = _contentController.text.trim();
-    
-    if (content.isEmpty && _selectedImage == null) {
+
+    if (content.isEmpty && _selectedImage == null && _existingImageUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.shareYourThoughts),
@@ -65,47 +83,55 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token") ?? "";
-    
-    String? imageUrl;
-    
-    // Upload image if selected
+
+    String? imageUrl = _existingImageUrl;
+
     if (_selectedImage != null) {
       final uploadResponse = await ApiService.uploadImage(token, _selectedImage!.path);
       if (uploadResponse["url"] != null) {
         imageUrl = uploadResponse["url"];
       }
     }
-    
-    // Extract hashtags from content
+
     final hashtags = <String>[];
     final hashtagRegex = RegExp(r'#\w+');
     final matches = hashtagRegex.allMatches(content);
     for (final match in matches) {
       hashtags.add(match.group(0)!);
     }
-    
-    // Create post
-    final response = await ApiService.createPost(
-      token: token,
-      content: content,
-      imageUrl: imageUrl,
-      hashtags: hashtags.isNotEmpty ? hashtags : null,
-    );
+
+    final Map<String, dynamic> response;
+    if (_isEditing) {
+      response = await ApiService.updatePost(
+        token: token,
+        postId: widget.existingPost!.id,
+        content: content,
+        imageUrl: imageUrl,
+        hashtags: hashtags.isNotEmpty ? hashtags : null,
+      );
+    } else {
+      response = await ApiService.createPost(
+        token: token,
+        content: content,
+        imageUrl: imageUrl,
+        hashtags: hashtags.isNotEmpty ? hashtags : null,
+      );
+    }
 
     if (!mounted) return;
-    
+
     setState(() => _isPosting = false);
-    
+
     if (response["message"] == null || response["post"] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.postCreated),
+          content: Text(_isEditing ? 'Đã cập nhật bài viết' : AppLocalizations.of(context)!.postCreated),
           backgroundColor: AppColors.success,
         ),
       );
       Navigator.pop(context, true);
     } else {
-      final msg = response["message"] as String? ?? "Failed to create post";
+      final msg = response["message"] as String? ?? "Failed";
       final hint = msg == "Network error"
           ? "Không kết nối được server.\nKiểm tra backend (npm run dev) và IP trong api_service.dart"
           : msg;
@@ -122,11 +148,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: VioraAppBar(
-        title: l10n.createPost,
+        title: _isEditing ? 'Chỉnh sửa bài viết' : l10n.createPost,
         showBack: true,
         actions: [
           if (_isPosting)
@@ -145,7 +171,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             TextButton(
               onPressed: _publishPost,
               child: Text(
-                l10n.publish,
+                _isEditing ? 'Lưu' : l10n.publish,
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 15,
@@ -161,7 +187,35 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Content input
+            if (_isEditing && widget.existingPost!.isWarned)
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(AppIcons.shield, color: AppColors.warning, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Bài viết của bạn đã bị cảnh báo vi phạm. Sau khi chỉnh sửa, quản trị viên sẽ xem xét và gỡ cảnh báo.',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             TextField(
               controller: _contentController,
               maxLines: 8,
@@ -180,10 +234,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 filled: false,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
-            // Selected image preview
+
             if (_selectedImage != null) ...[
               Stack(
                 children: [
@@ -218,10 +271,43 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 ],
               ),
               const SizedBox(height: 16),
+            ] else if (_existingImageUrl != null) ...[
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      _existingImageUrl!,
+                      width: double.infinity,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: _removeImage,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
             ],
-            
-            // Add photo button
-            if (_selectedImage == null)
+
+            if (_selectedImage == null && _existingImageUrl == null)
               InkWell(
                 onTap: _pickImage,
                 borderRadius: BorderRadius.circular(12),

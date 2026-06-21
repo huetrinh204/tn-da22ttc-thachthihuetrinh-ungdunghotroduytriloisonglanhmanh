@@ -189,10 +189,13 @@ class _AiChatScreenState extends State<AiChatScreen>
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
+                image: const DecorationImage(
+                  image: AssetImage('assets/images/bongbongchat.jpg'),
+                  fit: BoxFit.cover,
+                ),
               ),
-              child: const Icon(AppIcons.aiChat, color: AppColors.primary, size: 20),
             ),
             const SizedBox(width: 10),
             Column(

@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../widgets/habit_icon.dart';
 
 class AdminDashboardTab extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -27,11 +28,16 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
   int _todayUsers = 0;
   int _todayPosts = 0;
   int _totalHabits = 0;
+  int _activeUsers = 0;
   
   List<Map<String, dynamic>> _userGrowthData = [];
   List<Map<String, dynamic>> _postGrowthData = [];
   
   String _growthFilter = 'monthly';
+
+  List<Map<String, dynamic>> _habitCategories = [];
+  List<Map<String, dynamic>> _topHabits = [];
+  String _habitTrendPeriod = 'weekly';
 
   @override
   void initState() {
@@ -45,14 +51,9 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
     
     try {
       final stats = await ApiService.getAdminStats(_token);
-      
-      final usersRes = await ApiService.getAdminUsers(_token);
-      int habitCount = 0;
-      for (var user in usersRes['users']) {
-        habitCount += (user['habit_count'] as int?) ?? 0;
-      }
-      
+      final catRes = await ApiService.getAdminHabitCategories(_token);
       await _loadGrowthData();
+      await _loadHabitTrends();
       
       if (!mounted) return;
       setState(() {
@@ -61,13 +62,25 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         _totalComments = stats['totalComments'] ?? 0;
         _todayUsers = stats['todayUsers'] ?? 0;
         _todayPosts = stats['todayPosts'] ?? 0;
-        _totalHabits = habitCount;
+        _totalHabits = stats['totalHabits'] ?? 0;
+        _activeUsers = stats['activeUsers'] ?? 0;
+        _habitCategories = List<Map<String, dynamic>>.from(catRes['categories'] ?? []);
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadHabitTrends() async {
+    try {
+      final trends = await ApiService.getAdminHabitTrends(_token, period: _habitTrendPeriod);
+      if (!mounted) return;
+      setState(() {
+        _topHabits = List<Map<String, dynamic>>.from(trends['topHabits'] ?? []);
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadGrowthData() async {
@@ -143,6 +156,8 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             _buildGrowthSection(l10n),
             const SizedBox(height: 28),
             _buildDistributionSection(l10n),
+            const SizedBox(height: 28),
+            _buildHabitTrendsSection(l10n),
           ],
         ),
       ),
@@ -860,6 +875,280 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           ),
         ),
       ],
+    );
+  }
+
+  int _parseInt(dynamic v, [int fallback = 0]) {
+    if (v is int) return v;
+    if (v is double) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? fallback;
+    return fallback;
+  }
+
+  Widget _buildHabitTrendsSection(AppLocalizations l10n) {
+    const habitCategoryColors = {
+      'eat': Color(0xFF4CAF50),
+      'exercise': Color(0xFFF59E0B),
+      'sleep': Color(0xFF3B82F6),
+      'mental': Color(0xFF8B5CF6),
+      'hydration': Color(0xFF0EA5E9),
+      'other': Color(0xFF6B7280),
+    };
+    String catLabel(String key) {
+      switch (key) {
+        case 'eat': return l10n.categoryEat;
+        case 'exercise': return l10n.categoryExercise;
+        case 'sleep': return l10n.categorySleep;
+        case 'mental': return l10n.categoryMental;
+        case 'hydration': return l10n.categoryHydration;
+        default: return l10n.categoryOther;
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          icon: AppIcons.habits,
+          title: l10n.habitTrends,
+          subtitle: '$_activeUsers ${l10n.users} · ${_habitCategories.length} ${l10n.category}',
+        ),
+        const SizedBox(height: 18),
+        _buildHabitPeriodToggle(),
+        const SizedBox(height: 16),
+        // Category breakdown
+        if (_habitCategories.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: context.isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.grey.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.popularHabitCategories,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                ...List.generate(_habitCategories.length, (i) {
+                  final cat = _habitCategories[i];
+                  final key = cat['category'] as String? ?? 'other';
+                  final total = _parseInt(cat['total_habits']);
+                  final users = _parseInt(cat['total_users']);
+                  final streak = _parseInt(cat['total_streak']);
+                  final color = habitCategoryColors[key] ?? AppColors.primary;
+                  final label = catLabel(key);
+                  final maxCount = (_habitCategories.isNotEmpty
+                      ? _parseInt(_habitCategories.first['total_habits'], 1)
+                      : 1);
+
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: i < _habitCategories.length - 1 ? 12 : 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 8, height: 8,
+                              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.textPrimary,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '$total ${l10n.habitsLabel}',
+                              style: TextStyle(fontSize: 12, color: context.textSecondary),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '$users ${l10n.users}',
+                              style: TextStyle(fontSize: 12, color: context.textSecondary),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: total / maxCount,
+                            backgroundColor: context.isDark
+                                ? const Color(0xFF2E433C)
+                                : const Color(0xFFE5E7EB),
+                            color: color,
+                            minHeight: 6,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${l10n.habitCount}: $streak ${l10n.habitsLabel}',
+                          style: TextStyle(fontSize: 10, color: context.textSecondary),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        const SizedBox(height: 16),
+        // Top habits
+        if (_topHabits.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: context.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: context.isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : Colors.grey.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.topCompletedHabits,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...List.generate(_topHabits.length, (i) {
+                  final h = _topHabits[i];
+                  final name = h['name'] as String? ?? '';
+                  final cat = h['category'] as String? ?? 'other';
+                  final completions = _parseInt(h['completions']);
+                  final usersCount = _parseInt(h['users_count']);
+                  final icon = h['icon'] as String? ?? '✅';
+                  final color = habitCategoryColors[cat] ?? AppColors.primary;
+                  final maxCompletions = _topHabits.isNotEmpty
+                      ? _parseInt(_topHabits.first['completions'], 1)
+                      : 1;
+
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: i < _topHabits.length - 1 ? 10 : 0),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(child: HabitIcon(iconString: icon, size: 16, color: color)),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: context.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(3),
+                                child: LinearProgressIndicator(
+                                  value: completions / maxCompletions,
+                                  backgroundColor: context.isDark
+                                      ? const Color(0xFF2E433C)
+                                      : const Color(0xFFE5E7EB),
+                                  color: color,
+                                  minHeight: 4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '$completions',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: color,
+                              ),
+                            ),
+                            Text(
+                              '$usersCount ${l10n.users}',
+                              style: TextStyle(fontSize: 10, color: context.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildHabitPeriodToggle() {
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: context.inputFill,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildToggleOption(
+            label: l10n.weekly,
+            isSelected: _habitTrendPeriod == 'weekly',
+            onTap: () {
+              setState(() => _habitTrendPeriod = 'weekly');
+              _loadHabitTrends();
+            },
+          ),
+          const SizedBox(width: 3),
+          _buildToggleOption(
+            label: l10n.monthly,
+            isSelected: _habitTrendPeriod == 'monthly',
+            onTap: () {
+              setState(() => _habitTrendPeriod = 'monthly');
+              _loadHabitTrends();
+            },
+          ),
+        ],
+      ),
     );
   }
 }

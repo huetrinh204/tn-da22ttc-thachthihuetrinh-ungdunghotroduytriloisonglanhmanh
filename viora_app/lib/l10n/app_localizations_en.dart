@@ -1908,6 +1908,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cactusLevel13 => 'Perfect cactus';
 
   @override
+  String get cactusLevel14 => 'Divine cactus';
+
+  @override
+  String get cactusLevel15 => 'Legendary cactus';
+
+  @override
   String get sakuraLevel1 => 'Sakura seed';
 
   @override
@@ -1948,6 +1954,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sakuraLevel14 => 'Perfect sakura';
+
+  @override
+  String get sakuraLevel15 => 'Legendary sakura';
 
   @override
   String get sunflowerLevel1 => 'Sunflower seed';
@@ -2061,4 +2070,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allCompletedContinue => 'Awesome!';
+
+  @override
+  String get habitTrends => 'Habit Trends';
+
+  @override
+  String get popularHabitCategories => 'Popular Habit Categories';
+
+  @override
+  String get topCompletedHabits => 'Top Most Completed Habits';
+
+  @override
+  String get adminSearchHint => 'Search habits or users...';
+
+  @override
+  String get adminManageHabits => 'Manage user habits';
+
+  @override
+  String get lastWatered => 'Last watered';
+
+  @override
+  String get noPlants => 'No plants';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get adminHabits => 'Manage Habits';
+
+  @override
+  String get warned => 'Warned';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get pendingApproval => 'Pending approval';
+
+  @override
+  String get hasBeenWarned => 'Has been warned';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get removeWarning => 'Remove warning';
+
+  @override
+  String warnedPostsCount(int count) {
+    return '$count warned posts';
+  }
+
+  @override
+  String pendingPostsCount(int count) {
+    return '$count pending posts';
+  }
+
+  @override
+  String adminPostsStatus(String posts, int warnedCount, int pendingCount) {
+    return '$posts · $warnedCount warned · $pendingCount pending';
+  }
+
+  @override
+  String get dismissWarningHint => 'Tap \"Remove warning\" to review';
+
+  @override
+  String get approveRejectHint => 'Approve or reject edited post';
+
+  @override
+  String get noPendingPosts => 'No pending posts';
+
+  @override
+  String get noWarnedPosts => 'No warned posts';
+
+  @override
+  String get rejectPost => 'Reject post';
+
+  @override
+  String get rejectPostMessage =>
+      'This post will be deleted and the user will be notified with the reason.';
+
+  @override
+  String get rejectReason => 'Rejection reason';
+
+  @override
+  String get rejectReasonHint => 'Enter reason...';
+
+  @override
+  String get removeWarningConfirm =>
+      'This post will be visible again in the community. Confirm remove warning?';
+
+  @override
+  String get postApproved => 'Post approved';
+
+  @override
+  String get postRejectedDeleted => 'Post rejected and deleted';
+
+  @override
+  String get postWarningRemoved => 'Warning removed';
 }

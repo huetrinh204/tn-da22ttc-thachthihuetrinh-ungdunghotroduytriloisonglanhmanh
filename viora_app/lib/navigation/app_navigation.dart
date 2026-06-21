@@ -28,7 +28,10 @@ class AppNavigation {
     MaterialPageRoute(builder: (_) => const AiChatScreen()),
   );
 
-  static void openPlant() => openGrow();
+  static void openPlant() {
+    navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    switchToTab(AppTabs.grow);
+  }
   static void openProfile() => openMe();
 
   static void openPostDetail(String postId) async {
