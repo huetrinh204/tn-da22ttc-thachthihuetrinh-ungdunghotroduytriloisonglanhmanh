@@ -537,7 +537,7 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
           context,
           MaterialPageRoute(
             builder: (_) => AdminPlantDetailScreen(
-              userId: '${plant['user_id']}',
+              userId: plant['user_id']?.toString() ?? '',
               userName: plant['user_name'] as String? ?? '',
             ),
           ),

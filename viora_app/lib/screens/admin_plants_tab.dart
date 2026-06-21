@@ -294,17 +294,19 @@ class _AdminPlantsTabState extends State<AdminPlantsTab> {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AdminPlantDetailScreen(
-                  userId: userId,
-                  userName: userName,
-                ),
-              ),
-            );
-          },
+          onTap: userId.isEmpty
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdminPlantDetailScreen(
+                        userId: userId,
+                        userName: userName,
+                      ),
+                    ),
+                  );
+                },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),

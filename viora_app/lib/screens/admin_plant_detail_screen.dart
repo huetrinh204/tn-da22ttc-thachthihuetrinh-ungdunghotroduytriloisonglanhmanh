@@ -42,6 +42,11 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('token') ?? '';
 
+    if (widget.userId.isEmpty) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
     try {
       final res = await ApiService.getPlantHistory(_token, widget.userId);
       if (!mounted) return;
