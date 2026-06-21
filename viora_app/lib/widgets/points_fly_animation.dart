@@ -95,10 +95,12 @@ class _PointsFlyAnimationState extends State<PointsFlyAnimation>
                 ),
                 child: Text(
                   '+${widget.points}',
+                  textDirection: TextDirection.ltr,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.none,
                   ),
                 ),
               ),

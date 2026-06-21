@@ -103,11 +103,38 @@ class FcmService {
     await prefs.setString("fcm_token", token);
   }
 
+  /// Lấy userId từ JWT token (không cần gọi API)
+  static Future<String?> _getCurrentUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token");
+    if (token == null) return null;
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final normalized = base64Url.normalize(parts[1]);
+      final payload = utf8.decode(base64Url.decode(normalized));
+      final json = jsonDecode(payload);
+      return json['id']?.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
     if (notification == null) return;
 
+    // Chỉ hiển thị thông báo của user hiện tại
     final data = message.data;
+    final notifUserId = data['userId'];
+    if (notifUserId != null) {
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId != null && notifUserId != currentUserId) {
+        print('[FCM] Skip notification for userId=$notifUserId (current=$currentUserId)');
+        return;
+      }
+    }
+
     final payload = data.isNotEmpty ? jsonEncode(data) : null;
 
     await _localNotif.show(

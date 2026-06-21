@@ -143,6 +143,19 @@ class ApiService {
     } catch (_) {}
   }
 
+  static Future<void> clearFcmToken(String token) async {
+    try {
+      await http.post(
+        Uri.parse("$baseUrl/auth/fcm-token"),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({"fcm_token": null}),
+      );
+    } catch (_) {}
+  }
+
   // ================= FORGOT PASSWORD =================
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
     try {

@@ -395,8 +395,9 @@ router.post("/fcm-token", async (req, res) => {
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET);
     const { fcm_token } = req.body;
+    // Nếu token rỗng → set NULL để cron không gửi cho user này
     await pool.query("UPDATE users SET fcm_token = ? WHERE id = ?",
-      [fcm_token, decoded.id]);
+      [fcm_token && fcm_token.trim() ? fcm_token : null, decoded.id]);
     res.json({ message: "FCM token saved" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });

@@ -85,6 +85,8 @@ flutter:
     - assets/images/tree/huongduong/
     - assets/images/khobau.png
     - assets/images/thanhtuu/
+    - assets/images/bongbongchat.jpg
+    - assets/images/AI_chatbox.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

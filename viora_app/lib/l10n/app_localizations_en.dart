@@ -141,28 +141,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get howToEarnPoints => 'How to Earn Points';
 
   @override
-  String get earnTip1 => 'Complete ≥ 1 habit per day';
+  String get earnTip1 => 'Each completed habit per day';
 
   @override
-  String get earnReward1 => '+1 point';
+  String get earnReward1 => '+1 EXP';
 
   @override
-  String get earnTip2 => 'Complete ≥ 50% habits per day';
+  String get earnTip2 => 'Accumulate EXP to level up';
 
   @override
-  String get earnReward2 => '+2 points';
+  String get earnReward2 => '15 levels';
 
   @override
-  String get earnTip3 => 'Complete 100% habits per day';
+  String get earnTip3 => 'Keep checking in daily';
 
   @override
-  String get earnReward3 => '+3 points';
+  String get earnReward3 => 'Plant stays healthy';
 
   @override
-  String get earnTip4 => 'No check-in for 3 consecutive days';
+  String get earnTip4 => 'Miss 3 consecutive days';
 
   @override
-  String get earnReward4 => 'Plant wilts';
+  String get earnReward4 => '-3 EXP & plant wilts';
 
   @override
   String get congratulations => '🎉 CONGRATULATIONS! 🎉';

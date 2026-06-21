@@ -9,6 +9,7 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "viora_app",
   timezone: "+07:00", // Set timezone to Vietnam (UTC+7)
+  dateStrings: true,   // Return all date/time types as strings, not Date objects
 });
 
 export default pool;

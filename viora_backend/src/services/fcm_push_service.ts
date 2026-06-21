@@ -17,10 +17,11 @@ if (!admin.apps.length) {
 export async function sendPushNotification(
   fcmToken: string,
   title: string,
-  body: string
+  body: string,
+  userId?: number | string
 ) {
   try {
-    await admin.messaging().send({
+    const message: any = {
       token: fcmToken,
       notification: { title, body },
       android: {
@@ -30,7 +31,11 @@ export async function sendPushNotification(
           channelId: "viora_fcm",
         },
       },
-    });
+    };
+    if (userId != null) {
+      message.data = { userId: String(userId) };
+    }
+    await admin.messaging().send(message);
     console.log(`[FCM] Push sent to token: ${fcmToken.substring(0, 20)}...`);
   } catch (err) {
     console.error(`[FCM] Failed:`, err);

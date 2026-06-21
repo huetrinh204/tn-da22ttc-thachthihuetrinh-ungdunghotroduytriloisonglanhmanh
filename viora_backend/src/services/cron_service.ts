@@ -96,7 +96,7 @@ async function checkAndSendPersonalReminders() {
         notif_morning_enabled, notif_morning_hour, notif_morning_minute,
         notif_evening_enabled, notif_evening_hour, notif_evening_minute
        FROM users 
-       WHERE fcm_token IS NOT NULL AND (
+       WHERE fcm_token IS NOT NULL AND fcm_token != '' AND (
          (notif_morning_enabled = 1 AND notif_morning_hour = ? AND notif_morning_minute = ?) OR
          (notif_evening_enabled = 1 AND notif_evening_hour = ? AND notif_evening_minute = ?)
        )`,
@@ -229,9 +229,11 @@ async function checkAndSendHabitReminders() {
     const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
     const currentHour = vietnamTime.getUTCHours();
     const currentMinute = vietnamTime.getUTCMinutes();
+    const currentTotalMin = currentHour * 60 + currentMinute;
     const today = vietnamTime.toISOString().split("T")[0];
 
-    // Lấy tất cả habits có reminder_time, chưa hoàn thành hôm nay, và user có fcm_token
+    console.log(`[HabitReminder] Vietnam time: ${currentHour}:${String(currentMinute).padStart(2, '0')} (totalMin=${currentTotalMin}), today=${today}`);
+
     const [habits]: any = await pool.query(
       `SELECT h.id as habit_id, h.name as habit_name, h.reminder_time,
               u.id as user_id, u.fcm_token
@@ -239,35 +241,39 @@ async function checkAndSendHabitReminders() {
        INNER JOIN users u ON h.user_id = u.id
        WHERE h.reminder_time IS NOT NULL
          AND h.is_active = 1
-         AND u.fcm_token IS NOT NULL
-         AND h.id NOT IN (
+     AND u.fcm_token IS NOT NULL
+     AND u.fcm_token != ''
+     AND h.id NOT IN (
            SELECT habit_id FROM habit_logs
            WHERE log_date = ? AND is_completed = 1
          )`,
       [today]
     );
 
-    for (const habit of habits) {
-      const reminderTime = habit.reminder_time as string; // format "HH:MM" or "HH:MM:SS"
-      const parts = reminderTime.split(':');
-      const rHour = parseInt(parts[0]);
-      const rMinute = parseInt(parts[1]);
+    console.log(`[HabitReminder] Found ${habits.length} habits with reminder_time`);
 
-      // Tính số phút đã trôi qua kể từ reminder_time
-      const reminderTotalMin = rHour * 60 + rMinute;
-      const currentTotalMin = currentHour * 60 + currentMinute;
+    for (const habit of habits) {
+      const parsed = parseTimeValue(habit.reminder_time);
+      if (!parsed) {
+        console.log(`[HabitReminder] SKIP habit_id=${habit.habit_id} - cannot parse reminder_time: ${JSON.stringify(habit.reminder_time)}`);
+        continue;
+      }
+
+      const reminderTotalMin = parsed.hour * 60 + parsed.minute;
       const diffMin = currentTotalMin - reminderTotalMin;
 
-      // Chỉ gửi trong khoảng 0 → 60 phút sau reminder_time
+      console.log(`[HabitReminder] habit_id=${habit.habit_id} name="${habit.habit_name}" parsed=${parsed.hour}:${String(parsed.minute).padStart(2, '0')} diffMin=${diffMin}`);
+
       if (diffMin < 0 || diffMin > 60) continue;
 
-      // Gửi tại phút 0, 20, 40, 60
-      if (diffMin % 20 !== 0) continue;
+      // Gửi tại phút 0 (đúng giờ) và phút 20 (nhắc lại)
+      if (diffMin !== 0 && diffMin !== 20) continue;
 
       await sendPushNotification(
         habit.fcm_token,
         '⏰ Đến giờ rồi!',
-        `Đã đến lúc thực hiện thói quen "${habit.habit_name}" 💪`
+        `Đã đến lúc thực hiện thói quen "${habit.habit_name}" 💪`,
+        habit.user_id
       );
 
       console.log(`[HabitReminder] Sent to user=${habit.user_id} habit="${habit.habit_name}" at +${diffMin}min`);
@@ -275,6 +281,34 @@ async function checkAndSendHabitReminders() {
   } catch (error) {
     console.error('[Cron] Habit reminder error:', error);
   }
+}
+
+function parseTimeValue(value: any): { hour: number; minute: number } | null {
+  if (value == null) return null;
+
+  // Nếu là Date object (phòng trường hợp dateStrings không生效)
+  if (value instanceof Date) {
+    return { hour: value.getHours(), minute: value.getMinutes() };
+  }
+
+  // Nếu là number (MySQL trả về số giây từ 00:00:00)
+  if (typeof value === 'number') {
+    const totalMinutes = Math.floor(value / 60);
+    return { hour: Math.floor(totalMinutes / 60) % 24, minute: totalMinutes % 60 };
+  }
+
+  // Xử lý string: HH:MM:SS hoặc HH:MM hoặc H:MM
+  const str = String(value).trim();
+  const parts = str.split(':');
+  if (parts.length >= 2) {
+    const h = parseInt(parts[0]);
+    const m = parseInt(parts[1]);
+    if (!isNaN(h) && !isNaN(m) && h >= 0 && h < 24 && m >= 0 && m < 60) {
+      return { hour: h, minute: m };
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -356,7 +390,8 @@ async function checkProgressiveWilting() {
               await sendPushNotification(
                 user.fcm_token,
                 "🧊 Streak Freeze đã được dùng!",
-                `Bạn đã bỏ lỡ hôm qua nhưng streak được bảo vệ. Còn ${newTokens} freeze token. Hãy check-in hôm nay! 💪`
+                `Bạn đã bỏ lỡ hôm qua nhưng streak được bảo vệ. Còn ${newTokens} freeze token. Hãy check-in hôm nay! 💪`,
+                user.user_id
               );
             }
           } else {
@@ -382,7 +417,8 @@ async function checkProgressiveWilting() {
                 await sendPushNotification(
                   user.fcm_token,
                   "🍂 Cây của bạn đang héo!",
-                  `Cây đã bị mất ${penalty} điểm vì không check-in ${newDays} ngày. Hãy quay lại ngay! 💧`
+                  `Cây đã bị mất ${penalty} điểm vì không check-in ${newDays} ngày. Hãy quay lại ngay! 💧`,
+                  user.user_id
                 );
               }
             }
@@ -393,7 +429,8 @@ async function checkProgressiveWilting() {
             await sendPushNotification(
               user.fcm_token,
               "⚠️ Cây cần được chăm sóc!",
-              "Cây sẽ bị héo và mất điểm nếu bạn không check-in trong 24 giờ tới!"
+              "Cây sẽ bị héo và mất điểm nếu bạn không check-in trong 24 giờ tới!",
+              user.user_id
             );
           }
         }

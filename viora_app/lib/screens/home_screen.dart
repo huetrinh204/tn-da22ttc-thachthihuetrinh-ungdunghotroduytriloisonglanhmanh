@@ -12,14 +12,12 @@ import '../theme/app_colors.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
-import 'habits_screen.dart';
 import 'grow_screen.dart';
 import 'community_screen.dart';
 import 'profile_screen.dart';
 import 'onboarding_screen.dart';
 import '../services/notification_inbox_store.dart';
 import 'notifications_inbox_screen.dart';
-import 'ai_chat_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,6 +30,8 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   static const String _lastSeenPlantLevelKey = "last_seen_plant_level";
   int _currentIndex = 0;
   final GlobalKey<_DashboardTabState> _dashboardKey = GlobalKey<_DashboardTabState>();
+  double _bubbleDx = -1; // -1 = chưa khởi tạo
+  double _bubbleDy = -1;
   bool _isCheckingPlantLevel = false;
   bool _showGlobalLevelUpAnimation = false;
   int? _levelUpFromLevel;
@@ -59,7 +59,10 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _maybeOpenHabitsAfterOnboarding() async {
     if (!await FlowPrefs.consumeOpenHabitsAfterOnboarding()) return;
-    switchToTab(AppTabs.habits);
+    _currentIndex = AppTabs.today;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppNavigation.openHabits();
+    });
   }
 
   @override
@@ -130,19 +133,6 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _onHabitCheckInCompleted() async {
-    await _checkAndShowGlobalPlantLevelUp();
-  }
-
-  /// Called when any habit is deleted – forces GrowScreen to reload and
-  /// refreshes the Dashboard so the plant card shows the updated XP.
-  void _onHabitDeleted() {
-    setState(() => _growScreenVersion++);
-    if (_dashboardKey.currentState != null) {
-      _dashboardKey.currentState!._loadData();
-    }
-  }
-
   void switchToTab(int index) {
     _onTabTapped(AppTabs.normalize(index));
   }
@@ -151,19 +141,12 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     switch (index) {
       case AppTabs.today:
         return _DashboardTab(key: _dashboardKey);
-      case AppTabs.habits:
-        return HabitsScreen(
-          onHabitCheckInCompleted: _onHabitCheckInCompleted,
-          onHabitDeleted: _onHabitDeleted,
-        );
       case AppTabs.community:
         return const CommunityScreen();
       case AppTabs.grow:
         return GrowScreen(key: ValueKey('grow_$_growScreenVersion'));
       case AppTabs.me:
         return const ProfileScreen();
-      case AppTabs.aiChat:
-        return const AiChatScreen();
       default:
         return _DashboardTab(key: _dashboardKey);
     }
@@ -180,6 +163,8 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final globalLevelUpOverlay =
         _showGlobalLevelUpAnimation && _levelUpFromLevel != null && _levelUpToLevel != null
             ? LevelUpAnimation(
@@ -205,6 +190,42 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           bottomNavigationBar: _buildBottomNavBar(context),
         ),
         if (globalLevelUpOverlay != null) globalLevelUpOverlay,
+        // Floating AI Coach chat bubble — draggable
+        Positioned(
+          left: _bubbleDx < 0 ? screenWidth - 72 : _bubbleDx,
+          top: _bubbleDy < 0 ? screenHeight - 180 : _bubbleDy,
+          child: GestureDetector(
+            onTap: () => AppNavigation.openAiChat(),
+            onPanUpdate: (details) {
+              setState(() {
+                final currentX = _bubbleDx < 0 ? screenWidth - 72 : _bubbleDx;
+                final currentY = _bubbleDy < 0 ? screenHeight - 180 : _bubbleDy;
+                _bubbleDx = (currentX + details.delta.dx).clamp(0, screenWidth - 56);
+                _bubbleDy = (currentY + details.delta.dy).clamp(0, screenHeight - 160);
+              });
+            },
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.chat_bubble_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -214,11 +235,9 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final l10n = AppLocalizations.of(context)!;
     final navItems = [
       _NavItem(icon: AppIcons.home, label: l10n.today),
-      _NavItem(icon: AppIcons.habits, label: l10n.habits),
       _NavItem(icon: AppIcons.community, label: l10n.community),
       _NavItem(icon: AppIcons.growth, label: l10n.grow),
       _NavItem(icon: AppIcons.profile, label: l10n.navMe),
-      _NavItem(icon: AppIcons.aiChat, label: 'AI Coach'),
     ];
     return Container(
       decoration: BoxDecoration(
@@ -310,6 +329,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   bool isLoading = true;
   bool profileIncomplete = false;
   int unreadNotificationsCount = 0;
+  List _todayHabits = [];
+  String _token = '';
 
   // Plant data
   String plantType = "bamboo";
@@ -339,16 +360,16 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
 
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString("token") ?? "";
+    _token = prefs.getString("token") ?? "";
 
-    final profileRes = await ApiService.getProfile(token);
-    final streakRes = await ApiService.getStreak(token);
-    final habitsRes = await ApiService.getTodayHabits(token);
-    final plantRes = await ApiService.getPlant(token);
+    final profileRes = await ApiService.getProfile(_token);
+    final streakRes = await ApiService.getStreak(_token);
+    final habitsRes = await ApiService.getTodayHabits(_token);
+    final plantRes = await ApiService.getPlant(_token);
     final incomplete = await FlowPrefs.isProfileIncomplete();
     
     // Load community notifications unread count
-    final notificationsRes = await ApiService.getNotifications(token);
+    final notificationsRes = await ApiService.getNotifications(_token);
     int unread = 0;
     if (notificationsRes["notifications"] != null) {
       final notifs = notificationsRes["notifications"] as List;
@@ -376,9 +397,9 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       profileIncomplete = incomplete;
       unreadNotificationsCount = unread;
 
-      final habits = habitsRes["habits"] as List? ?? [];
-      totalToday = habits.length;
-      completedToday = habits.where((h) => h["is_completed"] == 1).length;
+      _todayHabits = habitsRes["habits"] as List? ?? [];
+      totalToday = _todayHabits.length;
+      completedToday = _todayHabits.where((h) => h["is_completed"] == 1).length;
 
       // Plant
       final plant = plantRes["plant"];
@@ -538,7 +559,6 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
 
   @override
   Widget build(BuildContext context) {
-    final progress = totalToday == 0 ? 0.0 : completedToday / totalToday;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -596,12 +616,8 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                 _buildPlantCard(),
                 const SizedBox(height: 16),
 
-                // Today progress card
-                _buildTodayCard(progress),
-                const SizedBox(height: 16),
-
-                // AI Coach shortcut
-                _buildAiCoachCard(),
+                // Today's Habits section
+                _buildHabitsSection(),
                 const SizedBox(height: 16),
 
                 // Motivational quote
@@ -849,194 +865,181 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     );
   }
 
-  Color _getProgressColor(double progress) {
-    if (progress == 0.0) return AppColors.error;
-    if (progress < 0.35) {
-      return Color.lerp(AppColors.error, AppColors.warning, progress / 0.35)!;
-    } else if (progress < 0.7) {
-      return Color.lerp(AppColors.warning, const Color(0xFFFBC02D), (progress - 0.35) / 0.35)!;
-    } else if (progress < 1.0) {
-      return Color.lerp(const Color(0xFFFBC02D), AppColors.primary, (progress - 0.7) / 0.3)!;
-    } else {
-      return AppColors.primaryDark;
-    }
-  }
-
-  Widget _buildTodayCard(double progress) {
+  Widget _buildHabitsSection() {
     final l10n = AppLocalizations.of(context)!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.darkSurface : AppColors.surface;
     final allDone = completedToday == totalToday && totalToday > 0;
+
     return Material(
       color: cardColor,
       borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: () => AppNavigation.openHabits(),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(AppIcons.calendarCheck,
-                            color: AppColors.primary, size: 18),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        l10n.today,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: context.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: allDone
-                          ? AppColors.primaryLight
-                          : AppColors.border.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(20),
+                      child: const Icon(AppIcons.calendarCheck,
+                          color: AppColors.primary, size: 18),
                     ),
-                    child: Text(
-                      l10n.completed(completedToday, totalToday),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.today,
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: allDone
-                            ? AppColors.primaryDark
-                            : context.textSecondary,
+                        color: context.textPrimary,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: totalToday == 0
-                      ? 0.0
-                      : (completedToday == 0 ? 0.06 : progress),
-                  minHeight: 10,
-                  backgroundColor: (totalToday > 0 && completedToday == 0)
-                      ? AppColors.error.withValues(alpha: 0.1)
-                      : AppColors.primaryLight,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    totalToday == 0
-                        ? AppColors.border
-                        : _getProgressColor(progress),
-                  ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                totalToday == 0
-                    ? l10n.noHabitsYet
-                    : allDone
-                        ? l10n.allDoneToday
-                        : l10n.habitsRemaining(totalToday - completedToday),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: allDone ? AppColors.primary : context.textSecondary,
-                  fontWeight: allDone ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-              if (totalToday == 0) ...[
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: allDone
+                        ? AppColors.primaryLight
+                        : AppColors.border.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Text(
-                    l10n.tapToAddFirstHabit,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                    l10n.completed(completedToday, totalToday),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: allDone
+                          ? AppColors.primaryDark
+                          : context.textSecondary,
                     ),
                   ),
                 ),
               ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAiCoachCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: isDark ? const Color(0xFF1A2E27) : const Color(0xFFEAF7F2),
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: () => AppNavigation.openAiChat(),
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.2),
             ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+            const SizedBox(height: 16),
+            if (_todayHabits.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(AppIcons.calendarCheck, size: 40, color: context.textSecondary.withValues(alpha: 0.5)),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.noHabitsYet,
+                        style: TextStyle(color: context.textSecondary),
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Icon(AppIcons.aiChat, color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Viora Coach 🌿',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: context.textPrimary,
+              )
+            else
+              ...List.generate(_todayHabits.length, (i) {
+                final h = _todayHabits[i];
+                final isHabitCompleted = h["is_completed"] == 1;
+                final habitName = h["name"] ?? "";
+                final target = double.tryParse(h["target_count"]?.toString() ?? '') ?? 1.0;
+                final current = double.tryParse(h["completed_count"]?.toString() ?? '') ?? (isHabitCompleted ? target : 0.0);
+                final habitProgress = target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
+
+                return Padding(
+                  padding: EdgeInsets.only(bottom: i < _todayHabits.length - 1 ? 8 : 0),
+                  child: Material(
+                    color: isHabitCompleted
+                        ? AppColors.primaryLight
+                        : (isDark ? AppColors.darkBackground : AppColors.background),
+                    borderRadius: BorderRadius.circular(12),
+                    child: InkWell(
+                      onTap: () => AppNavigation.openHabits(),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        child: Row(
+                          children: [
+                            if (isHabitCompleted)
+                              const Icon(AppIcons.checkCircle, color: AppColors.primary, size: 22)
+                            else
+                              Icon(Icons.circle_outlined, color: AppColors.border, size: 22),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    habitName,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: isHabitCompleted
+                                          ? AppColors.primary
+                                          : context.textPrimary,
+                                      decoration: isHabitCompleted
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: habitProgress,
+                                      minHeight: 4,
+                                      backgroundColor: AppColors.border.withValues(alpha: 0.3),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        isHabitCompleted ? AppColors.primary : AppColors.primaryLight,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "${current.toInt()}/${target.toInt()}",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: context.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Hỏi về sức khỏe, thói quen, dinh dưỡng...',
-                      style: TextStyle(fontSize: 12, color: context.textSecondary),
-                    ),
-                  ],
+                  ),
+                );
+              }),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.center,
+              child: TextButton.icon(
+                onPressed: () => AppNavigation.openHabits(),
+                icon: const Icon(AppIcons.chevronRight, size: 16),
+                label: Text(totalToday > 0 ? 'Xem tất cả thói quen' : l10n.addHabit),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
                 ),
               ),
-              Icon(AppIcons.chevronRight, color: AppColors.primary, size: 20),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

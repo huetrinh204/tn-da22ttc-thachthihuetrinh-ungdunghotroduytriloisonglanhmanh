@@ -2,6 +2,7 @@ import { Router } from "express";
 import pool from "../config/db";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { sendPushNotification } from "../services/fcm_push_service";
 
 dotenv.config();
 
@@ -86,6 +87,7 @@ router.post("/", authMiddleware, async (req: any, res) => {
   if (!name) return res.status(400).json({ message: "Tên thói quen không được trống" });
 
   try {
+    const finalReminderTime = (reminder_enabled !== false && reminder_time) ? reminder_time : null;
     const [result]: any = await pool.query(
       `INSERT INTO habits (user_id, name, category, frequency, target_count, icon, color, reminder_time)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -97,7 +99,7 @@ router.post("/", authMiddleware, async (req: any, res) => {
         target_count || 1,
         icon || "⭐",
         color || "#4CAF50",
-        (reminder_enabled !== false && reminder_time) ? reminder_time : null,
+        finalReminderTime,
       ]
     );
 
@@ -105,6 +107,9 @@ router.post("/", authMiddleware, async (req: any, res) => {
       "SELECT * FROM habits WHERE id = ?",
       [result.insertId]
     );
+
+    // Push ngay nếu reminder vừa set gần giờ hiện tại
+    await sendImmediateIfNeeded(req.user.id, name, finalReminderTime);
 
     res.json({ message: "Habit created", habit: rows[0] });
 
@@ -126,12 +131,46 @@ router.put("/:id", authMiddleware, async (req: any, res) => {
       [name, category, icon, color, target_count, finalReminderTime, req.params.id, req.user.id]
     );
 
+    // Push ngay nếu reminder vừa set gần giờ hiện tại
+    await sendImmediateIfNeeded(req.user.id, name, finalReminderTime);
+
     res.json({ message: "Habit updated" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// Helper: gửi push ngay nếu reminder_time gần giờ hiện tại (trong vòng 10 phút)
+async function sendImmediateIfNeeded(userId: number, habitName: string, reminderTime: string | null) {
+  if (!reminderTime) return;
+  try {
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const currentMin = vietnamTime.getUTCHours() * 60 + vietnamTime.getUTCMinutes();
+
+    const parts = reminderTime.split(':');
+    const reminderMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    const diff = currentMin - reminderMin;
+
+    if (diff >= 0 && diff <= 10) {
+      const [userRows]: any = await pool.query(
+        "SELECT fcm_token FROM users WHERE id = ?", [userId]
+      );
+      if (userRows.length > 0 && userRows[0].fcm_token) {
+        await sendPushNotification(
+          userRows[0].fcm_token,
+          '⏰ Đến giờ rồi!',
+          `Đã đến lúc thực hiện thói quen "${habitName}" 💪`,
+          userId
+        );
+        console.log(`[HabitImmediate] Push sent to user=${userId} habit="${habitName}" diffMin=${diff}`);
+      }
+    }
+  } catch (error) {
+    console.error('[HabitImmediate] Error:', error);
+  }
+}
 
 // ================= DELETE HABIT (soft delete) =================
 router.delete("/:id", authMiddleware, async (req: any, res) => {
@@ -479,50 +518,26 @@ router.get("/plant", authMiddleware, async (req: any, res) => {
 
 // helper: cập nhật plant experience và level (mỗi habit hoàn thành = +1 EXP)
 async function updatePlant(userId: number, today: string): Promise<number> {
-  // Đếm habits đã hoàn thành hôm nay (chỉ tính active habits, is_completed = 1)
-  const [doneRows]: any = await pool.query(
-    `SELECT COUNT(*) as done FROM habit_logs hl
-     INNER JOIN habits h ON hl.habit_id = h.id
-     WHERE hl.user_id = ? AND hl.log_date = ? AND h.is_active = 1 AND hl.is_completed = 1`,
+  // Đảm bảo plant tồn tại (atomic INSERT IGNORE để tránh race condition)
+  await pool.query(
+    `INSERT IGNORE INTO plants (user_id, plant_type, level, experience, last_watered)
+     VALUES (?, 'sprout', 1, 0, ?)`,
     [userId, today]
   );
-  const points = doneRows[0].done;
-  console.log(`[Plant] userId=${userId} completedToday=${points} today=${today}`);
-  if (points === 0) return 0;
 
-  // Lấy hoặc tạo plant
-  const [plantRows]: any = await pool.query(
-    "SELECT * FROM plants WHERE user_id = ?",
-    [userId]
+  // Atomic UPDATE: cộng dồn experience để tránh race condition khi check-in nhiều habit cùng lúc
+  await pool.query(
+    `UPDATE plants SET experience = experience + 1, last_watered = ? WHERE user_id = ?`,
+    [today, userId]
   );
 
-  if (plantRows.length === 0) {
-    console.log(`[Plant] No plant found, creating new`);
-    await pool.query(
-      `INSERT INTO plants (user_id, plant_type, level, experience, last_watered)
-       VALUES (?, 'sprout', 1, ?, ?)`,
-      [userId, points, today]
-    );
-    return points;
-  }
-
+  // Đọc lại experience sau khi đã cộng để tính level
+  const [plantRows]: any = await pool.query(
+    "SELECT experience, level FROM plants WHERE user_id = ?",
+    [userId]
+  );
   const plant = plantRows[0];
-
-  // Chỉ cộng điểm 1 lần/ngày
-  const lastWatered = plant.last_watered
-    ? (plant.last_watered instanceof Date
-        ? plant.last_watered.toISOString().split("T")[0]
-        : String(plant.last_watered).split("T")[0])
-    : null;
-
-  console.log(`[Plant] lastWatered=${lastWatered} today=${today} exp=${plant.experience}`);
-
-  if (lastWatered === today) {
-    console.log(`[Plant] Already watered today, skip`);
-    return 0;
-  }
-
-  const newExp = plant.experience + points;
+  const newExp = plant.experience;
 
   // Hệ thống 15 level
   const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
@@ -534,16 +549,17 @@ async function updatePlant(userId: number, today: string): Promise<number> {
     }
   }
 
-  console.log(`[Plant] newExp=${newExp} newLevel=${newLevel} oldLevel=${plant.level}`);
-  
-  await pool.query(
-    `UPDATE plants SET experience = ?, level = ?, last_watered = ? WHERE user_id = ?`,
-    [newExp, newLevel, today, userId]
-  );
+  console.log(`[Plant] +1 EXP! userId=${userId} exp now=${newExp} level=${plant.level} -> ${newLevel}`);
 
-  console.log(`[Plant] Updated plant: exp=${plant.experience} -> ${newExp}, level=${plant.level} -> ${newLevel}`);
-  
-  return points;
+  if (newLevel !== plant.level) {
+    await pool.query(
+      `UPDATE plants SET level = ? WHERE user_id = ?`,
+      [newLevel, userId]
+    );
+    console.log(`[Plant] Level up! userId=${userId} level=${newLevel}`);
+  }
+
+  return 1;
 }
 
 // Helper: Recalculate plant experience from scratch (mỗi habit hoàn thành = +1 EXP)

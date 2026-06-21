@@ -341,49 +341,49 @@ abstract class AppLocalizations {
   /// No description provided for @earnTip1.
   ///
   /// In vi, this message translates to:
-  /// **'Hoàn thành ≥ 1 habit trong ngày'**
+  /// **'Mỗi habit hoàn thành trong ngày'**
   String get earnTip1;
 
   /// No description provided for @earnReward1.
   ///
   /// In vi, this message translates to:
-  /// **'+1 điểm'**
+  /// **'+1 EXP'**
   String get earnReward1;
 
   /// No description provided for @earnTip2.
   ///
   /// In vi, this message translates to:
-  /// **'Hoàn thành ≥ 50% habits trong ngày'**
+  /// **'EXP tích lũy để nâng cấp cây'**
   String get earnTip2;
 
   /// No description provided for @earnReward2.
   ///
   /// In vi, this message translates to:
-  /// **'+2 điểm'**
+  /// **'15 cấp độ'**
   String get earnReward2;
 
   /// No description provided for @earnTip3.
   ///
   /// In vi, this message translates to:
-  /// **'Hoàn thành 100% habits trong ngày'**
+  /// **'Duy trì check-in mỗi ngày'**
   String get earnTip3;
 
   /// No description provided for @earnReward3.
   ///
   /// In vi, this message translates to:
-  /// **'+3 điểm'**
+  /// **'Cây luôn tươi tốt'**
   String get earnReward3;
 
   /// No description provided for @earnTip4.
   ///
   /// In vi, this message translates to:
-  /// **'Không check-in 3 ngày liên tiếp'**
+  /// **'Bỏ check-in 3 ngày liên tiếp'**
   String get earnTip4;
 
   /// No description provided for @earnReward4.
   ///
   /// In vi, this message translates to:
-  /// **'Cây héo'**
+  /// **'-3 EXP & cây héo'**
   String get earnReward4;
 
   /// No description provided for @congratulations.

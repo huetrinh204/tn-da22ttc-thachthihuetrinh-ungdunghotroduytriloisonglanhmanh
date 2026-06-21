@@ -730,6 +730,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: VioraAppBar(
             title: l10n.habits,
+            showBack: true,
             actions: [
               IconButton(
                 key: _treeIconKey,

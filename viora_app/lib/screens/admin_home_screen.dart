@@ -47,13 +47,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     
-    // Auto-reinit tabs if stale (hot reload fix)
-    if (_tabsWithCallback.length < 6) {
-      _initTabs();
-    }
-    if (_currentIndex >= _tabsWithCallback.length) {
-      _currentIndex = 0;
-    }
+    if (_tabsWithCallback.length < 6) _initTabs();
+    if (_currentIndex >= _tabsWithCallback.length) _currentIndex = 0;
     
     return Scaffold(
       appBar: VioraAppBar(

@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app_tabs.dart';
 import '../services/api_service.dart';
 import '../models/post.dart';
+import '../screens/habits_screen.dart';
+import '../screens/ai_chat_screen.dart';
 import '../screens/post_detail_screen.dart';
 import '../screens/user_profile_screen.dart';
 
@@ -16,11 +18,15 @@ class AppNavigation {
   }
 
   static void openToday() => switchToTab(AppTabs.today);
-  static void openHabits() => switchToTab(AppTabs.habits);
+  static void openHabits() => navigatorKey.currentState?.push(
+    MaterialPageRoute(builder: (_) => const HabitsScreen()),
+  );
   static void openCommunity() => switchToTab(AppTabs.community);
   static void openGrow() => switchToTab(AppTabs.grow);
   static void openMe() => switchToTab(AppTabs.me);
-  static void openAiChat() => switchToTab(AppTabs.aiChat);
+  static void openAiChat() => navigatorKey.currentState?.push(
+    MaterialPageRoute(builder: (_) => const AiChatScreen()),
+  );
 
   static void openPlant() => openGrow();
   static void openProfile() => openMe();

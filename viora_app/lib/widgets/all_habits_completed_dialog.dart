@@ -105,7 +105,13 @@ class _AllHabitsCompletedDialogState extends State<AllHabitsCompletedDialog>
                     ),
                   ],
                 ),
-                child: Column(
+                child: DefaultTextStyle.merge(
+                  style: const TextStyle(
+                    decoration: TextDecoration.none,
+                    decorationColor: Colors.transparent,
+                    decorationThickness: 0,
+                  ),
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
@@ -138,6 +144,7 @@ class _AllHabitsCompletedDialogState extends State<AllHabitsCompletedDialog>
                     const SizedBox(height: 20),
                     Text(
                       l10n.allCompletedTitle,
+                      textDirection: TextDirection.ltr,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24,
@@ -149,6 +156,7 @@ class _AllHabitsCompletedDialogState extends State<AllHabitsCompletedDialog>
                     const SizedBox(height: 12),
                     Text(
                       l10n.allCompletedBody,
+                      textDirection: TextDirection.ltr,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
@@ -159,6 +167,7 @@ class _AllHabitsCompletedDialogState extends State<AllHabitsCompletedDialog>
                     const SizedBox(height: 8),
                     Text(
                       l10n.allCompletedSubtitle,
+                      textDirection: TextDirection.ltr,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 13,
@@ -182,6 +191,7 @@ class _AllHabitsCompletedDialogState extends State<AllHabitsCompletedDialog>
                         ),
                         child: Text(
                           l10n.allCompletedContinue,
+                          textDirection: TextDirection.ltr,
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
@@ -194,6 +204,7 @@ class _AllHabitsCompletedDialogState extends State<AllHabitsCompletedDialog>
                 ),
               ),
             ),
+          ),
           ],
         ),
       ),
