@@ -18,9 +18,11 @@ class AppNavigation {
   }
 
   static void openToday() => switchToTab(AppTabs.today);
-  static void openHabits() => navigatorKey.currentState?.push(
-    MaterialPageRoute(builder: (_) => const HabitsScreen()),
-  );
+  static Future<void> openHabits() async {
+    await navigatorKey.currentState?.push(
+      MaterialPageRoute(builder: (_) => const HabitsScreen()),
+    );
+  }
   static void openCommunity() => switchToTab(AppTabs.community);
   static void openGrow() => switchToTab(AppTabs.grow);
   static void openMe() => switchToTab(AppTabs.me);

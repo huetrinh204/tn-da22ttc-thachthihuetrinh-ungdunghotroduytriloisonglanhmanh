@@ -266,6 +266,32 @@ router.post("/posts", authMiddleware, async (req: any, res: Response) => {
     );
 
     const post = await fetchPostById(result.insertId, userId, req);
+
+    // Notify followers about the new post
+    try {
+      const [userRows]: any = await pool.query(
+        "SELECT name FROM users WHERE id = ?", [userId]
+      );
+      const userName = userRows[0]?.name || 'Someone';
+      const [followers]: any = await pool.query(
+        "SELECT follower_id FROM user_follows WHERE following_id = ?", [userId]
+      );
+      for (const f of followers) {
+        await pool.query(
+          `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+           VALUES (?, 'new_post', ?, ?, '📝', ?, 0, NOW())`,
+          [
+            f.follower_id,
+            'Bài viết mới từ người bạn theo dõi',
+            `${userName} vừa đăng bài viết mới`,
+            JSON.stringify({ post_id: result.insertId, user_id: userId }),
+          ]
+        );
+      }
+    } catch (notifError) {
+      console.log("[NewPost] Failed to notify followers:", notifError);
+    }
+
     res.json({ post });
   } catch (error) {
     console.log(error);
@@ -293,6 +319,12 @@ router.delete("/posts/:postId", authMiddleware, async (req: any, res: Response) 
     }
 
     await pool.query("DELETE FROM community_posts WHERE id = ?", [postId]);
+
+    // Clean up related warning notifications
+    await pool.query(
+      "DELETE FROM user_notifications WHERE JSON_EXTRACT(payload, '$.post_id') = ?",
+      [postId]
+    );
 
     const imageUrl = rows[0].image_url as string | null;
     if (imageUrl && imageUrl.startsWith("/uploads/")) {
@@ -1029,39 +1061,58 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
       });
     }
 
-    // Add user notifications (admin warnings)
+    // Add user notifications (admin warnings, new posts, etc.)
     for (const row of userNotifRows) {
       const payload = row.payload && typeof row.payload === 'string'
         ? JSON.parse(row.payload)
         : row.payload;
 
-      // Resolve admin avatar (from reported_by or fallback to any admin)
-      let adminAvatar: string | null = null;
-      const reportedBy = payload?.reported_by;
-      if (reportedBy) {
-        const [adminRows]: any = await pool.query(
-          "SELECT avatar_url FROM users WHERE id = ?",
-          [reportedBy]
-        );
-        if (adminRows.length > 0) {
-          adminAvatar = resolveAvatar(adminRows[0].avatar_url);
+      let actorId = "admin";
+      let actorName = "Viora Admin";
+      let actorAvatar: string | null = null;
+
+      if (row.type === 'new_post') {
+        // Resolve the actual poster's info
+        const posterId = payload?.user_id;
+        if (posterId) {
+          const [posterRows]: any = await pool.query(
+            "SELECT name, avatar_url FROM users WHERE id = ?",
+            [posterId]
+          );
+          if (posterRows.length > 0) {
+            actorId = String(posterId);
+            actorName = posterRows[0].name;
+            actorAvatar = resolveAvatar(posterRows[0].avatar_url);
+          }
         }
-      }
-      if (!adminAvatar) {
-        const [fallbackRows]: any = await pool.query(
-          "SELECT avatar_url FROM users WHERE role = 'admin' AND avatar_url IS NOT NULL LIMIT 1"
-        );
-        if (fallbackRows.length > 0) {
-          adminAvatar = resolveAvatar(fallbackRows[0].avatar_url);
+      } else {
+        // Resolve admin avatar (from reported_by or fallback to any admin)
+        const reportedBy = payload?.reported_by;
+        if (reportedBy) {
+          const [adminRows]: any = await pool.query(
+            "SELECT avatar_url FROM users WHERE id = ?",
+            [reportedBy]
+          );
+          if (adminRows.length > 0) {
+            actorAvatar = resolveAvatar(adminRows[0].avatar_url);
+          }
+        }
+        if (!actorAvatar) {
+          const [fallbackRows]: any = await pool.query(
+            "SELECT avatar_url FROM users WHERE role = 'admin' AND avatar_url IS NOT NULL LIMIT 1"
+          );
+          if (fallbackRows.length > 0) {
+            actorAvatar = resolveAvatar(fallbackRows[0].avatar_url);
+          }
         }
       }
 
       notifications.push({
         id: `user_notif_${row.id}`,
-        type: row.type, // 'warning' for admin warnings
-        actor_id: "admin",
-        actor_name: "Viora Admin",
-        actor_avatar: adminAvatar,
+        type: row.type,
+        actor_id: actorId,
+        actor_name: actorName,
+        actor_avatar: actorAvatar,
         title: row.title,
         body: row.body,
         emoji: row.emoji,

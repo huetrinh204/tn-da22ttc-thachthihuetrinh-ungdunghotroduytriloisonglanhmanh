@@ -247,7 +247,7 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
       await updateHabitStreak(req.params.id, today);
 
       // cập nhật plant và lấy số điểm được cộng
-      const pointsEarned = await updatePlant(req.user.id, today);
+      const plantUpdate = await updatePlant(req.user.id, today);
 
       // kiểm tra và unlock achievements
       const newAchievements = await checkAchievements(req.user.id);
@@ -255,15 +255,37 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
       res.json({ 
         message: "Checked in completely", 
         is_completed: true, 
-        points_earned: pointsEarned,
-        new_achievements: newAchievements 
+        points_earned: plantUpdate.points_earned,
+        new_achievements: newAchievements,
+        plant: {
+          experience: plantUpdate.experience,
+          level: plantUpdate.level,
+          is_wilted: plantUpdate.is_wilted,
+          plant_type: plantUpdate.plant_type,
+        }
       });
     } else {
+      // Vẫn trả về plant data hiện tại để frontend cập nhật
+      const [plantRows]: any = await pool.query(
+        "SELECT experience, level, is_wilted, plant_type FROM plants WHERE user_id = ?",
+        [req.user.id]
+      );
+      let plantData = null;
+      if (plantRows.length > 0) {
+        const p = plantRows[0];
+        plantData = {
+          experience: p.experience,
+          level: p.level,
+          is_wilted: Boolean(p.is_wilted),
+          plant_type: p.plant_type || 'sprout',
+        };
+      }
       res.json({
         message: "Progress updated",
         is_completed: false,
         points_earned: 0,
-        new_achievements: []
+        new_achievements: [],
+        plant: plantData,
       });
     }
   } catch (error) {
@@ -517,7 +539,7 @@ router.get("/plant", authMiddleware, async (req: any, res) => {
 });
 
 // helper: cập nhật plant experience và level (mỗi habit hoàn thành = +1 EXP)
-async function updatePlant(userId: number, today: string): Promise<number> {
+async function updatePlant(userId: number, today: string): Promise<{ points_earned: number; experience: number; level: number; is_wilted: boolean; plant_type: string }> {
   // Đảm bảo plant tồn tại (atomic INSERT IGNORE để tránh race condition)
   await pool.query(
     `INSERT IGNORE INTO plants (user_id, plant_type, level, experience, last_watered)
@@ -533,7 +555,7 @@ async function updatePlant(userId: number, today: string): Promise<number> {
 
   // Đọc lại experience sau khi đã cộng để tính level
   const [plantRows]: any = await pool.query(
-    "SELECT experience, level FROM plants WHERE user_id = ?",
+    "SELECT experience, level, is_wilted, plant_type FROM plants WHERE user_id = ?",
     [userId]
   );
   const plant = plantRows[0];
@@ -559,7 +581,13 @@ async function updatePlant(userId: number, today: string): Promise<number> {
     console.log(`[Plant] Level up! userId=${userId} level=${newLevel}`);
   }
 
-  return 1;
+  return {
+    points_earned: 1,
+    experience: newExp,
+    level: newLevel,
+    is_wilted: Boolean(plant.is_wilted),
+    plant_type: plant.plant_type || 'sprout',
+  };
 }
 
 // Helper: Recalculate plant experience from scratch (mỗi habit hoàn thành = +1 EXP)

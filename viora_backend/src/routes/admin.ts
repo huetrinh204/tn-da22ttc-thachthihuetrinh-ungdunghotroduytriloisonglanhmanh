@@ -249,6 +249,13 @@ router.delete("/posts/:postId", authMiddleware, adminMiddleware, async (req: any
     const { postId } = req.params;
 
     await pool.query("DELETE FROM community_posts WHERE id = ?", [postId]);
+
+    // Clean up related warning notifications
+    await pool.query(
+      "DELETE FROM user_notifications WHERE JSON_EXTRACT(payload, '$.post_id') = ?",
+      [postId]
+    );
+
     res.json({ message: "Post deleted successfully" });
   } catch (error) {
     console.error("Delete post error:", error);
@@ -382,6 +389,12 @@ router.put("/posts/:postId/unwarn", authMiddleware, adminMiddleware, async (req:
 
     await pool.query("UPDATE community_posts SET is_warned = 0, edited_after_warn = 0 WHERE id = ?", [postId]);
 
+    // Mark old warning notifications as read so they no longer count as unread
+    await pool.query(
+      "UPDATE user_notifications SET is_read = 1 WHERE type = 'warning' AND JSON_EXTRACT(payload, '$.post_id') = ?",
+      [postId]
+    );
+
     // Notify user that their post has been unflagged
     await pool.query(
       `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
@@ -416,6 +429,12 @@ router.put("/posts/:postId/approve", authMiddleware, adminMiddleware, async (req
 
     await pool.query(
       "UPDATE community_posts SET is_warned = 0, edited_after_warn = 0 WHERE id = ?",
+      [postId]
+    );
+
+    // Mark old warning notifications as read so they no longer count as unread
+    await pool.query(
+      "UPDATE user_notifications SET is_read = 1 WHERE type = 'warning' AND JSON_EXTRACT(payload, '$.post_id') = ?",
       [postId]
     );
 
@@ -458,6 +477,12 @@ router.delete("/posts/:postId/reject", authMiddleware, adminMiddleware, async (r
 
     // Delete post
     await pool.query("DELETE FROM community_posts WHERE id = ?", [postId]);
+
+    // Clean up old warning notifications
+    await pool.query(
+      "DELETE FROM user_notifications WHERE JSON_EXTRACT(payload, '$.post_id') = ?",
+      [postId]
+    );
 
     // Notify user that their post has been rejected and deleted
     await pool.query(

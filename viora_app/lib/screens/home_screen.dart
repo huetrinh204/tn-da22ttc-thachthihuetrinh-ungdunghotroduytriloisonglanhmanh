@@ -82,17 +82,20 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return 1;
   }
 
-  Future<void> _checkAndShowGlobalPlantLevelUp() async {
+  Future<void> _checkAndShowGlobalPlantLevelUp([Map<String, dynamic>? plantData]) async {
     if (_isCheckingPlantLevel || _showGlobalLevelUpAnimation) return;
     _isCheckingPlantLevel = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString("token") ?? "";
-      if (token.isEmpty) return;
 
-      final res = await ApiService.getPlant(token);
-      if (!mounted) return;
-      final plant = res["plant"];
+      Map<String, dynamic>? plant = plantData;
+      if (plant == null) {
+        final token = prefs.getString("token") ?? "";
+        if (token.isEmpty) return;
+        final res = await ApiService.getPlant(token);
+        if (!mounted) return;
+        plant = res["plant"];
+      }
       if (plant == null) return;
 
       final exp = plant["experience"] ?? 0;
@@ -105,7 +108,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (newLevel <= lastSeenLevel) return;
 
       setState(() {
-        _globalPlantType = (plant["plant_type"] ?? "bamboo").toString();
+        _globalPlantType = (plant!["plant_type"] ?? "bamboo").toString();
         _levelUpFromLevel = lastSeenLevel.clamp(1, 15);
         _levelUpToLevel = newLevel.clamp(1, 15);
         _showGlobalLevelUpAnimation = true;
@@ -140,7 +143,10 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildScreen(int index) {
     switch (index) {
       case AppTabs.today:
-        return _DashboardTab(key: _dashboardKey);
+        return _DashboardTab(
+          key: _dashboardKey,
+          onPlantLoaded: _checkAndShowGlobalPlantLevelUp,
+        );
       case AppTabs.community:
         return const CommunityScreen();
       case AppTabs.grow:
@@ -314,7 +320,9 @@ class _NavItem {
 }
 
 class _DashboardTab extends StatefulWidget {
-  const _DashboardTab({super.key});
+  final void Function([Map<String, dynamic>? plantData])? onPlantLoaded;
+
+  const _DashboardTab({super.key, this.onPlantLoaded});
 
   @override
   State<_DashboardTab> createState() => _DashboardTabState();
@@ -418,6 +426,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
 
     _maybeShowStreakRecovery();
     _maybePromptFirstHabit();
+    widget.onPlantLoaded?.call(plantRes["plant"]);
   }
 
   Future<void> _maybePromptFirstHabit() async {
@@ -619,12 +628,12 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                 _buildPlantCard(),
                 const SizedBox(height: 16),
 
-                // Community section
-                _buildCommunitySection(),
-                const SizedBox(height: 16),
-
                 // Today's Habits section
                 _buildHabitsSection(),
+                const SizedBox(height: 16),
+
+                // Community section
+                _buildCommunitySection(),
                 const SizedBox(height: 16),
 
                 // Motivational quote
@@ -976,7 +985,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                         : (isDark ? AppColors.darkBackground : AppColors.background),
                     borderRadius: BorderRadius.circular(12),
                     child: InkWell(
-                      onTap: () => AppNavigation.openHabits(),
+                      onTap: () async {
+                        await AppNavigation.openHabits();
+                        _loadData();
+                      },
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -1038,7 +1050,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
             Align(
               alignment: Alignment.center,
               child: TextButton.icon(
-                onPressed: () => AppNavigation.openHabits(),
+                onPressed: () async {
+                  await AppNavigation.openHabits();
+                  _loadData();
+                },
                 icon: const Icon(AppIcons.chevronRight, size: 16),
                 label: Text(totalToday > 0 ? 'Xem tất cả thói quen' : l10n.addHabit),
                 style: TextButton.styleFrom(
@@ -1057,7 +1072,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = isDark ? AppColors.darkSurface : AppColors.surface;
 
-    final recent = _notifications.take(3).toList();
+    final recent = _notifications
+      .where((n) => (n['is_read'] as int? ?? 0) == 0)
+      .take(3)
+      .toList();
 
     return Material(
       color: cardColor,
@@ -1190,6 +1208,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
         icon = Icons.check_circle;
         iconColor = AppColors.success;
         message = n['title'] as String? ?? 'Đã gỡ cảnh báo bài viết';
+      case 'new_post':
+        icon = AppIcons.add;
+        iconColor = AppColors.primary;
+        message = '$userName vừa đăng bài viết mới';
       default:
         icon = Icons.notifications;
         iconColor = AppColors.primary;

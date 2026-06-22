@@ -213,7 +213,7 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
           ),
         );
       }
-    } else if (notif.type == 'like' || notif.type == 'comment') {
+    } else if (notif.type == 'like' || notif.type == 'comment' || notif.type == 'new_post') {
       if (notif.postId != null) {
         await _navigateToPost(notif.postId!, notif);
       }
@@ -466,6 +466,11 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
         icon = Icons.warning;
         iconColor = Colors.orange;
         message = notif.title ?? 'Admin Warning';
+        break;
+      case 'new_post':
+        icon = Icons.article;
+        iconColor = AppColors.primary;
+        message = '${notif.userName} vừa đăng bài viết mới';
         break;
       default:
         icon = Icons.notifications;

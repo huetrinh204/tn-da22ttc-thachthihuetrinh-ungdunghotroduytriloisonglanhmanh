@@ -135,7 +135,12 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                       decorationColor: Colors.transparent,
                       decorationThickness: 0,
                     ),
-                    child: Column(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.72,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
@@ -313,6 +318,8 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
                       ],
                     ),
                   ),
+                ),
+              ),
                 ),
               ),
             ),
