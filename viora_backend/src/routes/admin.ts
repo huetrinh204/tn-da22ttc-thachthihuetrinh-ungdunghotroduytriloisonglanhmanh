@@ -834,17 +834,31 @@ router.get("/habits/trends", authMiddleware, adminMiddleware, async (req: any, r
 
 // ================= PLANT MANAGEMENT =================
 
-// Get all plants with user info
+// Get all plants with user info (one plant per user)
 router.get("/plants", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
   try {
-    const [plants]: any = await pool.query(`
+    const [rows]: any = await pool.query(`
       SELECT 
         p.id, p.user_id, p.plant_type, p.level, p.experience, p.last_watered,
         u.name as user_name, u.email as user_email, u.avatar_url as user_avatar
       FROM plants p
       JOIN users u ON p.user_id = u.id
+      WHERE p.id IN (
+        SELECT MIN(p2.id) FROM plants p2
+        WHERE p2.user_id = p.user_id
+      )
       ORDER BY p.experience DESC, p.level DESC
     `);
+
+    const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+    const plants = rows.map((p: any) => {
+      let calculatedLevel = 1;
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (p.experience >= thresholds[i]) { calculatedLevel = i + 1; break; }
+      }
+      p.level = calculatedLevel;
+      return p;
+    });
 
     res.json({ plants });
   } catch (error) {
@@ -858,24 +872,71 @@ router.get("/plants/:userId/history", authMiddleware, adminMiddleware, async (re
   try {
     const { userId } = req.params;
 
-    // Get plant info
-    const [plants]: any = await pool.query(
-      "SELECT * FROM plants WHERE user_id = ?",
-      [userId]
-    );
-
-    if (plants.length === 0) {
-      return res.json({ plant: null, history: [], user: null, stats: null });
-    }
-
-    const plant = plants[0];
-
-    // Get user info
-    const [users]: any = await pool.query(
+    // First get user by their primary key (id)
+    const [userRows]: any = await pool.query(
       "SELECT id, name, email, avatar_url, created_at FROM users WHERE id = ?",
       [userId]
     );
-    const user = users.length > 0 ? users[0] : null;
+    if (userRows.length === 0) {
+      return res.status(404).json({ message: "User not found", plant: null, history: [] });
+    }
+    const user = userRows[0];
+
+    // Then find plant by matching user.id with plant.user_id
+    let [plantRows]: any = await pool.query(
+      "SELECT * FROM plants WHERE user_id = ? ORDER BY id ASC LIMIT 1",
+      [user.id]
+    );
+
+    // If no plant, create one based on habit_logs data
+    if (plantRows.length === 0) {
+      const [expRows]: any = await pool.query(
+        `SELECT COUNT(*) as total_exp,
+                MAX(hl.log_date) as last_date
+         FROM habit_logs hl
+         JOIN habits h ON hl.habit_id = h.id AND h.is_active = 1
+         WHERE hl.user_id = ? AND hl.is_completed = 1`,
+        [user.id]
+      );
+      const totalExp = Number(expRows[0]?.total_exp) || 0;
+      let lastDate: string | null = null;
+      if (expRows[0]?.last_date) {
+        const d = expRows[0].last_date;
+        lastDate = d instanceof Date ? d.toISOString().split('T')[0] : String(d).split('T')[0];
+      }
+
+      const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+      let level = 1;
+      for (let i = thresholds.length - 1; i >= 0; i--) {
+        if (totalExp >= thresholds[i]) { level = i + 1; break; }
+      }
+
+      await pool.query(
+        `INSERT INTO plants (user_id, plant_type, level, experience, health, last_watered, days_without_checkin)
+         VALUES (?, 'bamboo', ?, ?, 100, ?, 0)`,
+        [user.id, level, totalExp, lastDate]
+      );
+
+      // Re-query after insert
+      [plantRows] = await pool.query(
+        "SELECT * FROM plants WHERE user_id = ? ORDER BY id ASC LIMIT 1",
+        [user.id]
+      );
+    }
+
+    if (plantRows.length === 0) {
+      console.error(`[Admin] Failed to create plant for userId=${userId}`);
+      return res.status(500).json({ message: "Failed to create plant", plant: null, history: [] });
+    }
+
+    let plant = plantRows[0];
+    // Override level to be calculated from experience (not stale DB value)
+    const thresholds = [0, 5, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525];
+    let calcLevel = 1;
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (plant.experience >= thresholds[i]) { calcLevel = i + 1; break; }
+    }
+    plant.level = calcLevel;
 
     // Get current streak
     const [streaks]: any = await pool.query(
@@ -909,7 +970,7 @@ router.get("/plants/:userId/history", authMiddleware, adminMiddleware, async (re
     // Group by date and count habits completed
     const historyMap = new Map();
     for (const row of history) {
-      const dateStr = row.date.toISOString().split('T')[0];
+      const dateStr = typeof row.date === 'string' ? row.date.split('T')[0] : String(row.date).split('T')[0];
       if (!historyMap.has(dateStr)) {
         historyMap.set(dateStr, {
           date: dateStr,

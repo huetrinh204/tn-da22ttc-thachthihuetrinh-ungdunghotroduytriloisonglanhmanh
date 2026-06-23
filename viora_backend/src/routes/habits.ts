@@ -265,9 +265,8 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
         }
       });
     } else {
-      // Vẫn trả về plant data hiện tại để frontend cập nhật
       const [plantRows]: any = await pool.query(
-        "SELECT experience, level, is_wilted, plant_type FROM plants WHERE user_id = ?",
+        "SELECT experience, level, is_wilted, plant_type FROM plants WHERE user_id = ? ORDER BY id ASC LIMIT 1",
         [req.user.id]
       );
       let plantData = null;
@@ -277,7 +276,7 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
           experience: p.experience,
           level: p.level,
           is_wilted: Boolean(p.is_wilted),
-          plant_type: p.plant_type || 'sprout',
+          plant_type: p.plant_type || 'bamboo',
         };
       }
       res.json({
@@ -540,14 +539,21 @@ router.get("/plant", authMiddleware, async (req: any, res) => {
 
 // helper: cập nhật plant experience và level (mỗi habit hoàn thành = +1 EXP)
 async function updatePlant(userId: number, today: string): Promise<{ points_earned: number; experience: number; level: number; is_wilted: boolean; plant_type: string }> {
-  // Đảm bảo plant tồn tại (atomic INSERT IGNORE để tránh race condition)
-  await pool.query(
-    `INSERT IGNORE INTO plants (user_id, plant_type, level, experience, last_watered)
-     VALUES (?, 'sprout', 1, 0, ?)`,
-    [userId, today]
+  // Đảm bảo plant tồn tại (chỉ INSERT nếu chưa có)
+  const [existingPlants]: any = await pool.query(
+    "SELECT id FROM plants WHERE user_id = ? LIMIT 1",
+    [userId]
   );
 
-  // Atomic UPDATE: cộng dồn experience để tránh race condition khi check-in nhiều habit cùng lúc
+  if (existingPlants.length === 0) {
+    await pool.query(
+      `INSERT INTO plants (user_id, plant_type, level, experience, last_watered, health)
+       VALUES (?, 'bamboo', 1, 0, ?, 100)`,
+      [userId, today]
+    );
+  }
+
+  // Atomic UPDATE: cộng dồn experience
   await pool.query(
     `UPDATE plants SET experience = experience + 1, last_watered = ? WHERE user_id = ?`,
     [today, userId]
@@ -555,7 +561,7 @@ async function updatePlant(userId: number, today: string): Promise<{ points_earn
 
   // Đọc lại experience sau khi đã cộng để tính level
   const [plantRows]: any = await pool.query(
-    "SELECT experience, level, is_wilted, plant_type FROM plants WHERE user_id = ?",
+    "SELECT experience, level, is_wilted, plant_type FROM plants WHERE user_id = ? ORDER BY id ASC LIMIT 1",
     [userId]
   );
   const plant = plantRows[0];
@@ -586,7 +592,7 @@ async function updatePlant(userId: number, today: string): Promise<{ points_earn
     experience: newExp,
     level: newLevel,
     is_wilted: Boolean(plant.is_wilted),
-    plant_type: plant.plant_type || 'sprout',
+    plant_type: plant.plant_type || 'bamboo',
   };
 }
 
@@ -594,6 +600,19 @@ async function updatePlant(userId: number, today: string): Promise<{ points_earn
 async function recalculatePlantExperience(userId: number) {
   try {
     console.log(`[Recalculate] Starting for userId=${userId}`);
+
+    // Ensure plant exists
+    const [existingPlants]: any = await pool.query(
+      "SELECT id FROM plants WHERE user_id = ? LIMIT 1",
+      [userId]
+    );
+    if (existingPlants.length === 0) {
+      await pool.query(
+        `INSERT INTO plants (user_id, plant_type, level, experience, health)
+         VALUES (?, 'bamboo', 1, 0, 100)`,
+        [userId]
+      );
+    }
 
     // Check if user has any active habits
     const [activeHabits]: any = await pool.query(
