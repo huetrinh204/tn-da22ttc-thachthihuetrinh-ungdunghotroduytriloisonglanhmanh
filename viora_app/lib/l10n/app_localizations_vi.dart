@@ -748,6 +748,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get addHabit => 'Thêm thói quen';
 
   @override
+  String get viewAllHabits => 'Xem tất cả thói quen';
+
+  @override
   String get noHabits => 'Chưa có thói quen nào';
 
   @override
@@ -1177,6 +1180,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get community => 'Cộng đồng';
 
   @override
+  String get noCommunityActivity => 'Chưa có hoạt động nào từ cộng đồng';
+
+  @override
+  String get viewInCommunity => 'Xem thêm trong Cộng đồng';
+
+  @override
   String get shareYourProgress => 'Bạn muốn chia sẻ gì với mọi người nào?';
 
   @override
@@ -1443,6 +1452,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get viewProfile => 'Xem hồ sơ';
 
   @override
+  String get viewProfileInCommunity => 'Xem hồ sơ của bạn trong cộng đồng';
+
+  @override
   String notifLike(String name) {
     return '$name đã thích bài viết của bạn';
   }
@@ -1455,6 +1467,25 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String notifFollow(String name) {
     return '$name đã bắt đầu theo dõi bạn';
+  }
+
+  @override
+  String notifNewPost(String name) {
+    return '$name vừa đăng bài viết mới';
+  }
+
+  @override
+  String get notifWarning => 'Cảnh báo từ quản trị viên';
+
+  @override
+  String get notifPostEdited => 'Người dùng đã chỉnh sửa bài viết';
+
+  @override
+  String get notifWarningCleared => 'Đã gỡ cảnh báo bài viết';
+
+  @override
+  String notifDefaultActivity(String name) {
+    return 'Hoạt động mới từ $name';
   }
 
   @override

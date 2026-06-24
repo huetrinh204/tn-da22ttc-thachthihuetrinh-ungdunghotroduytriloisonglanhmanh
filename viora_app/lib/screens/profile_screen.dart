@@ -602,10 +602,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
 
                   // Shortcut xem trang cá nhân
-                  _buildSection('Trang cá nhân', [
+                  _buildSection(l10n.profile, [
                     _buildTile(
-                      'Xem trang cá nhân',
-                      'Xem hồ sơ của bạn trong cộng đồng',
+                      l10n.viewProfile,
+                      l10n.viewProfileInCommunity,
                       Icons.account_circle_outlined,
                       onTap: () {
                         Navigator.push(

@@ -470,7 +470,7 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
       case 'new_post':
         icon = Icons.article;
         iconColor = AppColors.primary;
-        message = '${notif.userName} vừa đăng bài viết mới';
+        message = l10n.notifNewPost(notif.userName);
         break;
       default:
         icon = Icons.notifications;
@@ -595,7 +595,8 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
                     ),
                   ),
                   if (notif.content != null &&
-                      notif.type != 'follow') ...[
+                      notif.type != 'follow' &&
+                      notif.type != 'new_post') ...[
                     const SizedBox(height: 6),
                     Text(
                       notif.content!,

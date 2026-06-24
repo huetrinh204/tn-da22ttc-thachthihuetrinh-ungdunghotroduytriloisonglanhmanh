@@ -367,6 +367,7 @@
   "habitNameExample": "E.g.: Drink 2L water daily",
   "category": "Category",
   "addHabit": "Add Habit",
+  "viewAllHabits": "View all habits",
   "noHabits": "No habits yet",
   "addFirstHabit": "Add your first habit to start\\nyour healthy living journey",
   "amazingAllDone": "Amazing! All done 🎉",
@@ -534,6 +535,8 @@
   "startTrackingHabit": "Start tracking habit to see chart",
   
   "community": "Community",
+  "noCommunityActivity": "No community activity yet",
+  "viewInCommunity": "View more in Community",
   "shareYourProgress": "What would you like to share with everyone?",
   "photo": "Photo",
   "achievement": "Achievement",
@@ -591,7 +594,7 @@
   "postDeleted": "Post deleted",
   "postCreated": "Post created successfully!",
   "justNow": "Just now",
-  "minutesAgo": "{count} minutes ago",
+  "minutesAgo": "{count, plural, one{{count} minute ago} other{{count} minutes ago}}",
   "@minutesAgo": {
     "placeholders": {
       "count": {
@@ -599,7 +602,7 @@
       }
     }
   },
-  "hoursAgo": "{count} hours ago",
+  "hoursAgo": "{count, plural, one{{count} hour ago} other{{count} hours ago}}",
   "@hoursAgo": {
     "placeholders": {
       "count": {
@@ -649,7 +652,7 @@
   "notificationsTitle": "Notifications",
   "noNotifications": "No notifications yet",
   "noNotificationsHint": "Achievements and reminders will appear here",
-  "daysAgo": "{count} days ago",
+  "daysAgo": "{count, plural, one{{count} day ago} other{{count} days ago}}",
   "@daysAgo": {
     "placeholders": {
       "count": {
@@ -661,6 +664,7 @@
   "followers": "Followers",
   "posts": "Posts",
   "viewProfile": "View Profile",
+  "viewProfileInCommunity": "View your profile in the community",
   "notifLike": "{name} liked your post",
   "@notifLike": {
     "placeholders": {
@@ -679,6 +683,25 @@
   },
   "notifFollow": "{name} started following you",
   "@notifFollow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNewPost": "{name} just posted a new article",
+  "@notifNewPost": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifWarning": "Warning from admin",
+  "notifPostEdited": "User edited their post",
+  "notifWarningCleared": "Post warning cleared",
+  "notifDefaultActivity": "New activity from {name}",
+  "@notifDefaultActivity": {
     "placeholders": {
       "name": {
         "type": "String"

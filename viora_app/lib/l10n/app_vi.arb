@@ -367,6 +367,7 @@
   "habitNameExample": "VD: Uống 2L nước mỗi ngày",
   "category": "Danh mục",
   "addHabit": "Thêm thói quen",
+  "viewAllHabits": "Xem tất cả thói quen",
   "noHabits": "Chưa có thói quen nào",
   "addFirstHabit": "Thêm thói quen đầu tiên để bắt đầu\\nhành trình sống lành mạnh",
   "amazingAllDone": "Tuyệt vời! Hoàn thành hết rồi 🎉",
@@ -534,6 +535,8 @@
   "startTrackingHabit": "Bắt đầu theo dõi thói quen để xem biểu đồ",
   
   "community": "Cộng đồng",
+  "noCommunityActivity": "Chưa có hoạt động nào từ cộng đồng",
+  "viewInCommunity": "Xem thêm trong Cộng đồng",
   "shareYourProgress": "Bạn muốn chia sẻ gì với mọi người nào?",
   "photo": "Ảnh",
   "achievement": "Thành tích",
@@ -661,6 +664,7 @@
   "followers": "Người theo dõi",
   "posts": "Bài viết",
   "viewProfile": "Xem hồ sơ",
+  "viewProfileInCommunity": "Xem hồ sơ của bạn trong cộng đồng",
   "notifLike": "{name} đã thích bài viết của bạn",
   "@notifLike": {
     "placeholders": {
@@ -679,6 +683,25 @@
   },
   "notifFollow": "{name} đã bắt đầu theo dõi bạn",
   "@notifFollow": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifNewPost": "{name} vừa đăng bài viết mới",
+  "@notifNewPost": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notifWarning": "Cảnh báo từ quản trị viên",
+  "notifPostEdited": "Người dùng đã chỉnh sửa bài viết",
+  "notifWarningCleared": "Đã gỡ cảnh báo bài viết",
+  "notifDefaultActivity": "Hoạt động mới từ {name}",
+  "@notifDefaultActivity": {
     "placeholders": {
       "name": {
         "type": "String"

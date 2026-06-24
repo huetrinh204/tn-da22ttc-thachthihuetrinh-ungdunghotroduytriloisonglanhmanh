@@ -1055,7 +1055,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                   _loadData();
                 },
                 icon: const Icon(AppIcons.chevronRight, size: 16),
-                label: Text(totalToday > 0 ? 'Xem tất cả thói quen' : l10n.addHabit),
+                label: Text(totalToday > 0 ? l10n.viewAllHabits : l10n.addHabit),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
                 ),
@@ -1142,7 +1142,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
-                      'Chưa có hoạt động nào từ cộng đồng',
+                      l10n.noCommunityActivity,
                       style: TextStyle(color: context.textSecondary),
                     ),
                   ),
@@ -1156,7 +1156,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Xem thêm trong Cộng đồng',
+                    l10n.viewInCommunity,
                     style: TextStyle(
                       fontSize: 13,
                       color: AppColors.primary,
@@ -1176,6 +1176,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
   }
 
   Widget _buildNotifItem(Map n) {
+    final l10n = AppLocalizations.of(context)!;
     final type = n['type'] as String? ?? 'like';
     final userName = (n['actor_name'] ?? n['user_name']) as String? ?? 'Unknown';
 
@@ -1187,35 +1188,35 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
       case 'like':
         icon = Icons.favorite;
         iconColor = Colors.red;
-        message = '$userName đã thích bài viết của bạn';
+        message = l10n.notifLike(userName);
       case 'comment':
         icon = Icons.chat_bubble_outline;
         iconColor = AppColors.primary;
-        message = '$userName đã bình luận về bài viết của bạn';
+        message = l10n.notifComment(userName);
       case 'follow':
         icon = Icons.person_add;
         iconColor = Colors.blue;
-        message = '$userName đã theo dõi bạn';
+        message = l10n.notifFollow(userName);
       case 'warning':
         icon = Icons.warning_amber;
         iconColor = Colors.orange;
-        message = n['title'] as String? ?? 'Cảnh báo từ quản trị viên';
+        message = n['title'] as String? ?? l10n.notifWarning;
       case 'post_edited':
         icon = Icons.edit;
         iconColor = AppColors.primary;
-        message = n['title'] as String? ?? 'Người dùng đã chỉnh sửa bài viết';
+        message = n['title'] as String? ?? l10n.notifPostEdited;
       case 'warning_cleared':
         icon = Icons.check_circle;
         iconColor = AppColors.success;
-        message = n['title'] as String? ?? 'Đã gỡ cảnh báo bài viết';
+        message = n['title'] as String? ?? l10n.notifWarningCleared;
       case 'new_post':
         icon = AppIcons.add;
         iconColor = AppColors.primary;
-        message = '$userName vừa đăng bài viết mới';
+        message = l10n.notifNewPost(userName);
       default:
         icon = Icons.notifications;
         iconColor = AppColors.primary;
-        message = 'Hoạt động mới từ $userName';
+        message = l10n.notifDefaultActivity(userName);
     }
 
     return Padding(

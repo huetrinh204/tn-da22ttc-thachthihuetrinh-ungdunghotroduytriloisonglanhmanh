@@ -48,6 +48,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
   int _activeTabIndex = 0;
   final List<Widget> _flyingAnimations = [];
   final GlobalKey _treeIconKey = GlobalKey();
+  final GlobalKey _stackKey = GlobalKey();
+  final Map<int, GlobalKey> _habitCardKeys = {};
 
   List<Map<String, dynamic>> get categories {
     final l10n = AppLocalizations.of(context)!;
@@ -108,7 +110,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     }
   }
 
-  void handleCheckIn(int habitId, bool isCompleted) async {
+  void handleCheckIn(int habitId, bool isCompleted, {Offset? cardPosition}) async {
     // Nếu đã hoàn thành rồi thì không làm gì
     if (isCompleted) return;
 
@@ -127,8 +129,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     if (!mounted) return;
 
     // Get habit card position for animation start
-    final RenderBox? habitBox = context.findRenderObject() as RenderBox?;
-    final habitPosition = habitBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+    final habitPosition = cardPosition ?? Offset.zero;
 
     final currentCountGlobal = double.tryParse(habit["completed_count"]?.toString() ?? '') ?? 0.0;
     final targetCountGlobal = double.tryParse(habit["target_count"]?.toString() ?? '') ?? 1.0;
@@ -240,20 +241,27 @@ class _HabitsScreenState extends State<HabitsScreen> {
         _treeIconKey.currentContext?.findRenderObject() as RenderBox?;
     if (treeBox == null) return;
 
-    final treePosition = treeBox.localToGlobal(Offset.zero);
-    final treeCenter = Offset(
-      treePosition.dx + treeBox.size.width / 2,
-      treePosition.dy + treeBox.size.height / 2,
-    );
+    // Convert start position from global to Stack-local coordinates
+    final RenderBox? stackBox =
+        _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (stackBox == null) return;
 
-    // Create animation widget
+    final stackLocalStart = stackBox.globalToLocal(startPosition);
+    final treeGlobal = treeBox.localToGlobal(Offset.zero);
+    final treeCenterGlobal = Offset(
+      treeGlobal.dx + treeBox.size.width / 2,
+      treeGlobal.dy + treeBox.size.height / 2,
+    );
+    final stackLocalEnd = stackBox.globalToLocal(treeCenterGlobal);
+
+    // Create animation widget with Stack-local coordinates
     final animationWidget = PointsFlyAnimation(
       points: points,
       startPosition: Offset(
-        startPosition.dx + 40, // Adjust to start from habit card center
-        startPosition.dy + 40,
+        stackLocalStart.dx + 40,
+        stackLocalStart.dy + 40,
       ),
-      endPosition: treeCenter,
+      endPosition: stackLocalEnd,
       onComplete: () {
         setState(() {
           _flyingAnimations.removeAt(0);
@@ -725,6 +733,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     }
 
     return Stack(
+      key: _stackKey,
       children: [
         Scaffold(
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -880,6 +889,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     )["icon"];
 
     final habitId = habit['id'] as int;
+    final cardKey = _habitCardKeys.putIfAbsent(habitId, () => GlobalKey());
 
     // Safely parse target and completed count
     final double target = double.tryParse(habit["target_count"]?.toString() ?? '') ?? 1.0;
@@ -971,9 +981,13 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 if (_highlightHabitId == habitId) {
                   setState(() => _highlightHabitId = null);
                 }
-                handleCheckIn(habitId, isCompleted);
+                // Capture card position for fly animation
+                final RenderBox? cardBox = cardKey.currentContext?.findRenderObject() as RenderBox?;
+                final pos = cardBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+                handleCheckIn(habitId, isCompleted, cardPosition: pos);
               },
         child: Container(
+          key: cardKey,
           margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -1056,7 +1070,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
                             if (_highlightHabitId == habitId) {
                               setState(() => _highlightHabitId = null);
                             }
-                            handleCheckIn(habitId, isCompleted);
+                            final RenderBox? cardBox = cardKey.currentContext?.findRenderObject() as RenderBox?;
+                            final pos = cardBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+                            handleCheckIn(habitId, isCompleted, cardPosition: pos);
                           },
                     child: actionButton,
                   ),

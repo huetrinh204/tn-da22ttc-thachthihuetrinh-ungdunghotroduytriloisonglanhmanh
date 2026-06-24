@@ -747,6 +747,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addHabit => 'Add Habit';
 
   @override
+  String get viewAllHabits => 'View all habits';
+
+  @override
   String get noHabits => 'No habits yet';
 
   @override
@@ -1175,6 +1178,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get community => 'Community';
 
   @override
+  String get noCommunityActivity => 'No community activity yet';
+
+  @override
+  String get viewInCommunity => 'View more in Community';
+
+  @override
   String get shareYourProgress => 'What would you like to share with everyone?';
 
   @override
@@ -1287,12 +1296,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String minutesAgo(int count) {
-    return '$count minutes ago';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count minutes ago',
+      one: '$count minute ago',
+    );
+    return '$_temp0';
   }
 
   @override
   String hoursAgo(int count) {
-    return '$count hours ago';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hours ago',
+      one: '$count hour ago',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1430,7 +1451,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String daysAgo(int count) {
-    return '$count days ago';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: '$count day ago',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1441,6 +1468,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewProfile => 'View Profile';
+
+  @override
+  String get viewProfileInCommunity => 'View your profile in the community';
 
   @override
   String notifLike(String name) {
@@ -1455,6 +1485,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notifFollow(String name) {
     return '$name started following you';
+  }
+
+  @override
+  String notifNewPost(String name) {
+    return '$name just posted a new article';
+  }
+
+  @override
+  String get notifWarning => 'Warning from admin';
+
+  @override
+  String get notifPostEdited => 'User edited their post';
+
+  @override
+  String get notifWarningCleared => 'Post warning cleared';
+
+  @override
+  String notifDefaultActivity(String name) {
+    return 'New activity from $name';
   }
 
   @override

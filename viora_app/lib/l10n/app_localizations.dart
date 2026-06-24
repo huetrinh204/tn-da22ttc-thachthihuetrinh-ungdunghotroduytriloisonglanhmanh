@@ -1514,6 +1514,12 @@ abstract class AppLocalizations {
   /// **'Thêm thói quen'**
   String get addHabit;
 
+  /// No description provided for @viewAllHabits.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tất cả thói quen'**
+  String get viewAllHabits;
+
   /// No description provided for @noHabits.
   ///
   /// In vi, this message translates to:
@@ -2348,6 +2354,18 @@ abstract class AppLocalizations {
   /// **'Cộng đồng'**
   String get community;
 
+  /// No description provided for @noCommunityActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có hoạt động nào từ cộng đồng'**
+  String get noCommunityActivity;
+
+  /// No description provided for @viewInCommunity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem thêm trong Cộng đồng'**
+  String get viewInCommunity;
+
   /// No description provided for @shareYourProgress.
   ///
   /// In vi, this message translates to:
@@ -2840,6 +2858,12 @@ abstract class AppLocalizations {
   /// **'Xem hồ sơ'**
   String get viewProfile;
 
+  /// No description provided for @viewProfileInCommunity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem hồ sơ của bạn trong cộng đồng'**
+  String get viewProfileInCommunity;
+
   /// No description provided for @notifLike.
   ///
   /// In vi, this message translates to:
@@ -2857,6 +2881,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'{name} đã bắt đầu theo dõi bạn'**
   String notifFollow(String name);
+
+  /// No description provided for @notifNewPost.
+  ///
+  /// In vi, this message translates to:
+  /// **'{name} vừa đăng bài viết mới'**
+  String notifNewPost(String name);
+
+  /// No description provided for @notifWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảnh báo từ quản trị viên'**
+  String get notifWarning;
+
+  /// No description provided for @notifPostEdited.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người dùng đã chỉnh sửa bài viết'**
+  String get notifPostEdited;
+
+  /// No description provided for @notifWarningCleared.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gỡ cảnh báo bài viết'**
+  String get notifWarningCleared;
+
+  /// No description provided for @notifDefaultActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động mới từ {name}'**
+  String notifDefaultActivity(String name);
 
   /// No description provided for @tapToChangeAvatar.
   ///

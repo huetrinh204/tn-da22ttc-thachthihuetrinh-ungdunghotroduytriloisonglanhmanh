@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_message.dart';
 import '../providers/locale_provider.dart';
@@ -393,8 +394,17 @@ class _AiChatScreenState extends State<AiChatScreen>
                     : !isUser ? Border.all(color: context.infoBoxBorder) : null,
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
               ),
-              child: Text(msg.content, style: TextStyle(fontSize: 14,
-                color: isUser ? Colors.white : isError ? Colors.red.shade700 : context.textPrimary, height: 1.45)),
+              child: isUser
+                  ? Text(msg.content, style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.45))
+                  : MarkdownBody(
+                      data: msg.content,
+                      selectable: true,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(fontSize: 14, color: isError ? Colors.red.shade700 : context.textPrimary, height: 1.45),
+                        strong: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isError ? Colors.red.shade700 : context.textPrimary, height: 1.45),
+                        listBullet: TextStyle(fontSize: 14, color: isError ? Colors.red.shade700 : context.textPrimary, height: 1.45),
+                      ),
+                    ),
             ),
           ),
           if (isUser) const SizedBox(width: 4),
