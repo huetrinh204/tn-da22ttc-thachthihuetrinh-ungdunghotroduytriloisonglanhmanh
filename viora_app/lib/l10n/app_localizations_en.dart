@@ -789,6 +789,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryOther => 'Other';
 
   @override
+  String get metricExercise => 'Time (Minutes)';
+
+  @override
   String get metricWater => 'Water (ml)';
 
   @override
@@ -2106,6 +2109,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addHabitQuoteAuthor => '— Jim Rohn';
+
+  @override
+  String get habitProgress => 'Progress';
 
   @override
   String get allCompletedTitle => 'Outstanding! 🎉';

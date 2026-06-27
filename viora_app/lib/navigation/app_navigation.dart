@@ -31,7 +31,6 @@ class AppNavigation {
   );
 
   static void openPlant() {
-    navigatorKey.currentState?.popUntil((route) => route.isFirst);
     switchToTab(AppTabs.grow);
   }
   static void openProfile() => openMe();

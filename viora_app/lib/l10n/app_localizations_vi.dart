@@ -790,6 +790,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get categoryOther => 'Khác';
 
   @override
+  String get metricExercise => 'Thời gian (Phút)';
+
+  @override
   String get metricWater => 'Số ml nước';
 
   @override
@@ -2089,6 +2092,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get addHabitQuoteAuthor => '— Jim Rohn';
+
+  @override
+  String get habitProgress => 'Tiến độ';
 
   @override
   String get allCompletedTitle => 'Xuất sắc! 🎉';

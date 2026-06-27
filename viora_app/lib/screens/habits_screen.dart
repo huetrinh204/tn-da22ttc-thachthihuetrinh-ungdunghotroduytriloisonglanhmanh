@@ -380,6 +380,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
+              if (context.mounted) Navigator.pop(context);
               AppNavigation.openPlant();
             },
             style: ElevatedButton.styleFrom(
@@ -407,9 +408,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
         metricUnit = l10n.unitMl;
         break;
       case "exercise":
-        metricLabel = 'Thời gian (Phút)';
-        metricUnit = 'phút';
-        metricHint = 'Nhập số phút';
+        metricLabel = l10n.metricExercise;
+        metricUnit = l10n.unitMinutes;
         break;
       case "sleep":
         metricLabel = l10n.metricSleepMinutes;
@@ -508,7 +508,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx, {"confirmed": false}),
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey.shade300),
+                      side: BorderSide(color: context.isDark ? const Color(0xFF2E433C) : Colors.grey.shade300),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -516,8 +516,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
                     ),
                     child: Text(
                       l10n.notSure,
-                      style: const TextStyle(
-                        color: Colors.grey,
+                      style: TextStyle(
+                        color: context.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -717,8 +717,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   _activeTabIndex == 1
                       ? l10n.noHabitsCompletedToday
                       : l10n.addHabitToStart,
-                  style: const TextStyle(
-                    color: Color(0xFF7E8A85),
+                  style: TextStyle(
+                    color: context.textSecondary,
                     fontSize: 14,
                   ),
                 ),
@@ -745,7 +745,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 key: _treeIconKey,
                 icon: const Icon(Icons.eco_rounded, size: 26),
                 tooltip: l10n.myPlant,
-                onPressed: () => AppNavigation.openPlant(),
+                onPressed: () {
+                  if (context.mounted) Navigator.pop(context);
+                  AppNavigation.openPlant();
+                },
               ),
               IconButton(
                 key: widget.statsCoachKey,
@@ -847,6 +850,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Widget _buildQuoteCard() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       padding: const EdgeInsets.all(20),
@@ -856,10 +860,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
-              '"Sức khỏe là lựa chọn, không phải sự tình cờ. Hãy kiên trì với những thói quen nhỏ mỗi ngày nhé!"',
-              style: TextStyle(
+              l10n.quote,
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.primary,
                 height: 1.5,
@@ -899,16 +903,16 @@ class _HabitsScreenState extends State<HabitsScreen> {
     // Format progress text
     String progressText = "";
     if (isCompleted) {
-      progressText = "Đã hoàn thành";
+      progressText = l10n.completedExclaim;
     } else {
       if (category == 'hydration') {
-        progressText = "${current.toInt()} / ${target.toInt()} ml";
+        progressText = "${current.toInt()} / ${target.toInt()} ${l10n.unitMl}";
       } else if (category == 'exercise' || category == 'sleep' || category == 'mental') {
-        progressText = "${current.toInt()} / ${target.toInt()} phút";
+        progressText = "${current.toInt()} / ${target.toInt()} ${l10n.unitMinutes}";
       } else if (category == 'eat') {
-        progressText = "${current.toInt()} / ${target.toInt()} calo";
+        progressText = "${current.toInt()} / ${target.toInt()} ${l10n.unitCal}";
       } else {
-        progressText = "${current.toInt()} / ${target.toInt()} lần";
+        progressText = "${current.toInt()} / ${target.toInt()} ${l10n.times}";
       }
     }
 
@@ -950,7 +954,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: Colors.red.shade400,
+          color: context.isDark ? const Color(0xFF7F1D1D) : Colors.red.shade400,
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(Icons.delete_outline, color: Colors.white, size: 26),
@@ -995,7 +999,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
+                color: context.isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -1048,7 +1052,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '$currentStreak ngày',
+                                '$currentStreak ${l10n.days}',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -1127,11 +1131,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
                         value: 'delete',
                         child: Row(
                           children: [
-                            const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                            const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
                             const SizedBox(width: 8),
                             Text(
                               l10n.delete,
-                              style: const TextStyle(color: Colors.red),
+                              style: TextStyle(color: AppColors.error),
                             ),
                           ],
                         ),
@@ -1147,7 +1151,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Tiến độ',
+                    l10n.habitProgress,
                     style: TextStyle(
                       fontSize: 12,
                       color: context.textSecondary,

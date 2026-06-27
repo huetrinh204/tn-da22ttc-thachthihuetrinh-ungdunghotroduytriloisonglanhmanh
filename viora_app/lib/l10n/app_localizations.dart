@@ -1592,6 +1592,12 @@ abstract class AppLocalizations {
   /// **'Khác'**
   String get categoryOther;
 
+  /// No description provided for @metricExercise.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian (Phút)'**
+  String get metricExercise;
+
   /// No description provided for @metricWater.
   ///
   /// In vi, this message translates to:
@@ -4075,6 +4081,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'— Jim Rohn'**
   String get addHabitQuoteAuthor;
+
+  /// No description provided for @habitProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiến độ'**
+  String get habitProgress;
 
   /// No description provided for @allCompletedTitle.
   ///

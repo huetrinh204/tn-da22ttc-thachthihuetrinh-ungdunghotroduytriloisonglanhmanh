@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../l10n/app_localizations.dart';
+import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 
 class AddHabitScreen extends StatefulWidget {
@@ -53,9 +54,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FAF7),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF9FAF7),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
@@ -64,8 +65,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         ),
         title: Text(
           widget.initialHabit != null ? l10n.editHabit : l10n.addNewHabit,
-          style: const TextStyle(
-            color: Color(0xFF1E352F),
+          style: TextStyle(
+            color: context.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -78,8 +79,8 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               padding: const EdgeInsets.only(right: 8.0),
               child: Text(
                 l10n.save,
-                style: const TextStyle(
-                  color: Color(0xFF0F623F),
+                style: TextStyle(
+                  color: context.textGreen,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -112,7 +113,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -120,22 +121,22 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         children: [
           Text(
             l10n.habitName.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF7E8A85),
+              color: context.textSecondary,
               letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _nameController,
-            style: const TextStyle(fontSize: 16, color: Color(0xFF1E352F)),
+            style: TextStyle(fontSize: 16, color: context.textPrimary),
             decoration: InputDecoration(
               hintText: l10n.habitNameExample,
-              hintStyle: TextStyle(fontSize: 16, color: Colors.grey.shade400),
+              hintStyle: TextStyle(fontSize: 16, color: context.textSecondary.withValues(alpha: 0.6)),
               filled: true,
-              fillColor: const Color(0xFFF4F6F4),
+              fillColor: context.inputFill,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -161,7 +162,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -169,10 +170,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         children: [
           Text(
             l10n.addHabitCategory,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF7E8A85),
+              color: context.textSecondary,
               letterSpacing: 0.5,
             ),
           ),
@@ -188,7 +189,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               final isSelected = _selectedCategory == cat['id'];
               Widget iconWidget = Icon(
                 cat['icon'] as IconData,
-                color: isSelected ? Colors.white : const Color(0xFF0F623F),
+                color: isSelected ? Colors.white : AppColors.primary,
                 size: 24,
               );
               if (cat['id'] == 'exercise') {
@@ -221,13 +222,13 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: isSelected
-                        ? Border.all(color: const Color(0xFF0F623F), width: 1.5)
+                        ? Border.all(color: AppColors.primary, width: 1.5)
                         : null,
                   ),
                   padding: isSelected ? const EdgeInsets.all(2) : EdgeInsets.zero,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF0F623F) : const Color(0xFFF4F6F4),
+                      color: isSelected ? AppColors.primary : context.inputFill,
                       borderRadius: isSelected ? BorderRadius.circular(13) : BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -240,7 +241,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isSelected ? Colors.white : const Color(0xFF0F623F),
+                            color: isSelected ? Colors.white : AppColors.primary,
                           ),
                         ),
                       ],
@@ -270,7 +271,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -278,10 +279,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         children: [
           Text(
             l10n.addHabitIcon,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF7E8A85),
+              color: context.textSecondary,
               letterSpacing: 0.5,
             ),
           ),
@@ -303,19 +304,19 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: isSelected
-                        ? Border.all(color: const Color(0xFF0F623F), width: 1.5)
+                        ? Border.all(color: AppColors.primary, width: 1.5)
                         : null,
                   ),
                   padding: isSelected ? const EdgeInsets.all(3) : EdgeInsets.zero,
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected ? const Color(0xFF0F623F) : const Color(0xFFF4F6F4),
+                      color: isSelected ? AppColors.primary : context.inputFill,
                     ),
                     child: Center(
                       child: Icon(
                         iconData,
-                        color: isSelected ? Colors.white : const Color(0xFF0F623F),
+                        color: isSelected ? Colors.white : AppColors.primary,
                         size: 22,
                       ),
                     ),
@@ -352,7 +353,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -363,26 +364,26 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             children: [
               Text(
                 l10n.addHabitDailyGoal,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF7E8A85),
+                  color: context.textSecondary,
                   letterSpacing: 0.5,
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF5EF),
+                  color: context.infoBoxColor,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFB1E5CD), width: 1.5),
+                  border: Border.all(color: context.infoBoxBorder, width: 1.5),
                 ),
                 child: Text(
                   '${_dailyGoal.toInt()} $unit',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F623F),
+                    color: context.textGreen,
                   ),
                 ),
               ),
@@ -391,10 +392,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
           const SizedBox(height: 20),
           SliderTheme(
             data: SliderThemeData(
-              activeTrackColor: const Color(0xFFB1E5CD),
-              inactiveTrackColor: const Color(0xFFE5ECE8),
-              thumbColor: const Color(0xFF0F623F),
-              overlayColor: const Color(0xFF0F623F).withValues(alpha: 0.1),
+              activeTrackColor: context.isDark ? const Color(0xFF2E433C) : const Color(0xFFB1E5CD),
+              inactiveTrackColor: context.isDark ? const Color(0xFF1A2E27) : const Color(0xFFE5ECE8),
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withValues(alpha: 0.1),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
               trackHeight: 6,
             ),
@@ -411,9 +412,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Min: ${minVal.toInt()}$unit',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF7E8A85))),
+                  style: TextStyle(fontSize: 12, color: context.textSecondary)),
               Text('Max: ${maxVal.toInt()}$unit',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF7E8A85))),
+                  style: TextStyle(fontSize: 12, color: context.textSecondary)),
             ],
           ),
         ],
@@ -432,7 +433,7 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -440,10 +441,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         children: [
           Text(
             l10n.addHabitReminder,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF7E8A85),
+              color: context.textSecondary,
               letterSpacing: 0.5,
             ),
           ),
@@ -453,10 +454,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
               Expanded(
                 child: Text(
                   l10n.addHabitReminderLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     height: 1.5,
-                    color: Color(0xFF1E352F),
+                    color: context.textPrimary,
                   ),
                 ),
               ),
@@ -471,8 +472,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                               data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
                               child: Theme(
                                 data: Theme.of(context).copyWith(
-                                  colorScheme: const ColorScheme.light(
-                                    primary: Color(0xFF0F623F),
+                                  colorScheme: ColorScheme.fromSeed(
+                                    seedColor: AppColors.primary,
+                                    brightness: context.isDark ? Brightness.dark : Brightness.light,
                                   ),
                                 ),
                                 child: child!,
@@ -487,9 +489,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: _reminderEnabled ? const Color(0xFFF4F6F4) : const Color(0xFFECECEC),
+                    color: _reminderEnabled ? context.inputFill : context.isDark ? const Color(0xFF1A2E27) : const Color(0xFFECECEC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFDDE3DE)),
+                    border: Border.all(color: context.isDark ? const Color(0xFF2E433C) : const Color(0xFFDDE3DE)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -499,14 +501,14 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: _reminderEnabled ? const Color(0xFF0F623F) : const Color(0xFFAAAAAA),
+                          color: _reminderEnabled ? context.textGreen : context.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Icon(
                         LucideIcons.clock,
                         size: 16,
-                        color: _reminderEnabled ? const Color(0xFF0F623F) : const Color(0xFFAAAAAA),
+                        color: _reminderEnabled ? context.textGreen : context.textSecondary,
                       ),
                     ],
                   ),
@@ -517,9 +519,9 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                 value: _reminderEnabled,
                 onChanged: (v) => setState(() => _reminderEnabled = v),
                 activeThumbColor: Colors.white,
-                activeTrackColor: const Color(0xFF0F623F),
+                activeTrackColor: AppColors.primary,
                 inactiveThumbColor: Colors.white,
-                inactiveTrackColor: const Color(0xFFCCCCCC),
+                inactiveTrackColor: context.isDark ? const Color(0xFF2E433C) : const Color(0xFFCCCCCC),
               ),
             ],
           ),

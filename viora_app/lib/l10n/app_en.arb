@@ -389,6 +389,7 @@
   "categoryHydration": "Hydration",
   "categoryOther": "Other",
   
+  "metricExercise": "Time (Minutes)",
   "metricWater": "Water (ml)",
   "metricDistance": "Distance (m)",
   "metricSleepHours": "Sleep hours",
@@ -1000,6 +1001,8 @@
   "addHabitEnterName": "Please enter habit name",
   "addHabitQuote": "\"Discipline is the bridge between goals and accomplishment.\"",
   "addHabitQuoteAuthor": "— Jim Rohn",
+
+  "habitProgress": "Progress",
 
   "allCompletedTitle": "Outstanding! 🎉",
   "allCompletedBody": "You've completed all your habits today.",

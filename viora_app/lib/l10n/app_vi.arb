@@ -389,6 +389,7 @@
   "categoryHydration": "Uống nước",
   "categoryOther": "Khác",
   
+  "metricExercise": "Thời gian (Phút)",
   "metricWater": "Số ml nước",
   "metricDistance": "Khoảng cách (m)",
   "metricSleepHours": "Số giờ ngủ",
@@ -1000,6 +1001,8 @@
   "addHabitEnterName": "Vui lòng nhập tên thói quen",
   "addHabitQuote": "\"Kỷ luật là cầu nối giữa mục tiêu và thành tựu.\"",
   "addHabitQuoteAuthor": "— Jim Rohn",
+
+  "habitProgress": "Tiến độ",
 
   "allCompletedTitle": "Xuất sắc! 🎉",
   "allCompletedBody": "Bạn đã hoàn thành tất cả thói quen hôm nay.",
