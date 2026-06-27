@@ -286,7 +286,7 @@ async function checkAndSendHabitReminders() {
 function parseTimeValue(value: any): { hour: number; minute: number } | null {
   if (value == null) return null;
 
-  // Nếu là Date object (phòng trường hợp dateStrings không生效)
+  // Nếu là Date object (phòng trường hợp dateStrings không)
   if (value instanceof Date) {
     return { hour: value.getHours(), minute: value.getMinutes() };
   }
