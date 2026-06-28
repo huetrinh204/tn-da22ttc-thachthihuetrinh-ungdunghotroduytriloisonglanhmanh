@@ -13,7 +13,7 @@ Thumbs.db
 *.log
 logs/
 
-# Environment variables — KHÔNG commit lên git
+# Environment variables 
 .env
 .env.local
 .env.production
