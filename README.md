@@ -1,4 +1,4 @@
-# 🌱 Viora — Ứng dụng Theo dõi Thói quen & Cây Ảo
+# 🌱 Viora — PHÁT TRIỂN ỨNG DỤNG DI ĐỘNG HỖ TRỢ VÀ DUY TRÌ LỐI SỐNG LÀNH MẠNH
 
 Viora là ứng dụng **habit tracker** kết hợp **gamification** (cây ảo), **mạng xã hội** và **AI coaching**, giúp người dùng xây dựng thói quen tốt mỗi ngày một cách vui vẻ và có động lực.
 
