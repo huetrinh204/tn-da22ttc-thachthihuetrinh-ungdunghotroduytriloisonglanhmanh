@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
+import { uploadToFirebase, deleteFromFirebase } from "../services/storage_service";
+import { sendPushNotification } from "../services/fcm_push_service";
 
 dotenv.config();
 
@@ -20,21 +21,8 @@ function getBaseUrl(req?: any): string {
   return PUBLIC_BASE_URL.replace(/\/$/, "");
 }
 
-const uploadsDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname) || ".jpg";
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -327,10 +315,8 @@ router.delete("/posts/:postId", authMiddleware, async (req: any, res: Response) 
     );
 
     const imageUrl = rows[0].image_url as string | null;
-    if (imageUrl && imageUrl.startsWith("/uploads/")) {
-      const filename = path.basename(imageUrl);
-      const filePath = path.join(uploadsDir, filename);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    if (imageUrl && imageUrl.startsWith("https://storage.googleapis.com/")) {
+      await deleteFromFirebase(imageUrl);
     }
 
     res.json({ message: "Deleted" });
@@ -410,7 +396,7 @@ router.post("/posts/:postId/like", authMiddleware, async (req: any, res: Respons
   if (isNaN(postId)) return res.status(400).json({ message: "Invalid post id" });
 
   try {
-    const [posts]: any = await pool.query("SELECT id FROM community_posts WHERE id = ?", [postId]);
+    const [posts]: any = await pool.query("SELECT id, user_id, content FROM community_posts WHERE id = ?", [postId]);
     if (!posts.length) return res.status(404).json({ message: "Post not found" });
 
     await pool.query(
@@ -422,6 +408,26 @@ router.post("/posts/:postId/like", authMiddleware, async (req: any, res: Respons
       "SELECT COUNT(*) AS cnt FROM community_post_likes WHERE post_id = ?",
       [postId]
     );
+
+    // Gửi push notification cho chủ bài viết (nếu không phải tự like)
+    try {
+      const postOwner = posts[0];
+      if (postOwner.user_id !== userId) {
+        const [likerRows]: any = await pool.query("SELECT name FROM users WHERE id = ?", [userId]);
+        const [ownerRows]: any = await pool.query("SELECT fcm_token FROM users WHERE id = ?", [postOwner.user_id]);
+        if (ownerRows.length && ownerRows[0].fcm_token) {
+          const likerName = likerRows[0]?.name || "Ai đó";
+          await sendPushNotification(
+            ownerRows[0].fcm_token,
+            "❤️ Lượt thích mới",
+            `${likerName} đã thích bài viết của bạn`,
+            postOwner.user_id
+          );
+        }
+      }
+    } catch (pushErr) {
+      console.log("[Like] Push notification failed:", pushErr);
+    }
 
     res.json({
       like_count: countRows[0].cnt,
@@ -537,6 +543,39 @@ router.post("/posts/:postId/comments", authMiddleware, async (req: any, res: Res
       WHERE c.id = ?`,
       [result.insertId]
     );
+
+    // Gửi thông báo cho chủ bài viết (nếu không phải tự comment bài của mình)
+    try {
+      const [postOwner]: any = await pool.query(
+        "SELECT user_id FROM community_posts WHERE id = ?", [postId]
+      );
+      if (postOwner.length && postOwner[0].user_id !== userId) {
+        const [commenterRows]: any = await pool.query("SELECT name FROM users WHERE id = ?", [userId]);
+        const commenterName = commenterRows[0]?.name || "Ai đó";
+        await pool.query(
+          `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+           VALUES (?, 'comment', ?, ?, '💬', ?, 0, NOW())`,
+          [
+            postOwner[0].user_id,
+            "Bình luận mới",
+            `${commenterName} đã bình luận bài viết của bạn`,
+            JSON.stringify({ post_id: postId, comment_id: result.insertId, user_id: userId }),
+          ]
+        );
+        // Push notification
+        const [ownerRows]: any = await pool.query("SELECT fcm_token FROM users WHERE id = ?", [postOwner[0].user_id]);
+        if (ownerRows.length && ownerRows[0].fcm_token) {
+          await sendPushNotification(
+            ownerRows[0].fcm_token,
+            "💬 Bình luận mới",
+            `${commenterName} đã bình luận bài viết của bạn`,
+            postOwner[0].user_id
+          );
+        }
+      }
+    } catch (notifError) {
+      console.log("[Comment] Failed to send notification:", notifError);
+    }
 
     res.json({ comment: mapCommentRow(rows[0], req) });
   } catch (error) {
@@ -684,6 +723,39 @@ router.post("/comments/:commentId/replies", authMiddleware, async (req: any, res
       created_at: rows[0].created_at,
     };
 
+    // Gửi thông báo cho chủ comment (nếu không phải tự reply comment của mình)
+    try {
+      const [commentOwner]: any = await pool.query(
+        "SELECT user_id, post_id FROM community_comments WHERE id = ?", [commentId]
+      );
+      if (commentOwner.length && commentOwner[0].user_id !== userId) {
+        const [replierRows]: any = await pool.query("SELECT name FROM users WHERE id = ?", [userId]);
+        const replierName = replierRows[0]?.name || "Ai đó";
+        await pool.query(
+          `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+           VALUES (?, 'reply', ?, ?, '↩️', ?, 0, NOW())`,
+          [
+            commentOwner[0].user_id,
+            "Trả lời mới",
+            `${replierName} đã trả lời bình luận của bạn`,
+            JSON.stringify({ post_id: commentOwner[0].post_id, comment_id: commentId, user_id: userId }),
+          ]
+        );
+        // Push notification
+        const [ownerRows]: any = await pool.query("SELECT fcm_token FROM users WHERE id = ?", [commentOwner[0].user_id]);
+        if (ownerRows.length && ownerRows[0].fcm_token) {
+          await sendPushNotification(
+            ownerRows[0].fcm_token,
+            "↩️ Trả lời mới",
+            `${replierName} đã trả lời bình luận của bạn`,
+            commentOwner[0].user_id
+          );
+        }
+      }
+    } catch (notifError) {
+      console.log("[Reply] Failed to send notification:", notifError);
+    }
+
     res.json({ reply });
   } catch (error) {
     console.log(error);
@@ -693,7 +765,7 @@ router.post("/comments/:commentId/replies", authMiddleware, async (req: any, res
 
 // ================= UPLOAD IMAGE =================
 router.post("/upload", authMiddleware, (req: any, res: Response) => {
-  upload.single("image")(req, res, (err: any) => {
+  upload.single("image")(req, res, async (err: any) => {
     if (err) {
       console.error("Community image upload error:", err);
       return res.status(400).json({ message: err.message || "Upload failed" });
@@ -703,9 +775,13 @@ router.post("/upload", authMiddleware, (req: any, res: Response) => {
       return res.status(400).json({ message: "No image file" });
     }
 
-    const relativePath = `/uploads/${req.file.filename}`;
-    const url = resolveImageUrl(relativePath);
-    res.json({ url, path: relativePath });
+    try {
+      const url = await uploadToFirebase(req.file.buffer, req.file.originalname, "posts");
+      res.json({ url, path: url });
+    } catch (e) {
+      console.error("Firebase upload error:", e);
+      res.status(500).json({ message: "Upload failed" });
+    }
   });
 });
 
@@ -1083,6 +1159,20 @@ router.get("/notifications", authMiddleware, async (req: any, res: Response) => 
             actorId = String(posterId);
             actorName = posterRows[0].name;
             actorAvatar = resolveAvatar(posterRows[0].avatar_url);
+          }
+        }
+      } else if (row.type === 'comment' || row.type === 'reply') {
+        // Resolve the commenter/replier info
+        const commenterId = payload?.user_id;
+        if (commenterId) {
+          const [userRows]: any = await pool.query(
+            "SELECT name, avatar_url FROM users WHERE id = ?",
+            [commenterId]
+          );
+          if (userRows.length > 0) {
+            actorId = String(commenterId);
+            actorName = userRows[0].name;
+            actorAvatar = resolveAvatar(userRows[0].avatar_url);
           }
         }
       } else {

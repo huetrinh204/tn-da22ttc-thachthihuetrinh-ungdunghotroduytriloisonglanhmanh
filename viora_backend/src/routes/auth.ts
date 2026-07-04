@@ -7,7 +7,7 @@ import { sendOtpEmail } from "../services/email_service";
 import dotenv from "dotenv";
 import multer from "multer";
 import path from "path";
-import fs from "fs";
+import { uploadToFirebase, deleteFromFirebase } from "../services/storage_service";
 
 dotenv.config();
 
@@ -30,21 +30,8 @@ const GOOGLE_CLIENT_ID =
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Avatar upload setup
-const uploadsDir = path.join(__dirname, "../../uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const avatarStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname) || ".jpg";
-    cb(null, `avatar-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  },
-});
-
 const avatarUpload = multer({
-  storage: avatarStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
@@ -146,21 +133,15 @@ router.post("/avatar", (req: any, res: any) => {
 
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
-      const relativePath = `/uploads/${req.file.filename}`;
-      const base = getBaseUrl(req);
-      const avatarUrl = `${base}${relativePath}`;
 
-      // Delete old avatar if it's a local file
+      // Xóa avatar cũ trên Firebase nếu có
       const [oldRows]: any = await pool.query("SELECT avatar_url FROM users WHERE id = ?", [decoded.id]);
-      if (oldRows.length && oldRows[0].avatar_url) {
-        const old = oldRows[0].avatar_url as string;
-        if (old.includes("/uploads/avatar-")) {
-          const oldFile = path.join(uploadsDir, path.basename(old));
-          if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
-        }
+      if (oldRows.length && oldRows[0].avatar_url?.startsWith("https://storage.googleapis.com/")) {
+        await deleteFromFirebase(oldRows[0].avatar_url);
       }
 
-      await pool.query("UPDATE users SET avatar_url = ? WHERE id = ?", [relativePath, decoded.id]);
+      const avatarUrl = await uploadToFirebase(req.file.buffer, req.file.originalname, "avatars");
+      await pool.query("UPDATE users SET avatar_url = ? WHERE id = ?", [avatarUrl, decoded.id]);
       res.json({ avatar_url: avatarUrl });
     } catch (e) {
       console.error("Avatar upload error:", e);

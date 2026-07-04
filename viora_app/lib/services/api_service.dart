@@ -3,12 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class ApiService {
-  // true = điện thoại thật, false = máy ảo (emulator)
-  static const bool _isPhysicalDevice = false;
-
-  static const String baseUrl = _isPhysicalDevice
-      ? "http://192.168.1.3:3000"
-      : "http://10.0.2.2:3000";
+  static const String baseUrl = "https://viora-application.onrender.com";
 
   // Helper method to resolve image URLs
   static String resolveImageUrl(String? imagePath) {

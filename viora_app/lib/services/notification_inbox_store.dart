@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
 /// Notification type enum
-enum NotifType { like, comment, follow, achievement, plantLevel, other }
+enum NotifType { like, comment, reply, follow, achievement, plantLevel, other }
 
 class InboxItem {
   final String id;
@@ -56,6 +56,7 @@ class InboxItem {
     switch (typeStr) {
       case 'like': parsedType = NotifType.like; break;
       case 'comment': parsedType = NotifType.comment; break;
+      case 'reply': parsedType = NotifType.reply; break;
       case 'follow': parsedType = NotifType.follow; break;
       case 'achievement': parsedType = NotifType.achievement; break;
       case 'plantLevel': parsedType = NotifType.plantLevel; break;
@@ -110,6 +111,13 @@ class InboxItem {
         body = commentContent.isNotEmpty ? '"$commentContent"' : 'commented on your post.';
         emoji = '💬';
         notifType = NotifType.comment;
+        break;
+      case 'reply':
+        title = '$actorName replied to your comment';
+        final replyContent = (n['reply_content'] as String? ?? '').trim();
+        body = replyContent.isNotEmpty ? '"$replyContent"' : 'replied to your comment.';
+        emoji = '↩️';
+        notifType = NotifType.reply;
         break;
       case 'follow':
         title = '$actorName started following you';

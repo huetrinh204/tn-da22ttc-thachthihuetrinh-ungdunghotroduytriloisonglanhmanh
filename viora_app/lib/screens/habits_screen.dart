@@ -824,7 +824,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         children: [
           Expanded(
             child: Text(
-              l10n.quote,
+              l10n.quote.replaceAll(r'\n', '\n'),
               style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.primary,
