@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../models/plant_type.dart';
 import '../constants/app_icons.dart';
-import '../theme/app_colors.dart';
-import '../theme/theme_extensions.dart';
 
 class LevelUpAnimation extends StatefulWidget {
   final String plantType;
@@ -77,261 +75,210 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
     final lvl = widget.newLevel.clamp(1, 15);
     final plantType = PlantType.fromIdOrDefault(widget.plantType);
     final imagePath = plantType.getAssetPath(lvl);
 
     return PopScope(
       canPop: false,
-      child: Stack(
+      child: SizedBox.expand(
+        child: Stack(
         children: [
-          Container(
-            color: Colors.black54,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                IgnorePointer(
-                  child: AnimatedBuilder(
-                    animation: _confettiController,
-                    builder: (context, child) {
-                      return CustomPaint(
-                        size: MediaQuery.of(context).size,
-                        painter: _ConfettiPainter(
-                          progress: _confettiController.value,
-                        ),
-                      );
-                    },
+          // Dark overlay
+          Positioned.fill(
+            child: AnimatedBuilder(
+              animation: _fadeAnimation,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _fadeAnimation.value * 0.45,
+                  child: const ColoredBox(
+                    color: Colors.black,
                   ),
+                );
+              },
+            ),
+          ),
+          // Confetti layer (behind card)
+          IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _confettiController,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: screenSize,
+                  painter: _ConfettiPainter(
+                    progress: _confettiController.value,
+                  ),
+                );
+              },
+            ),
+          ),
+          // Animated card
+          Center(
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_fadeAnimation, _scaleAnimation]),
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: Transform.scale(
+                    scale: _scaleAnimation.value,
+                    child: child,
+                  ),
+                );
+              },
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: screenSize.height * 0.72,
                 ),
-                Center(
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge([_fadeAnimation, _scaleAnimation]),
-                    builder: (context, child) {
-                      return Opacity(
-                        opacity: _fadeAnimation.value,
-                        child: Transform.scale(
-                          scale: _scaleAnimation.value,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 32),
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-                  decoration: BoxDecoration(
-                    color: context.cardColor,
+                child: Card(
+                  margin: EdgeInsets.symmetric(horizontal: screenSize.width * 0.08),
+                  elevation: 12,
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 24,
-                        offset: const Offset(0, 12),
-                      ),
-                    ],
                   ),
-                  child: DefaultTextStyle.merge(
-                    style: const TextStyle(
-                      decoration: TextDecoration.none,
-                      decorationColor: Colors.transparent,
-                      decorationThickness: 0,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: MediaQuery.of(context).size.height * 0.72,
-                      ),
-                      child: SingleChildScrollView(
-                        child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF43A047),
-                              Color(0xFF00796B),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Icon
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            shape: BoxShape.circle,
                           ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.35),
-                              blurRadius: 16,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          AppIcons.sprout,
-                          color: Colors.white,
-                          size: 36,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'CHÚC MỪNG!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: context.textPrimary,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        width: 160,
-                        height: 160,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.25),
-                            width: 2,
+                          child: const Icon(
+                            AppIcons.sprout,
+                            color: Color(0xFF2E7D32),
+                            size: 28,
                           ),
                         ),
-                        child: Center(
+                        const SizedBox(height: 10),
+                        // Title
+                        const Text(
+                          'CHÚC MỪNG!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF2E7D32),
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        // Plant image
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
                           child: Image.asset(
                             imagePath,
-                            width: 120,
-                            height: 120,
+                            width: 130,
+                            height: 130,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
                               return Text(
                                 plantType.emoji,
-                                style: const TextStyle(fontSize: 64),
+                                style: const TextStyle(fontSize: 72),
                               );
                             },
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary.withValues(alpha: 0.1),
-                              AppColors.primaryLight,
-                            ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
+                        const SizedBox(height: 14),
+                        // Level badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.2),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Cấp ${widget.oldLevel}',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: context.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                AppIcons.arrowRight,
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'Cấp ${widget.newLevel}',
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Cấp ${widget.oldLevel}',
                                 style: const TextStyle(
-                                  fontSize: 18,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.bold,
+                                  color: Color(0xFF66BB6A),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF2E7D32),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  AppIcons.arrowRight,
+                                  size: 12,
                                   color: Colors.white,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Cây của bạn đã lớn thêm\nmột chút rồi.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: context.textGreen,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Tiếp tục chăm sóc để nhận thêm\nnhững hạt giống mới nhé!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.textSecondary,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 54,
-                        child: ElevatedButton(
-                          onPressed: widget.onComplete,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            'Tiếp tục',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Cấp ${widget.newLevel}',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 14),
+                        // Motivational text
+                        const Text(
+                          'Cây của bạn đã lớn thêm một chút rồi!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF555555),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Continue button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 46,
+                          child: ElevatedButton(
+                            onPressed: widget.onComplete,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2E7D32),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: const Text(
+                              'Tiếp tục',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ),
               ),
-                ),
-              ),
             ),
-          ],
-        ),
-      ),
-      IgnorePointer(
+          ),
+          // Confetti layer (on top of card)
+          IgnorePointer(
             child: AnimatedBuilder(
               animation: _confettiController,
               builder: (context, child) {
                 return CustomPaint(
-                  size: MediaQuery.of(context).size,
+                  size: screenSize,
                   painter: _ConfettiPainter(
                     progress: _confettiController.value,
                     seedOffset: 500,
@@ -342,7 +289,8 @@ class _LevelUpAnimationState extends State<LevelUpAnimation>
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -354,6 +302,7 @@ class _ConfettiParticle {
   final double rotation;
   final double rotationSpeed;
   final Color color;
+  final double phase;
 
   _ConfettiParticle({
     required this.x,
@@ -363,6 +312,7 @@ class _ConfettiParticle {
     required this.rotation,
     required this.rotationSpeed,
     required this.color,
+    required this.phase,
   });
 }
 
@@ -376,13 +326,15 @@ class _ConfettiPainter extends CustomPainter {
           24,
           (index) {
             final random = math.Random(index + 200 + seedOffset);
+            final phase = random.nextDouble();
             return _ConfettiParticle(
               x: random.nextDouble(),
-              startY: -0.1 - random.nextDouble() * 0.2,
+              startY: -random.nextDouble() * 0.3,
               speed: 0.25 + random.nextDouble() * 0.35,
               size: 4.0 + random.nextDouble() * 5.0,
               rotation: random.nextDouble() * 2 * math.pi,
               rotationSpeed: -math.pi + random.nextDouble() * 2 * math.pi,
+              phase: phase,
               color: [
                 const Color(0xFF66BB6A),
                 const Color(0xFF4CAF50),
@@ -398,15 +350,16 @@ class _ConfettiPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final p in particles) {
-      final y = p.startY + (progress * p.speed * 1.5);
-      if (y > 1.1) continue;
+      final cyclePos = (progress + p.phase) % 1.0;
+      final y = p.startY + (cyclePos * p.speed * 1.5);
+      if (y > 1.3) continue;
 
       final x = p.x * size.width;
       final yPos = y * size.height;
-      final rotation = p.rotation + (progress * p.rotationSpeed * 3);
+      final rotation = p.rotation + (cyclePos * p.rotationSpeed * 3);
 
       final paint = Paint()
-        ..color = p.color.withValues(alpha: (1.0 - progress * 0.3))
+        ..color = p.color.withValues(alpha: cyclePos < 0.15 ? cyclePos / 0.15 : (1.0 - cyclePos * 0.3))
         ..style = PaintingStyle.fill;
 
       canvas.save();

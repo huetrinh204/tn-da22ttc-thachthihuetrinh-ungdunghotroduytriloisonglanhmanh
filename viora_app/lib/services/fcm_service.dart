@@ -66,11 +66,8 @@ class FcmService {
         sound: true,
       );
 
-      // Lấy FCM token và gửi lên server
-      final token = await _messaging.getToken();
-      if (token != null) {
-        await _saveFcmToken(token);
-      }
+      // Lấy FCM token và gửi lên server (có retry nếu lần đầu null)
+      await _fetchAndSaveToken();
 
       // Lắng nghe token refresh
       _messaging.onTokenRefresh.listen(_saveFcmToken);
@@ -92,6 +89,45 @@ class FcmService {
       });
     } catch (e) {
       print('[FCM] Init error: $e');
+    }
+  }
+
+  /// Retry tới 4 lần (1s → 2s → 3s → nghỉ) để lấy token
+  static Future<void> _fetchAndSaveToken() async {
+    final delays = [1000, 2000, 3000];
+    for (var attempt = 0; attempt <= delays.length; attempt++) {
+      try {
+        final token = await _messaging.getToken();
+        if (token != null && token.isNotEmpty) {
+          await _saveFcmToken(token);
+          print('[FCM] Token saved on attempt ${attempt + 1}');
+          return;
+        }
+      } catch (e) {
+        print('[FCM] getToken attempt ${attempt + 1} failed: $e');
+      }
+      if (attempt < delays.length) {
+        await Future.delayed(Duration(milliseconds: delays[attempt]));
+      }
+    }
+    print('[FCM] Failed to get token after ${delays.length + 1} attempts');
+  }
+
+  /// Gọi lại sau login/register để đảm bảo token được lưu khi có auth token
+  static Future<void> resyncToken() async {
+    try {
+      final token = await _messaging.getToken();
+      if (token != null && token.isNotEmpty) {
+        await _saveFcmToken(token);
+        print('[FCM] Token synced after login');
+      } else {
+        // Nếu vẫn null, retry với _fetchAndSaveToken
+        print('[FCM] Token null on resync, retrying...');
+        await _fetchAndSaveToken();
+      }
+    } catch (e) {
+      print('[FCM] Resync error: $e');
+      await _fetchAndSaveToken();
     }
   }
 

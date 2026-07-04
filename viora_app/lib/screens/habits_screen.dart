@@ -11,7 +11,8 @@ import '../widgets/all_habits_completed_dialog.dart';
 import '../widgets/points_fly_animation.dart';
 import '../widgets/habit_icon.dart';
 import '../widgets/app_confirm_dialog.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
+import '../widgets/app_success_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
@@ -24,7 +25,7 @@ class HabitsScreen extends StatefulWidget {
   final GlobalKey? statsCoachKey;
   final GlobalKey? addCoachKey;
   final GlobalKey? listCoachKey;
-  final Future<void> Function()? onHabitCheckInCompleted;
+  final Future<void> Function(Map<String, dynamic>? plant)? onHabitCheckInCompleted;
   final VoidCallback? onHabitDeleted;
 
   const HabitsScreen({
@@ -54,12 +55,12 @@ class _HabitsScreenState extends State<HabitsScreen> {
   List<Map<String, dynamic>> get categories {
     final l10n = AppLocalizations.of(context)!;
     return [
-      {"id": "eat", "label": l10n.categoryEat, "icon": "🥗"},
-      {"id": "exercise", "label": l10n.categoryExercise, "icon": "🏃"},
-      {"id": "sleep", "label": l10n.categorySleep, "icon": "😴"},
-      {"id": "mental", "label": l10n.categoryMental, "icon": "🧘"},
-      {"id": "hydration", "label": l10n.categoryHydration, "icon": "💧"},
-      {"id": "other", "label": l10n.categoryOther, "icon": "⭐"},
+      {"id": "eat", "label": l10n.categoryEat, "icon": "ðŸ¥—"},
+      {"id": "exercise", "label": l10n.categoryExercise, "icon": "ðŸƒ"},
+      {"id": "sleep", "label": l10n.categorySleep, "icon": "ðŸ˜´"},
+      {"id": "mental", "label": l10n.categoryMental, "icon": "ðŸ§˜"},
+      {"id": "hydration", "label": l10n.categoryHydration, "icon": "ðŸ’§"},
+      {"id": "other", "label": l10n.categoryOther, "icon": "â­"},
     ];
   }
 
@@ -76,24 +77,6 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final res = await ApiService.getTodayHabits(token);
     final list = res["habits"] ?? [];
     
-    // Auto-schedule / update reminders on launch/load
-    for (final h in list) {
-      final habitId = h["id"] as int?;
-      final isCompleted = h["is_completed"] == 1;
-      final reminderTime = h["reminder_time"] as String?;
-      if (habitId != null && reminderTime != null && reminderTime.isNotEmpty) {
-        if (isCompleted) {
-          await NotificationService.cancelHabitReminders(habitId);
-        } else {
-          await NotificationService.scheduleHabitReminders(
-            habitId: habitId,
-            habitName: h["name"] ?? "",
-            reminderTime: reminderTime,
-          );
-        }
-      }
-    }
-
     final showOnboardingReady = await FlowPrefs.consumeOnboardingHabitsReady();
     if (mounted) {
       setState(() {
@@ -105,20 +88,20 @@ class _HabitsScreenState extends State<HabitsScreen> {
       });
       if (showOnboardingReady && list.isNotEmpty) {
         final l10n = AppLocalizations.of(context)!;
-        AppSnackbar.showSuccess(context, l10n.onboardingReadyCheckHabits);
+        AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.onboardingReadyCheckHabits);
       }
     }
   }
 
   void handleCheckIn(int habitId, bool isCompleted, {Offset? cardPosition}) async {
-    // Nếu đã hoàn thành rồi thì không làm gì
+    // Náº¿u Ä‘Ã£ hoÃ n thÃ nh rá»“i thÃ¬ khÃ´ng lÃ m gÃ¬
     if (isCompleted) return;
 
-    // Lấy thông tin habit để biết category
+    // Láº¥y thÃ´ng tin habit Ä‘á»ƒ biáº¿t category
     final habit = habits.firstWhere((h) => h["id"] == habitId);
     final category = habit["category"] as String;
 
-    // Hiện dialog xác nhận
+    // Hiá»‡n dialog xÃ¡c nháº­n
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) => _buildCheckInDialog(ctx, category),
@@ -136,14 +119,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final remaining = targetCountGlobal - currentCountGlobal;
     final metricValue = result["metric_value"] as double? ?? (remaining > 0 ? remaining : 1.0);
 
-    // Optimistic update: chỉ cập nhật completed_count, KHÔNG set is_completed
-    // vì phải đợi server xác nhận mới biết có đủ mục tiêu chưa
+    // Optimistic update: chá»‰ cáº­p nháº­t completed_count, KHÃ”NG set is_completed
+    // vÃ¬ pháº£i Ä‘á»£i server xÃ¡c nháº­n má»›i biáº¿t cÃ³ Ä‘á»§ má»¥c tiÃªu chÆ°a
     setState(() {
       final idx = habits.indexWhere((h) => h["id"] == habitId);
       if (idx != -1) {
         final currentCount = double.tryParse(habits[idx]["completed_count"]?.toString() ?? '') ?? 0.0;
         habits[idx]["completed_count"] = currentCount + metricValue;
-        // KHÔNG set is_completed ở đây — chờ server trả về kết quả thực
+        // KHÃ”NG set is_completed á»Ÿ Ä‘Ã¢y â€” chá» server tráº£ vá» káº¿t quáº£ thá»±c
       }
     });
 
@@ -154,7 +137,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       metricUnit: result["metric_unit"],
     );
 
-    // Cập nhật is_completed DỰA THEO kết quả từ server
+    // Cáº­p nháº­t is_completed Dá»°A THEO káº¿t quáº£ tá»« server
     if (!mounted) return;
     final serverCompleted = res["is_completed"] == true;
     setState(() {
@@ -164,7 +147,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       }
     });
 
-    // Nếu đã hoàn thành mục tiêu, hủy các thông báo nhắc nhở còn lại trong ngày
+    // Náº¿u Ä‘Ã£ hoÃ n thÃ nh má»¥c tiÃªu, há»§y cÃ¡c thÃ´ng bÃ¡o nháº¯c nhá»Ÿ cÃ²n láº¡i trong ngÃ y
     if (serverCompleted) {
       await NotificationService.cancelHabitReminders(habitId);
     }
@@ -184,28 +167,30 @@ class _HabitsScreenState extends State<HabitsScreen> {
         await NotificationInboxStore.add(
           title: a["title"]?.toString() ?? l10n.achievements,
           body: a["description"]?.toString() ?? '',
-          emoji: a["icon"]?.toString() ?? '🏆',
+          emoji: a["icon"]?.toString() ?? 'ðŸ†',
           targetTab: 1,
         );
       }
       AchievementPopup.show(context, newAchievements);
     }
 
-    final postCheckinStep = await FlowPrefs.getPostCheckinCoachStep();
-    if (postCheckinStep > 0 && mounted) {
-      await _showFirstCheckInDialog();
-      await FlowPrefs.completePostCheckinCoachFlow();
-      await FlowPrefs.markFirstCheckInDone();
-      return;
+    if (serverCompleted) {
+      final postCheckinStep = await FlowPrefs.getPostCheckinCoachStep();
+      if (postCheckinStep > 0 && mounted) {
+        await _showFirstCheckInDialog();
+        await FlowPrefs.completePostCheckinCoachFlow();
+        await FlowPrefs.markFirstCheckInDone();
+        return;
+      }
+
+      final firstDone = await FlowPrefs.hasCompletedFirstCheckIn();
+      if (!firstDone && mounted) {
+        await FlowPrefs.markFirstCheckInDone();
+        await _showFirstCheckInDialog();
+      }
     }
 
-    final firstDone = await FlowPrefs.hasCompletedFirstCheckIn();
-    if (!firstDone && mounted) {
-      await FlowPrefs.markFirstCheckInDone();
-      await _showFirstCheckInDialog();
-    }
-
-    await widget.onHabitCheckInCompleted?.call();
+    await widget.onHabitCheckInCompleted?.call(res["plant"] as Map<String, dynamic>?);
 
     // Refresh habits from server to ensure accuracy
     await loadHabits();
@@ -228,11 +213,15 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    AppSnackbar.showSuccess(context, l10n.habitCreatedSuccess);
+    AppSuccessDialog.show(
+      context,
+      title: l10n.habitCreatedSuccess,
+    );
 
     if (wasFirst) {
       await _showAfterFirstHabitDialog(habitId);
     }
+
   }
 
   void _showPointsFlyAnimation(Offset startPosition, int points) {
@@ -401,7 +390,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     String? metricLabel;
     String metricHint = l10n.enterNumberOptional;
 
-    // Xác định metric theo category
+    // XÃ¡c Ä‘á»‹nh metric theo category
     switch (category) {
       case "hydration":
         metricLabel = l10n.metricWater;
@@ -418,6 +407,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
       case "eat":
         metricLabel = l10n.metricCalories;
         metricUnit = l10n.unitCal;
+        break;
+      case "mental":
+        metricLabel = l10n.metricExercise;
+        metricUnit = l10n.unitMinutes;
         break;
       default:
         metricLabel = null;
@@ -569,7 +562,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
     widget.onHabitDeleted?.call();
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    AppSnackbar.showSuccess(context, l10n.habitDeletedSuccess);
+    AppSuccessDialog.show(
+      context,
+      title: l10n.habitDeletedSuccess,
+    );
   }
 
   void showEditHabitSheet(Map habit) async {
@@ -602,33 +598,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     if (!mounted) return;
 
-    if (res["message"] == null || res["message"] == "Habit updated") {
-      if (reminderEnabled && reminderTimeStr != null) {
-        final isCompleted = habit["is_completed"] == 1;
-        if (isCompleted) {
-          await NotificationService.cancelHabitReminders(habitId);
-        } else {
-          await NotificationService.scheduleHabitReminders(
-            habitId: habitId,
-            habitName: habitData['name'],
-            reminderTime: reminderTimeStr,
-          );
-        }
-      } else {
-        await NotificationService.cancelHabitReminders(habitId);
-      }
-      loadHabits();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.habitUpdated),
-          backgroundColor: AppColors.success,
-        ),
+      if (res["message"] == null || res["message"] == "Habit updated") {
+        loadHabits();
+      AppSuccessDialog.show(
+        context,
+        title: l10n.habitUpdated,
       );
     } else {
-      AppSnackbar.showError(
-        context,
-        res['message']?.toString() ?? l10n.failed,
-      );
+      AppNotificationDialog.show(context, type: NotificationType.error, title: res['message']?.toString() ?? l10n.failed);
     }
   }
 
@@ -664,23 +641,8 @@ class _HabitsScreenState extends State<HabitsScreen> {
       final newHabit = Map<String, dynamic>.from(res['habit'] as Map);
       await _onHabitCreated(newHabit);
 
-      // Lên lịch thông báo nhắc nhở nếu người dùng đã bật
-      if (reminderEnabled && reminderTime != null && reminderTime.isNotEmpty) {
-        final habitId = newHabit['id'] as int?;
-        final habitName = newHabit['name'] as String? ?? habitData['name'];
-        if (habitId != null) {
-          await NotificationService.scheduleHabitReminders(
-            habitId: habitId,
-            habitName: habitName,
-            reminderTime: reminderTime,
-          );
-        }
-      }
     } else {
-      AppSnackbar.showError(
-        context,
-        res['message']?.toString() ?? l10n.failed,
-      );
+      AppNotificationDialog.show(context, type: NotificationType.error, title: res['message']?.toString() ?? l10n.failed);
     }
   }
 
@@ -889,7 +851,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final category = habit["category"]?.toString() ?? "other";
     final categoryIcon = categories.firstWhere(
       (c) => c["id"] == category,
-      orElse: () => {"icon": "⭐"},
+      orElse: () => {"icon": "â­"},
     )["icon"];
 
     final habitId = habit['id'] as int;
@@ -1193,7 +1155,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text("🌱", style: TextStyle(fontSize: 64)),
+          const Text("ðŸŒ±", style: TextStyle(fontSize: 64)),
           const SizedBox(height: 16),
           Text(
             l10n.noHabits,
@@ -1229,3 +1191,4 @@ class _HabitsScreenState extends State<HabitsScreen> {
     );
   }
 }
+

@@ -802,8 +802,8 @@ class ApiService {
         Uri.parse("$baseUrl/community/users/$userId/follow"),
         headers: {"Authorization": "Bearer $token"},
       );
+      if (response.statusCode == 200) return {"success": true};
       final data = jsonDecode(response.body);
-      if (response.statusCode == 200) return data;
       return {"message": data["message"] ?? "Failed"};
     } catch (e) {
       return {"message": "Network error"};
@@ -817,8 +817,8 @@ class ApiService {
         Uri.parse("$baseUrl/community/users/$userId/follow"),
         headers: {"Authorization": "Bearer $token"},
       );
+      if (response.statusCode == 200) return {"success": true};
       final data = jsonDecode(response.body);
-      if (response.statusCode == 200) return data;
       return {"message": data["message"] ?? "Failed"};
     } catch (e) {
       return {"message": "Network error"};
@@ -1657,6 +1657,77 @@ class ApiService {
           "Content-Type": "application/json",
         },
         body: jsonEncode({"logoUrl": logoUrl}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= USER REPORT POST =================
+
+  // Report a post (any user)
+  static Future<Map<String, dynamic>> reportPost(
+    String token,
+    String postId,
+    String reason, {
+    String description = '',
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$baseUrl/community/posts/$postId/report"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "reason": reason,
+          "description": description,
+        }),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Get pending reports (admin)
+  static Future<Map<String, dynamic>> getReports(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$baseUrl/admin/reports"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // Handle a report (admin): warn or dismiss
+  static Future<Map<String, dynamic>> handleReport(
+    String token,
+    String notifId, {
+    required String action,
+    String? warnReason,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse("$baseUrl/admin/reports/$notifId/handle"),
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "action": action,
+          if (warnReason != null) "warnReason": warnReason,
+        }),
       );
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) return data;

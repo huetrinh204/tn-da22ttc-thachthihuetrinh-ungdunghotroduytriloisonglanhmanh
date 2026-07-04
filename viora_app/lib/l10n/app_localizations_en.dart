@@ -691,6 +691,128 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stepConfirm => 'Confirm';
 
   @override
+  String get agreePrivacyPolicy =>
+      'I agree to the Privacy Policy and Terms of Service';
+
+  @override
+  String get pleaseAgreePrivacy =>
+      'Please agree to the Privacy Policy and Terms of Service';
+
+  @override
+  String get policiesTitle => 'Privacy Policy & Terms of Service';
+
+  @override
+  String get privacyPolicyTitle => 'Privacy Policy';
+
+  @override
+  String get termsOfServiceTitle => 'Terms of Service';
+
+  @override
+  String get ppInfoCollected => '1. Information We Collect';
+
+  @override
+  String get ppInfoCollectedContent =>
+      'When you use Viora, we may collect the following information:\n- Account information: full name, email address, avatar\n- Habit data: habit list, daily check-in logs, measurements, progress\n- Interaction data: posts, comments, likes, follows in the community\n- Virtual plant data: level, experience (EXP), plant type\n- Device data: device token for push notifications';
+
+  @override
+  String get ppPurpose => '2. How We Use Your Information';
+
+  @override
+  String get ppPurposeContent =>
+      'We use your information for the following purposes:\n- Providing and operating app features (habit tracking, virtual plant, community)\n- Personalizing user experience and suggesting suitable habits\n- Sending habit reminders via push notifications and email\n- Providing AI Coach feature for habit-building guidance\n- Analyzing and improving service quality\n- Technical support and issue resolution';
+
+  @override
+  String get ppStorageSecurity => '3. Storage and Security';
+
+  @override
+  String get ppStorageSecurityContent =>
+      'We implement the following security measures:\n- Data stored on secure servers with SSL/TLS encryption\n- Passwords encrypted using bcrypt hashing algorithm\n- Data retained only as long as necessary to provide services\n- We regularly review and update security measures';
+
+  @override
+  String get ppDataSharing => '4. Data Sharing';
+
+  @override
+  String get ppDataSharingContent =>
+      'We do not sell, trade, or transfer your personal information to third parties, except:\n- When required by law enforcement authorities\n- When necessary to protect the rights and safety of users or the application\n- With service providers (e.g., Firebase for push notifications) under confidentiality agreements';
+
+  @override
+  String get ppUserRights => '5. Your Rights';
+
+  @override
+  String get ppUserRightsContent =>
+      'You have the right to:\n- Access and view your personal information\n- Edit and update your personal information\n- Request deletion of your account and related data\n- Opt out of push notifications or promotional emails\n- Export your data upon request';
+
+  @override
+  String get ppPolicyChanges => '6. Policy Changes';
+
+  @override
+  String get ppPolicyChangesContent =>
+      'We may update this Privacy Policy from time to time. When significant changes occur, we will notify you via email or in-app notification. Your continued use of the application after changes take effect constitutes your acceptance of those changes.';
+
+  @override
+  String get ppContact => '7. Contact Us';
+
+  @override
+  String get ppContactContent =>
+      'If you have any questions about this Privacy Policy, please contact us at: support@viora.app';
+
+  @override
+  String get tosAcceptance => '1. Acceptance of Terms';
+
+  @override
+  String get tosAcceptanceContent =>
+      'By registering and using Viora, you confirm that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with any term, please do not use the application.';
+
+  @override
+  String get tosAccount => '2. Account Responsibility';
+
+  @override
+  String get tosAccountContent =>
+      'You are responsible for:\n- Providing accurate, complete, and updated information when registering\n- Safeguarding your password and account\n- Notifying us immediately of any unauthorized access\n- All activities that occur under your account';
+
+  @override
+  String get tosProhibited => '3. Prohibited Conduct';
+
+  @override
+  String get tosProhibitedContent =>
+      'When using the application, you must not:\n- Post content that violates laws, is pornographic, violent, or offensive\n- Harass, threaten, or infringe on the privacy of other users\n- Impersonate others or create multiple accounts for malicious purposes\n- Distribute spam, viruses, or malware\n- Exploit vulnerabilities or interfere with the application\'s systems\n- Use the application for commercial purposes without authorization';
+
+  @override
+  String get tosUserContent => '4. User Content';
+
+  @override
+  String get tosUserContentContent =>
+      'You retain intellectual property rights to content you post (posts, comments, images). By posting, you grant us a non-exclusive, royalty-free license to use, display, and distribute that content within the application.';
+
+  @override
+  String get tosAppRights => '5. Application Rights';
+
+  @override
+  String get tosAppRightsContent =>
+      'We have the right to:\n- Remove content that violates the Terms of Service without prior notice\n- Suspend or terminate accounts that violate our terms\n- Modify, suspend, or discontinue any service at any time\n- Change usage limits or application features';
+
+  @override
+  String get tosDisclaimer => '6. Disclaimer';
+
+  @override
+  String get tosDisclaimerContent =>
+      'The application is provided on an \'as is\' basis. We do not warrant that the application will meet your requirements or be error-free. Information and advice from AI Coach are for reference only and do not substitute professional advice from doctors or health experts.';
+
+  @override
+  String get tosChanges => '7. Changes to Terms';
+
+  @override
+  String get tosChangesContent =>
+      'We may modify these Terms of Service at any time. When changes occur, we will notify you via email or in-app notification. Your continued use of the application after changes take effect constitutes your acceptance of the new terms.';
+
+  @override
+  String get tosContact => '8. Contact Us';
+
+  @override
+  String get tosContactContent =>
+      'If you have any questions about these Terms of Service, please contact us at: support@viora.app';
+
+  @override
   String get habitsToday => 'Today\'s Habits';
 
   @override
@@ -1757,7 +1879,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendWarning => 'Send Warning';
 
   @override
-  String get warningSent => 'Warning sent to user (in-app + email)';
+  String get warningSent => 'Warning sent';
 
   @override
   String get userDetails => 'User Details';
@@ -1850,6 +1972,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plantTypeFlower => 'Flower';
+
+  @override
+  String get changePlantType => 'Change Plant';
 
   @override
   String get appInfo => 'App Information';

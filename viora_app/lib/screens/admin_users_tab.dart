@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import 'admin_user_detail_screen.dart';
+import '../widgets/app_notification_dialog.dart';
+import '../widgets/admin_card_skeleton.dart';
+import '../widgets/admin_state_widgets.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -95,9 +101,9 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
               icon: const Icon(Icons.person_add_rounded, size: 20),
-              label: Text(l10n.addUser, style: const TextStyle(fontWeight: FontWeight.w600)),
+              label: Text(l10n.addUser, style: AppTypography.captionBold),
             ),
     );
   }
@@ -130,10 +136,10 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
   Widget _buildSearchBar(AppLocalizations l10n, bool isDark) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      margin: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, AppSpacing.sm),
       decoration: BoxDecoration(
         color: context.cardColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.08)
@@ -171,28 +177,25 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
 
   Widget _buildUserList(AppLocalizations l10n, bool isDark) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 6,
+            itemBuilder: (_, __) => const AdminCardSkeleton(),
+          ),
+        ),
+      );
     }
 
     if (_filteredUsers.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              LucideIcons.users,
-              size: 56,
-              color: context.textSecondary.withValues(alpha: 0.25),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _searchController.text.isNotEmpty
-                  ? l10n.noUsersFound
-                  : l10n.noUsersYet,
-              style: TextStyle(fontSize: 15, color: context.textSecondary),
-            ),
-          ],
-        ),
+      return AdminEmptyState(
+        icon: LucideIcons.users,
+        title: _searchController.text.isNotEmpty
+            ? l10n.noUsersFound
+            : l10n.noUsersYet,
       );
     }
 
@@ -235,7 +238,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
         color: isSelected
             ? AppColors.primary.withValues(alpha: 0.06)
             : context.cardColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         child: InkWell(
           onTap: () {
             if (_isSelectionMode) {
@@ -266,11 +269,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               });
             }
           },
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
           child: Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
               border: Border.all(
                 color: isSelected
                     ? AppColors.primary.withValues(alpha: 0.3)
@@ -351,11 +354,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                           Expanded(
                             child: Text(
                               name,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: context.textPrimary,
-                              ),
+                              style: AppTypography.title,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -368,9 +367,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                               ),
                               child: Text(
                                 'ADMIN',
-                                style: TextStyle(
+                                style: AppTypography.captionBold.copyWith(
                                   fontSize: 9,
-                                  fontWeight: FontWeight.w700,
                                   color: const Color(0xFFE53935),
                                   letterSpacing: 0.5,
                                 ),
@@ -381,9 +379,8 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                       const SizedBox(height: 4),
                       Text(
                         email,
-                        style: TextStyle(
+                        style: AppTypography.caption.copyWith(
                           fontSize: 13,
-                          color: context.textSecondary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -431,7 +428,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                             const SizedBox(width: 10),
                             Text(
                               isAdmin ? l10n.demoteToUser : l10n.promoteToAdmin,
-                              style: TextStyle(fontSize: 14, color: context.textPrimary),
+                              style: AppTypography.body,
                             ),
                           ],
                         ),
@@ -443,7 +440,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                           children: [
                             Icon(Icons.block_rounded, size: 18, color: context.textSecondary),
                             const SizedBox(width: 10),
-                            Text(l10n.blockUser, style: TextStyle(fontSize: 14, color: context.textPrimary)),
+                            Text(l10n.blockUser, style: AppTypography.body),
                           ],
                         ),
                         onTap: () => _blockUser(user['id'], name),
@@ -454,7 +451,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                           children: [
                             Icon(Icons.delete_outline_rounded, size: 18, color: const Color(0xFFE53935)),
                             const SizedBox(width: 10),
-                            Text(l10n.delete, style: TextStyle(fontSize: 14, color: const Color(0xFFE53935))),
+                            Text(l10n.delete, style: AppTypography.body.copyWith(color: const Color(0xFFE53935))),
                           ],
                         ),
                         onTap: () => _deleteUser(user['id'], name),
@@ -490,18 +487,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           const SizedBox(width: 4),
           Text(
             value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: context.textPrimary,
-            ),
+            style: AppTypography.captionBold,
           ),
           const SizedBox(width: 2),
           Text(
             label,
-            style: TextStyle(
+            style: AppTypography.caption.copyWith(
               fontSize: 11,
-              color: context.textSecondary,
             ),
           ),
         ],
@@ -523,7 +515,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
         builder: (context, setState) => Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, 28, AppSpacing.xxl, AppSpacing.lg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -539,13 +531,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                 const SizedBox(height: 16),
                 Text(
                   l10n.addNewUser,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: context.textPrimary),
+                  style: AppTypography.headingMedium.copyWith(color: context.textPrimary),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   Localizations.localeOf(context).languageCode == 'vi' ? 'Nhập thông tin người dùng mới' : 'Enter new user information',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: context.textSecondary, height: 1.4),
+                  style: AppTypography.bodySecondary.copyWith(height: 1.4),
                 ),
                 const SizedBox(height: 24),
                 _buildDialogField(
@@ -595,7 +587,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        child: Text(l10n.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        child: Text(l10n.cancel, style: AppTypography.captionBold),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -605,8 +597,10 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                           if (nameController.text.isEmpty ||
                               emailController.text.isEmpty ||
                               passwordController.text.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.pleaseEnterAllFields)),
+                            AppNotificationDialog.show(
+                              context,
+                              type: NotificationType.warning,
+                              title: l10n.pleaseEnterAllFields,
                             );
                             return;
                           }
@@ -618,8 +612,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                             if (context.mounted) Navigator.pop(context, true);
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('${l10n.failed}: $e')),
+                              AppNotificationDialog.show(
+                                context,
+                                type: NotificationType.error,
+                                title: l10n.failed,
+                                content: '$e',
                               );
                             }
                           }
@@ -631,7 +628,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        child: Text(l10n.create, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        child: Text(l10n.create, style: AppTypography.captionBold),
                       ),
                     ),
                   ],
@@ -646,12 +643,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     if (result == true) {
       _loadUsers();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.userCreated),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.userCreated);
       }
     }
   }
@@ -702,15 +694,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       _loadUsers();
       if (mounted) {
         final loc = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.roleUpdated), behavior: SnackBarBehavior.floating),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.success, title: loc.roleUpdated);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${Localizations.localeOf(context).languageCode == 'vi' ? 'Lỗi' : 'Error'}: $e'), behavior: SnackBarBehavior.floating),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.error, title: 'Lỗi', content: '$e');
       }
     }
   }
@@ -736,9 +724,9 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, 28, AppSpacing.xxl, AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -758,22 +746,14 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               const SizedBox(height: 16),
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: context.textPrimary,
-                ),
+                style: AppTypography.headingMedium.copyWith(fontSize: 18, color: context.textPrimary),
               ),
               const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: context.textSecondary,
-                  height: 1.4,
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodySecondary.copyWith(height: 1.4),
                 ),
-              ),
               const SizedBox(height: 24),
               Row(
                 children: [
@@ -783,10 +763,10 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: context.textSecondary,
                         side: BorderSide(color: context.textSecondary.withValues(alpha: 0.25)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                      child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(AppLocalizations.of(context)!.cancel, style: AppTypography.captionBold),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -797,10 +777,10 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                         backgroundColor: confirmColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: Text(confirmLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(confirmLabel, style: AppTypography.captionBold),
                     ),
                   ),
                 ],
@@ -825,12 +805,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       confirmColor: Colors.orange,
       onConfirm: () {
         final loc = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(loc.blockFeatureInDev),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.info, title: loc.blockFeatureInDev);
       },
     );
   }
@@ -847,15 +822,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
           await ApiService.deleteUser(_token, userId.toString());
           _loadUsers();
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(loc.userDeleted), behavior: SnackBarBehavior.floating),
-            );
+            AppNotificationDialog.show(context, type: NotificationType.success, title: loc.userDeleted);
           }
         } catch (e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${Localizations.localeOf(context).languageCode == 'vi' ? 'Lỗi' : 'Error'}: $e'), behavior: SnackBarBehavior.floating),
-            );
+            AppNotificationDialog.show(context, type: NotificationType.error, title: 'Lỗi', content: '$e');
           }
         }
       },
@@ -871,9 +842,9 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xxl, 28, AppSpacing.xxl, AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -889,13 +860,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               const SizedBox(height: 16),
               Text(
                 title,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.textPrimary),
+                style: AppTypography.headingMedium.copyWith(fontSize: 18, color: context.textPrimary),
               ),
               const SizedBox(height: 8),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: context.textSecondary, height: 1.4),
+                style: AppTypography.bodySecondary.copyWith(height: 1.4),
               ),
               const SizedBox(height: 24),
               Row(
@@ -906,13 +877,13 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: context.textSecondary,
                         side: BorderSide(color: context.textSecondary.withValues(alpha: 0.25)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: Text(loc.cancel, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(loc.cancel, style: AppTypography.captionBold),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context, true),
@@ -920,10 +891,10 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
                         backgroundColor: const Color(0xFFE53935),
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
-                      child: Text(loc.deleteAll, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(loc.deleteAll, style: AppTypography.captionBold),
                     ),
                   ),
                 ],
@@ -944,18 +915,11 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
       });
       _loadUsers();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(loc.usersDeleted(count)),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.success, title: loc.usersDeleted(count));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${Localizations.localeOf(context).languageCode == 'vi' ? 'Lỗi' : 'Error'}: $e'), behavior: SnackBarBehavior.floating),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.error, title: 'Lỗi', content: '$e');
       }
     }
   }

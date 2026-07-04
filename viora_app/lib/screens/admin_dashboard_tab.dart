@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -193,20 +196,14 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
           children: [
             Text(
               l10n.overview,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: context.textPrimary,
+              style: AppTypography.headingLarge.copyWith(
                 letterSpacing: -0.3,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               Localizations.localeOf(context).languageCode == 'vi' ? 'Tổng quan hệ thống' : 'System Overview',
-              style: TextStyle(
-                fontSize: 13,
-                color: context.textSecondary,
-              ),
+              style: AppTypography.caption,
             ),
           ],
         ),
@@ -286,16 +283,16 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
     final isDark = context.isDark;
     return Material(
       color: isDark ? AppColors.darkSurface : Colors.white,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       elevation: isDark ? 0 : 1,
       shadowColor: Colors.black.withValues(alpha: 0.06),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.md),
             border: isDark
                 ? Border.all(color: Colors.white.withValues(alpha: 0.06))
                 : null,
@@ -326,27 +323,24 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                     itemBuilder: (_) => [],
                   ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                formatCompact(value),
-                style: TextStyle(
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              formatCompact(value),
+                style: AppTypography.headingLarge.copyWith(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
-                  color: context.textPrimary,
                   letterSpacing: -0.5,
                   height: 1,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
                   Expanded(
                     child: Text(
                       label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.textSecondary,
+                      style: AppTypography.caption.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -420,10 +414,9 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: AppTypography.headingMedium.copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: context.textPrimary,
                   letterSpacing: -0.2,
                 ),
               ),
@@ -432,10 +425,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: context.textSecondary,
-                    ),
+                    style: AppTypography.caption,
                   ),
                 ),
             ],
@@ -536,11 +526,10 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-            color: isSelected ? AppColors.primary : context.textSecondary,
-          ),
+            style: AppTypography.caption.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected ? AppColors.primary : context.textSecondary,
+            ),
         ),
       ),
     );
@@ -583,15 +572,11 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
               const SizedBox(width: 10),
               Text(
                 title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: context.textPrimary,
-                ),
+                style: AppTypography.title,
               ),
+              const SizedBox(height: AppSpacing.xxl),
             ],
           ),
-          const SizedBox(height: 20),
           SizedBox(
             height: 220,
             child: data.isEmpty
@@ -847,8 +832,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         Expanded(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 13,
+            style: AppTypography.caption.copyWith(
               color: context.textPrimary,
               fontWeight: FontWeight.w500,
             ),
@@ -856,22 +840,18 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
         ),
         Text(
           '${pct.toStringAsFixed(0)}%',
-          style: TextStyle(
-            fontSize: 13,
+          style: AppTypography.caption.copyWith(
             fontWeight: FontWeight.w600,
             color: context.textPrimary,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         SizedBox(
           width: 56,
           child: Text(
             formatCompact(value),
             textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: 13,
-              color: context.textSecondary,
-            ),
+            style: AppTypography.caption,
           ),
         ),
       ],
@@ -934,11 +914,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
               children: [
                 Text(
                   l10n.popularHabitCategories,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
-                  ),
+                  style: AppTypography.title,
                 ),
                 const SizedBox(height: 14),
                 ...List.generate(_habitCategories.length, (i) {
@@ -965,24 +941,23 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                             ),
                             const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                label,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: context.textPrimary,
+                              Expanded(
+                                child: Text(
+                                  label,
+                                  style: AppTypography.caption.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color: context.textPrimary,
+                                  ),
                                 ),
                               ),
-                            ),
                             Text(
                               '$total ${l10n.habitsLabel}',
-                              style: TextStyle(fontSize: 12, color: context.textSecondary),
+                              style: AppTypography.caption,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.sm),
                             Text(
                               '$users ${l10n.users}',
-                              style: TextStyle(fontSize: 12, color: context.textSecondary),
+                              style: AppTypography.caption,
                             ),
                           ],
                         ),
@@ -1001,7 +976,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
                         const SizedBox(height: 2),
                         Text(
                           '${l10n.habitCount}: $streak ${l10n.habitsLabel}',
-                          style: TextStyle(fontSize: 10, color: context.textSecondary),
+                              style: AppTypography.caption.copyWith(fontSize: 10),
                         ),
                       ],
                     ),
@@ -1029,11 +1004,7 @@ class _AdminDashboardTabState extends State<AdminDashboardTab> {
               children: [
                 Text(
                   l10n.topCompletedHabits,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: context.textPrimary,
-                  ),
+                  style: AppTypography.title,
                 ),
                 const SizedBox(height: 12),
                 ...List.generate(_topHabits.length, (i) {

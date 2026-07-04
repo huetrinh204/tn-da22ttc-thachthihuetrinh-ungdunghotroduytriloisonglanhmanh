@@ -1,0 +1,274 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.buildUserContext = buildUserContext;
+exports.buildAdminContext = buildAdminContext;
+exports.formatContextText = formatContextText;
+exports.buildSystemPrompt = buildSystemPrompt;
+exports.formatAdminContextText = formatAdminContextText;
+exports.buildAdminSystemPrompt = buildAdminSystemPrompt;
+exports.callGemini = callGemini;
+const express_1 = require("express");
+const db_1 = __importDefault(require("../config/db"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const router = (0, express_1.Router)();
+const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// Warn at module load if API key is not configured
+if (!GEMINI_API_KEY) {
+    console.warn("[AI] WARNING: GEMINI_API_KEY is not configured. The /ai/chat endpoint will return 503.");
+}
+// ─── Auth Middleware ──────────────────────────────────────────────────────────
+function authMiddleware(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+        return res.status(401).json({ message: "Unauthorized" });
+    const token = authHeader.split(" ")[1];
+    try {
+        const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    }
+    catch {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+}
+// ─── Context Builder ──────────────────────────────────────────────────────────
+async function buildUserContext(userId, dbPool = db_1.default) {
+    const emptyContext = {
+        userName: "",
+        habits: [],
+        completedToday: 0,
+        totalToday: 0,
+        currentStreak: 0,
+    };
+    try {
+        // Query user name
+        const [userRows] = await dbPool.query("SELECT name FROM users WHERE id = ?", [userId]);
+        // Query active habits — không dùng is_archived vì cột chưa tồn tại
+        const [habitRows] = await dbPool.query("SELECT name, category FROM habits WHERE user_id = ?", [userId]);
+        // Query current streak
+        const [streakRows] = await dbPool.query("SELECT current_streak FROM streaks WHERE user_id = ?", [userId]);
+        // Query completed today (only active habits)
+        const [completedRows] = await dbPool.query(`SELECT COUNT(*) as completed FROM habit_logs hl
+       INNER JOIN habits h ON hl.habit_id = h.id AND h.is_active = 1
+       WHERE hl.user_id = ? AND DATE(hl.log_date) = CURDATE()`, [userId]);
+        // Query active habits for today
+        const [totalRows] = await dbPool.query("SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_active = 1", [userId]);
+        return {
+            userName: userRows[0]?.name ?? "",
+            habits: Array.isArray(habitRows)
+                ? habitRows.map((h) => ({ name: h.name, category: h.category }))
+                : [],
+            completedToday: Number(completedRows[0]?.completed ?? 0),
+            totalToday: Number(totalRows[0]?.total ?? 0),
+            currentStreak: Number(streakRows[0]?.current_streak ?? 0),
+        };
+    }
+    catch (err) {
+        console.error("[AI] Failed to build user context:", err);
+        return emptyContext;
+    }
+}
+async function buildAdminContext(dbPool = db_1.default) {
+    try {
+        const [[{ totalUsers }]] = await dbPool.query("SELECT COUNT(*) as totalUsers FROM users");
+        const [[{ totalPosts }]] = await dbPool.query("SELECT COUNT(*) as totalPosts FROM community_posts");
+        const [[{ totalComments }]] = await dbPool.query("SELECT COUNT(*) as totalComments FROM community_comments");
+        const [[{ newUsersToday }]] = await dbPool.query("SELECT COUNT(*) as newUsersToday FROM users WHERE DATE(created_at) = CURDATE()");
+        const [[{ totalActiveHabits }]] = await dbPool.query("SELECT COUNT(*) as totalActiveHabits FROM habits WHERE is_active = 1");
+        const [[{ recentReports }]] = await dbPool.query("SELECT COUNT(*) as recentReports FROM user_notifications WHERE type = 'warning' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+        return { totalUsers, totalPosts, totalComments, newUsersToday, totalActiveHabits, recentReports };
+    }
+    catch (err) {
+        console.error("[AI] Failed to build admin context:", err);
+        return { totalUsers: 0, totalPosts: 0, totalComments: 0, newUsersToday: 0, totalActiveHabits: 0, recentReports: 0 };
+    }
+}
+// ─── Context Formatter ────────────────────────────────────────────────────────
+function formatContextText(ctx, language = 'vi') {
+    const habitsList = ctx.habits.length > 0
+        ? ctx.habits.map((h) => `• ${h.name} (${h.category})`).join("\n")
+        : language === 'en'
+            ? "No habits yet."
+            : "Chưa có thói quen nào.";
+    if (language === 'en') {
+        return [
+            `User name: ${ctx.userName || "You"}`,
+            `Current streak: ${ctx.currentStreak} days`,
+            `Today's progress: ${ctx.completedToday}/${ctx.totalToday} habits completed`,
+            `Habit list:\n${habitsList}`,
+        ].join("\n");
+    }
+    return [
+        `Tên người dùng: ${ctx.userName || "Bạn"}`,
+        `Streak hiện tại: ${ctx.currentStreak} ngày`,
+        `Tiến độ hôm nay: ${ctx.completedToday}/${ctx.totalToday} thói quen đã hoàn thành`,
+        `Danh sách thói quen:\n${habitsList}`,
+    ].join("\n");
+}
+// ─── System Prompt Builder ────────────────────────────────────────────────────
+function buildSystemPrompt(ctx, language = 'vi') {
+    const langInstruction = language === 'en'
+        ? 'Always reply in English, friendly and non-judgmental.'
+        : 'Luôn trả lời bằng tiếng Việt, thân thiện và không phán xét';
+    const staticPrompt = `You are Viora Coach — a friendly, positive, and science-based healthy lifestyle coach.
+You help users improve their physical and mental health through daily habits.
+
+RULES:
+- ${langInstruction}
+- Keep responses short, under 300 words
+- When appropriate, provide at least 1 specific action step
+- If the question is outside health, nutrition, or healthy habits — politely decline and steer back to relevant topics`;
+    const contextSection = language === 'en'
+        ? `\nUSER INFO:\n${formatContextText(ctx, 'en')}\n\nPersonalize your advice based on the above info.`
+        : `\nTHÔNG TIN NGƯỜI DÙNG:\n${formatContextText(ctx, 'vi')}\n\nHãy cá nhân hóa lời khuyên dựa trên thông tin trên.`;
+    return staticPrompt + contextSection;
+}
+function formatAdminContextText(ctx, language = 'vi') {
+    if (language === 'en') {
+        return [
+            `Total users: ${ctx.totalUsers}`,
+            `New users today: ${ctx.newUsersToday}`,
+            `Total posts: ${ctx.totalPosts}`,
+            `Total comments: ${ctx.totalComments}`,
+            `Active habits: ${ctx.totalActiveHabits}`,
+            `Warnings (7 days): ${ctx.recentReports}`,
+        ].join("\n");
+    }
+    return [
+        `Tổng người dùng: ${ctx.totalUsers}`,
+        `Người dùng mới hôm nay: ${ctx.newUsersToday}`,
+        `Tổng bài viết: ${ctx.totalPosts}`,
+        `Tổng bình luận: ${ctx.totalComments}`,
+        `Thói quen đang hoạt động: ${ctx.totalActiveHabits}`,
+        `Cảnh báo (7 ngày): ${ctx.recentReports}`,
+    ].join("\n");
+}
+function buildAdminSystemPrompt(ctx, language = 'vi') {
+    const langInstruction = language === 'en'
+        ? 'Always reply in English, friendly and professional.'
+        : 'Luôn trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp.';
+    const prompt = language === 'en'
+        ? `You are Viora Admin Assistant — an AI that helps administrators manage the Viora platform.
+You have access to real-time platform statistics. Use them to answer admin questions accurately.
+
+RULES:
+- ${langInstruction}
+- Keep responses concise, under 300 words
+- When discussing statistics, provide numbers and trends
+- If you don't have specific data, suggest what the admin can check
+- Only answer questions related to platform management, users, content moderation, and analytics`
+        : `Bạn là Trợ lý Quản trị Viora — một AI hỗ trợ quản trị viên quản lý nền tảng Viora.
+Bạn có quyền truy cập vào thống kê nền tảng thời gian thực. Hãy dùng chúng để trả lời chính xác.
+
+NGUYÊN TẮC:
+- ${langInstruction}
+- Giữ câu trả lời ngắn gọn, dưới 300 từ
+- Khi thảo luận thống kê, đưa ra số liệu và xu hướng
+- Nếu thiếu dữ liệu, gợi ý admin kiểm tra thêm
+- Chỉ trả lời câu hỏi liên quan đến quản lý nền tảng, người dùng, kiểm duyệt nội dung và phân tích`;
+    const contextSection = language === 'en'
+        ? `\nPLATFORM STATISTICS:\n${formatAdminContextText(ctx, 'en')}\n\nUse these stats to answer admin questions. For trends, suggest what to look for.`
+        : `\nTHỐNG KÊ NỀN TẢNG:\n${formatAdminContextText(ctx, 'vi')}\n\nDùng những số liệu này để trả lời câu hỏi của admin. Về xu hướng, hãy gợi ý admin nên kiểm tra gì thêm.`;
+    return prompt + contextSection;
+}
+// ─── Gemini Client ────────────────────────────────────────────────────────────
+async function callGemini(systemPrompt, userMessage, history) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error("GEMINI_API_KEY is not configured");
+    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const contents = [
+        ...history,
+        {
+            role: "user",
+            parts: [{ text: userMessage }],
+        },
+    ];
+    const body = {
+        system_instruction: {
+            parts: [{ text: systemPrompt }],
+        },
+        contents,
+        generationConfig: {
+            maxOutputTokens: 1024,
+            temperature: 0.7,
+        },
+    };
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => "unknown error");
+        // 429 = quota exceeded — throw riêng để caller có thể xử lý thân thiện
+        if (response.status === 429) {
+            throw Object.assign(new Error("Gemini API rate limit exceeded"), { statusCode: 429 });
+        }
+        throw new Error(`Gemini API error ${response.status}: ${errorText}`);
+    }
+    const data = (await response.json());
+    const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!replyText) {
+        throw new Error("Gemini API returned empty response");
+    }
+    return replyText;
+}
+// ─── POST /ai/chat ────────────────────────────────────────────────────────────
+router.post("/chat", authMiddleware, async (req, res) => {
+    const { message, history, language } = req.body;
+    // Validate message
+    if (!message ||
+        typeof message !== "string" ||
+        message.trim().length === 0 ||
+        message.length > 2000) {
+        return res.status(400).json({ message: "Tin nhắn không hợp lệ" });
+    }
+    // Check API key
+    if (!process.env.GEMINI_API_KEY) {
+        return res.status(503).json({ message: "Dịch vụ AI chưa được cấu hình" });
+    }
+    const userId = req.user.id;
+    const conversationHistory = Array.isArray(history)
+        ? history
+        : [];
+    try {
+        const [roleRows] = await db_1.default.query("SELECT role, language FROM users WHERE id = ?", [userId]);
+        const isAdmin = roleRows[0]?.role === 'admin';
+        let userLang = language;
+        if (!userLang || !['vi', 'en'].includes(userLang)) {
+            userLang = roleRows[0]?.language || 'vi';
+        }
+        let reply;
+        if (isAdmin) {
+            const adminCtx = await buildAdminContext();
+            const systemPrompt = buildAdminSystemPrompt(adminCtx, userLang);
+            reply = await callGemini(systemPrompt, message.trim(), conversationHistory);
+        }
+        else {
+            const userCtx = await buildUserContext(userId);
+            const systemPrompt = buildSystemPrompt(userCtx, userLang);
+            reply = await callGemini(systemPrompt, message.trim(), conversationHistory);
+        }
+        return res.status(200).json({ reply });
+    }
+    catch (err) {
+        console.error("[AI] Gemini call failed:", err);
+        if (err?.statusCode === 429) {
+            return res.status(503).json({
+                message: "Trợ lý AI đang quá tải, vui lòng thử lại sau 1 phút.",
+            });
+        }
+        return res
+            .status(503)
+            .json({ message: "Trợ lý AI đang bận, vui lòng thử lại sau ít phút." });
+    }
+});
+exports.default = router;

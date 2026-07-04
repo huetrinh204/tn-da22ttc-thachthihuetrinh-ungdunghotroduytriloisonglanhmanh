@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_colors.dart';
@@ -127,9 +127,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isUploadingAvatar = false);
     if (res['avatar_url'] != null) {
       setState(() => avatarUrl = res['avatar_url'] as String);
-      AppSnackbar.showSuccess(context, l10n.avatarUpdated);
+      AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.avatarUpdated);
     } else {
-      AppSnackbar.showError(context, l10n.avatarUpdateFailed);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.avatarUpdateFailed);
     }
   }
 
@@ -264,9 +264,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!mounted) return;
                   if (res["message"] == "Profile updated") {
                     setState(() => name = ctrl.text.trim());
-                    AppSnackbar.showSuccess(context, l10n.nameUpdated);
+                    AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.nameUpdated);
                   } else {
-                    AppSnackbar.showError(context, res["message"] ?? l10n.failed);
+                    AppNotificationDialog.show(context, type: NotificationType.error, title: res["message"] ?? l10n.failed);
                   }
                 },
                 style: _btnStyle(),
@@ -347,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               weight: w, goals: goals);
                           setState(() { height = h; weight = w; });
                           if (!mounted) return;
-                          AppSnackbar.showSuccess(context, l10n.statsUpdated);
+                          AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.statsUpdated);
                         },
                   style: _btnStyle(),
                   child: Text(l10n.save),
@@ -447,7 +447,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         weight: weight, goals: selected.toList());
                     setState(() => goals = selected.toList());
                     if (!mounted) return;
-                    AppSnackbar.showSuccess(context, l10n.goalsUpdated);
+                    AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.goalsUpdated);
                   },
                   style: _btnStyle(),
                   child: Text(l10n.save),
@@ -549,11 +549,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (newCtrl.text != cfCtrl.text) {
-                      AppSnackbar.showError(context, l10n.passwordMismatch);
+                      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.passwordMismatch);
                       return;
                     }
                     if (newCtrl.text.length < 8) {
-                      AppSnackbar.showError(context, l10n.passwordTooShort);
+                      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.passwordTooShort);
                       return;
                     }
                     Navigator.pop(ctx);
@@ -564,9 +564,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                     if (!mounted) return;
                     if (res["message"] == "Password updated") {
-                      AppSnackbar.showSuccess(context, l10n.passwordUpdated);
+                      AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.passwordUpdated);
                     } else {
-                      AppSnackbar.showError(context, res["message"] ?? l10n.failed);
+                      AppNotificationDialog.show(context, type: NotificationType.error, title: res["message"] ?? l10n.failed);
                     }
                   },
                   style: _btnStyle(),
@@ -826,10 +826,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, mode, _) {
         final isDark = mode == ThemeMode.dark;
         return ListTile(
-          leading: Icon(
-            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-            color: AppColors.primary,
-            size: 22,
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+              color: AppColors.primary,
+              size: 18,
+            ),
           ),
           title: Text(
             isDark ? l10n.darkMode : l10n.lightMode,
@@ -864,10 +872,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final isVietnamese = languageCode == 'vi';
         
         return ListTile(
-          leading: const Icon(
-            Icons.language_rounded,
-            color: AppColors.primary,
-            size: 22,
+          leading: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.language_rounded,
+              color: AppColors.primary,
+              size: 18,
+            ),
           ),
           title: Text(
             l10n.language,
@@ -951,7 +967,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await localeProvider.setLocale(const Locale('vi'));
                 if (!mounted) return;
                 Navigator.pop(ctx);
-                AppSnackbar.showSuccess(context, l10n.languageChanged);
+                AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.languageChanged);
               },
             ),
             
@@ -968,7 +984,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await localeProvider.setLocale(const Locale('en'));
                 if (!mounted) return;
                 Navigator.pop(ctx);
-                AppSnackbar.showSuccess(context, l10n.languageChangedEn);
+                AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.languageChangedEn);
               },
             ),
             

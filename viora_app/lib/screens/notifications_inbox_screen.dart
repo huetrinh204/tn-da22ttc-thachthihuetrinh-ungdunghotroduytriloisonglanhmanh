@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
@@ -156,7 +156,7 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
         _notifications.where((n) => n.isRead).map((n) => n.id).toList();
 
     if (readIds.isEmpty) {
-      if (mounted) AppSnackbar.showError(context, 'Không có thông báo đã đọc');
+      if (mounted) AppNotificationDialog.show(context, type: NotificationType.error, title: 'Không có thông báo đã đọc');
       return;
     }
 
@@ -213,7 +213,7 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
           ),
         );
       }
-    } else if (notif.type == 'like' || notif.type == 'comment' || notif.type == 'new_post') {
+    } else if (notif.type == 'post_reported' || notif.type == 'like' || notif.type == 'comment' || notif.type == 'new_post') {
       if (notif.postId != null) {
         await _navigateToPost(notif.postId!, notif);
       }
@@ -241,7 +241,7 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
     } catch (_) {}
 
     if (!mounted) return;
-    AppSnackbar.showError(context, 'Không thể tải bài viết');
+    AppNotificationDialog.show(context, type: NotificationType.error, title: 'Không thể tải bài viết');
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -466,6 +466,11 @@ class _NotificationsInboxScreenState extends State<NotificationsInboxScreen> {
         icon = Icons.warning;
         iconColor = Colors.orange;
         message = notif.title ?? 'Admin Warning';
+        break;
+      case 'post_reported':
+        icon = Icons.flag;
+        iconColor = Colors.orange;
+        message = notif.title ?? 'Báo cáo bài viết';
         break;
       case 'new_post':
         icon = Icons.article;

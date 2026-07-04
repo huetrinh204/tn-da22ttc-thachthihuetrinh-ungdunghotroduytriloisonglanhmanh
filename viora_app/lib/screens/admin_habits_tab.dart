@@ -4,11 +4,15 @@ import '../services/api_service.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_typography.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
 import '../models/plant_type.dart';
 import '../constants/app_icons.dart';
 import '../widgets/habit_icon.dart';
+import '../widgets/admin_card_skeleton.dart';
+import '../widgets/admin_state_widgets.dart';
 import 'admin_plant_detail_screen.dart';
 
 class AdminHabitsTab extends StatefulWidget {
@@ -177,7 +181,10 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
         _buildTabBar(),
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? ListView(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.lg),
+                  children: List.generate(6, (_) => const AdminCardSkeleton()),
+                )
               : TabBarView(
                   controller: _tabController,
                   children: [
@@ -213,16 +220,12 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
               children: [
                 Text(
                   '$habitCount ${l10n.habitsLabel}',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: context.textPrimary,
-                  ),
+                  style: AppTypography.headingMedium.copyWith(color: context.textPrimary),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '$plantCount ${l10n.plant} · ${l10n.adminManageHabits}',
-                  style: TextStyle(fontSize: 13, color: context.textSecondary),
+                  style: AppTypography.caption,
                 ),
               ],
             ),
@@ -312,9 +315,7 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.captionBold.copyWith(
             color: isSelected ? color : context.textSecondary,
           ),
         ),
@@ -328,19 +329,19 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
       margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
       decoration: BoxDecoration(
         color: context.isDark ? const Color(0xFF24352E) : const Color(0xFFF0F1F3),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
           color: AppColors.primary,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
         unselectedLabelColor: context.textSecondary,
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        labelStyle: AppTypography.captionBold,
+        unselectedLabelStyle: AppTypography.caption,
         dividerColor: Colors.transparent,
         tabs: [
           Tab(
@@ -371,15 +372,9 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
   Widget _buildHabitsList() {
     final l10n = AppLocalizations.of(context)!;
     if (_filteredHabits.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(AppIcons.habits, size: 48, color: context.textSecondary.withValues(alpha: 0.5)),
-            const SizedBox(height: 12),
-            Text(l10n.noHabits, style: TextStyle(color: context.textSecondary)),
-          ],
-        ),
+      return AdminEmptyState(
+        icon: AppIcons.habits,
+        title: l10n.noHabits,
       );
     }
     return RefreshIndicator(
@@ -408,20 +403,20 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: context.cardColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
           color: context.isDark ? const Color(0xFF2E433C) : const Color(0xFFE5E7EB),
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
             Container(
               width: 42, height: 42,
               decoration: BoxDecoration(
                 color: catColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Center(child: HabitIcon(iconString: icon, size: 20, color: catColor)),
             ),
@@ -435,11 +430,7 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
                       Expanded(
                         child: Text(
                           habit['name'] ?? '',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: context.textPrimary,
-                          ),
+                          style: AppTypography.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -451,11 +442,11 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
                             color: AppColors.error.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Text(l10n.inactive, style: TextStyle(fontSize: 10, color: AppColors.error, fontWeight: FontWeight.w600)),
+                          child: Text(l10n.inactive, style: AppTypography.captionBold.copyWith(fontSize: 10, color: AppColors.error)),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
                   Row(
                     children: [
                       Container(
@@ -464,15 +455,15 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
                           color: catColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text(catLabel, style: TextStyle(fontSize: 10, color: catColor, fontWeight: FontWeight.w500)),
+                        child: Text(catLabel, style: AppTypography.captionBold.copyWith(fontSize: 10, color: catColor)),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSpacing.sm),
                       Icon(AppIcons.user, size: 12, color: context.textSecondary),
                       const SizedBox(width: 3),
                       Expanded(
                         child: Text(
                           habit['user_name'] ?? '',
-                          style: TextStyle(fontSize: 11, color: context.textSecondary),
+                          style: AppTypography.caption,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -484,11 +475,11 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
                     children: [
                       Icon(AppIcons.streak, size: 13, color: AppColors.warning),
                       const SizedBox(width: 3),
-                      Text('$streak ${l10n.days}', style: TextStyle(fontSize: 11, color: AppColors.warning, fontWeight: FontWeight.w600)),
-                      const SizedBox(width: 12),
+                      Text('$streak ${l10n.days}', style: AppTypography.captionBold.copyWith(fontSize: 11, color: AppColors.warning)),
+                      const SizedBox(width: AppSpacing.md),
                       Icon(AppIcons.clock, size: 12, color: context.textSecondary),
                       const SizedBox(width: 3),
-                      Text(createdAt, style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                      Text(createdAt, style: AppTypography.caption),
                     ],
                   ),
                 ],
@@ -502,15 +493,9 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
 
   Widget _buildPlantsList(AppLocalizations l10n) {
     if (_filteredPlants.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(AppIcons.sprout, size: 48, color: context.textSecondary.withValues(alpha: 0.5)),
-            const SizedBox(height: 12),
-            Text(l10n.noPlants, style: TextStyle(color: context.textSecondary)),
-          ],
-        ),
+      return AdminEmptyState(
+        icon: AppIcons.sprout,
+        title: l10n.noPlants,
       );
     }
     return RefreshIndicator(
@@ -547,17 +532,17 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
         margin: const EdgeInsets.only(bottom: AppSpacing.md),
         decoration: BoxDecoration(
           color: context.cardColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: context.isDark ? const Color(0xFF2E433C) : const Color(0xFFE5E7EB),
-          ),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        border: Border.all(
+          color: context.isDark ? const Color(0xFF2E433C) : const Color(0xFFE5E7EB),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
                 child: Image.asset(
                   _getPlantImagePath(level, plantTypeId),
                   width: 48, height: 48,
@@ -579,14 +564,14 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
                   children: [
                     Text(
                       plant['user_name'] as String? ?? 'Unknown',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textPrimary),
+                      style: AppTypography.title,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${_getPlantName(context, level, plantTypeId)} · ${l10n.level(level)}',
-                      style: TextStyle(fontSize: 12, color: context.textSecondary),
+                      style: AppTypography.caption,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.sm),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
@@ -597,7 +582,7 @@ class _AdminHabitsTabState extends State<AdminHabitsTab>
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text('${l10n.lastWatered}: $lastWatered', style: TextStyle(fontSize: 10, color: context.textSecondary)),
+                    Text('${l10n.lastWatered}: $lastWatered', style: AppTypography.caption.copyWith(fontSize: 10)),
                   ],
                 ),
               ),

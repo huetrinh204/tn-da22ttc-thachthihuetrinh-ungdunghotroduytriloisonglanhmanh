@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../services/onboarding_gate.dart';
+import '../services/fcm_service.dart';
 import 'onboarding_screen.dart';
+import 'policies_screen.dart';
 import '../widgets/floating_leaves.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
@@ -30,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isLoading = false;
   bool obscurePassword = true;
   bool obscureConfirm = true;
+  bool acceptedPrivacy = false;
   String message = "";
 
   @override
@@ -44,6 +47,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void handleRegister() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
+    if (!acceptedPrivacy) {
+      AppNotificationDialog.show(
+        context,
+        type: NotificationType.warning,
+        title: l10n.pleaseAgreePrivacy,
+      );
+      return;
+    }
     setState(() => isLoading = true);
     final res = await ApiService.register(
       nameController.text.trim(),
@@ -54,6 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (res["message"] == "Register success") {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", res["token"]);
+      await FcmService.resyncToken();
       await OnboardingGate.prepareNewAccount();
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -62,8 +74,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
     } else {
       if (!mounted) return;
-      AppSnackbar.showError(context, res["message"] ?? l10n.registerFailed);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: res["message"] ?? l10n.registerFailed);
     }
+  }
+
+  void _showPoliciesScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PoliciesScreen()),
+    );
   }
 
   @override
@@ -168,7 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 l10n.enterEmail, Icons.email_outlined),
                             validator: (v) {
                               if (v!.trim().isEmpty) return l10n.pleaseEnterEmail;
-                              final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
+                              final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
                               if (!emailRegex.hasMatch(v.trim())) return l10n.invalidEmailFormat;
                               return null;
                             },
@@ -231,6 +250,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          Row(
+                            children: [
+                              SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: Checkbox(
+                                  value: acceptedPrivacy,
+                                  onChanged: (v) => setState(() => acceptedPrivacy = v ?? false),
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: _showPoliciesScreen,
+                                  child: Text(
+                                    l10n.agreePrivacyPolicy,
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontSize: 13,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
                           const SizedBox(height: AppSpacing.xxl),
 
                           SizedBox(

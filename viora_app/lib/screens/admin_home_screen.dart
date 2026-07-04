@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/viora_app_bar.dart';
 import '../theme/app_theme.dart';
+import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
 import 'admin_dashboard_tab.dart';
@@ -85,7 +86,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
             onTap: (index) => setState(() => _currentIndex = index),
             type: BottomNavigationBarType.fixed,
             selectedItemColor: AppColors.primary,
-            unselectedItemColor: Colors.grey,
+            unselectedItemColor: AppColors.textSecondary,
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(AppIcons.dashboard),
@@ -128,20 +129,23 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    spreadRadius: 1,
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.chat_bubble_rounded,
-                color: Colors.white,
-                size: 28,
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/CHAT_AI.png',
+                  width: 28,
+                  height: 28,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),

@@ -5,9 +5,10 @@ import '../services/api_service.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
-import '../widgets/app_snackbar.dart';
 import '../constants/app_icons.dart';
 import '../navigation/app_navigation.dart';
+import '../widgets/app_confirm_dialog.dart';
+import 'create_post_screen.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});
@@ -364,7 +365,6 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                             String? imageUrl;
                             if (imagePath != null) {
                               try {
-                                // Load asset bytes và upload lên server
                                 final byteData = await rootBundle.load(imagePath);
                                 final bytes = byteData.buffer.asUint8List();
                                 final filename = imagePath.split('/').last;
@@ -374,26 +374,31 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
                                   filename: filename,
                                 );
                                 imageUrl = uploadRes['url'] as String?;
-                              } catch (_) {
-                                // Nếu upload ảnh lỗi vẫn tiếp tục đăng bài không có ảnh
-                              }
+                              } catch (_) {}
                             }
 
-                            await ApiService.createPost(
-                              token: token,
-                              content: content,
-                              imageUrl: imageUrl,
-                              hashtags: ['#thanhTich', '#achievement'],
-                              postType: 'achievement',
-                            );
                             setDialog(() => isSharing = false);
                             if (!mounted) return;
-                            Navigator.pop(ctx); // đóng dialog
-                            AppSnackbar.showSuccess(
-                                context, l10n.achievementShared);
-                            // Pop về root (home screen) rồi switch sang tab Cộng đồng
-                            Navigator.of(context).popUntil((route) => route.isFirst);
-                            AppNavigation.openCommunity();
+                            Navigator.pop(ctx);
+
+                            if (!context.mounted) return;
+
+                            final postResult = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CreatePostScreen(
+                                  initialContent: content,
+                                  initialImageUrl: imageUrl,
+                                  initialHashtags: ['#thanhTich', '#achievement'],
+                                  postType: 'achievement',
+                                ),
+                              ),
+                            );
+
+                            if (postResult == true && mounted) {
+                              Navigator.of(context).pop();
+                              if (mounted) AppNavigation.openCommunityAchievements();
+                            }
                           },
                     icon: isSharing
                         ? const SizedBox(

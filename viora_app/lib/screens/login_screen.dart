@@ -7,13 +7,14 @@ import 'register_screen.dart';
 import 'onboarding_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../widgets/floating_leaves.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_typography.dart';
 import '../theme/theme_extensions.dart';
 import '../services/onboarding_gate.dart';
+import '../services/fcm_service.dart';
 import 'forgot_password_screen.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/language_flag_toggle.dart';
@@ -49,7 +50,12 @@ class _LoginScreenState extends State<LoginScreen> {
   void handleLogin() async {
     final l10n = AppLocalizations.of(context)!;
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      AppSnackbar.showError(context, l10n.pleaseEnterAllInfo);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.pleaseEnterAllInfo);
+      return;
+    }
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!emailRegex.hasMatch(emailController.text.trim())) {
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.invalidEmailFormat);
       return;
     }
     setState(() => isLoading = true);
@@ -62,11 +68,12 @@ class _LoginScreenState extends State<LoginScreen> {
       final token = res["token"];
       if (token == null) {
         if (!mounted) return;
-        AppSnackbar.showError(context, l10n.loginFailedRetry);
+        AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.loginFailedRetry);
         return;
       }
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("token", token);
+      await FcmService.resyncToken();
 
       // Check if user is admin
       final profileRes = await ApiService.getProfile(token);
@@ -91,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } else {
       if (!mounted) return;
-      AppSnackbar.showError(context, res["message"] ?? l10n.loginFailed);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: res["message"] ?? l10n.loginFailed);
     }
   }
 
@@ -105,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final idToken = auth.idToken;
       if (idToken == null) {
         if (!mounted) return;
-        AppSnackbar.showError(context, l10n.googleLoginFailed);
+        AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.googleLoginFailed);
         return;
       }
       setState(() => isLoading = true);
@@ -116,10 +123,11 @@ class _LoginScreenState extends State<LoginScreen> {
         final token = res["token"] as String?;
         if (token == null) {
           if (!mounted) return;
-          AppSnackbar.showError(context, l10n.googleLoginFailed);
+          AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.googleLoginFailed);
           return;
         }
         await prefs.setString("token", token);
+        await FcmService.resyncToken();
         final isNewUser = res["isNewUser"] == true;
 
         final profileRes = await ApiService.getProfile(token);
@@ -147,11 +155,11 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       } else {
         if (!mounted) return;
-        AppSnackbar.showError(context, res["message"] ?? l10n.googleLoginFailed);
+        AppNotificationDialog.show(context, type: NotificationType.error, title: res["message"] ?? l10n.googleLoginFailed);
       }
     } catch (e) {
       if (!mounted) return;
-      AppSnackbar.showError(context, l10n.googleLoginError(e.toString()));
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.googleLoginError(e.toString()));
     }
   }
 

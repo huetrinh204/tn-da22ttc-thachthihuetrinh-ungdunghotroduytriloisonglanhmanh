@@ -221,7 +221,7 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
-        payload: 'tab:1',
+        payload: 'tab:0',
       );
       print('[Notification] Scheduled id=$id at $hour:$minute (local TZ) using $scheduleMode');
     } catch (e) {
@@ -417,7 +417,7 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
-        payload: 'tab:1',
+        payload: 'tab:0',
       );
       print('[HabitReminder] Scheduled habit reminder id=$notifId ($habitName) at $hour:${minute.toString().padLeft(2, "0")} using $scheduleMode');
     } catch (e) {

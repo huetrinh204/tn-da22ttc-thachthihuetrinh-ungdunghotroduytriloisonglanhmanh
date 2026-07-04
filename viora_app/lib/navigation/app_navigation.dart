@@ -13,17 +13,32 @@ class AppNavigation {
 
   static void Function(int tabIndex)? onSwitchTab;
 
+  /// Sub-tab (tab con trong Community) đang chờ để chuyển đến.
+  static final ValueNotifier<int?> pendingCommunitySubTab = ValueNotifier(null);
+
   static void switchToTab(int index) {
     onSwitchTab?.call(AppTabs.normalize(index));
   }
 
   static void openToday() => switchToTab(AppTabs.today);
-  static Future<void> openHabits() async {
+  static Future<void> openHabits({
+    Future<void> Function(Map<String, dynamic>? plant)? onCheckInCompleted,
+    VoidCallback? onHabitDeleted,
+  }) async {
     await navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (_) => const HabitsScreen()),
+      MaterialPageRoute(
+        builder: (_) => HabitsScreen(
+          onHabitCheckInCompleted: onCheckInCompleted,
+          onHabitDeleted: onHabitDeleted,
+        ),
+      ),
     );
   }
   static void openCommunity() => switchToTab(AppTabs.community);
+  static void openCommunityAchievements() {
+    pendingCommunitySubTab.value = 2;
+    switchToTab(AppTabs.community);
+  }
   static void openGrow() => switchToTab(AppTabs.grow);
   static void openMe() => switchToTab(AppTabs.me);
   static void openAiChat() => navigatorKey.currentState?.push(

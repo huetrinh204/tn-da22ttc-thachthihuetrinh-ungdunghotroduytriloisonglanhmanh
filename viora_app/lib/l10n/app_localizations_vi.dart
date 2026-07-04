@@ -692,6 +692,128 @@ class AppLocalizationsVi extends AppLocalizations {
   String get stepConfirm => 'Xác nhận';
 
   @override
+  String get agreePrivacyPolicy =>
+      'Tôi đồng ý với Chính sách Bảo mật và Điều khoản Sử dụng';
+
+  @override
+  String get pleaseAgreePrivacy =>
+      'Vui lòng đồng ý với Chính sách Bảo mật và Điều khoản Sử dụng';
+
+  @override
+  String get policiesTitle => 'Chính sách Bảo mật & Điều khoản';
+
+  @override
+  String get privacyPolicyTitle => 'Chính sách Bảo mật';
+
+  @override
+  String get termsOfServiceTitle => 'Điều khoản Sử dụng';
+
+  @override
+  String get ppInfoCollected => '1. Thông tin chúng tôi thu thập';
+
+  @override
+  String get ppInfoCollectedContent =>
+      'Khi bạn sử dụng ứng dụng Viora, chúng tôi có thể thu thập các thông tin sau:\n- Thông tin tài khoản: họ tên, địa chỉ email, ảnh đại diện\n- Dữ liệu thói quen: danh sách thói quen, nhật ký check-in hằng ngày, số đo, tiến trình\n- Dữ liệu tương tác: bài viết, bình luận, lượt thích, theo dõi trong cộng đồng\n- Dữ liệu cây ảo: cấp độ, kinh nghiệm (EXP), loại cây\n- Dữ liệu thiết bị: mã thiết bị cho push notification';
+
+  @override
+  String get ppPurpose => '2. Mục đích sử dụng thông tin';
+
+  @override
+  String get ppPurposeContent =>
+      'Chúng tôi sử dụng thông tin của bạn cho các mục đích sau:\n- Cung cấp và vận hành các tính năng của ứng dụng (theo dõi thói quen, cây ảo, cộng đồng)\n- Cá nhân hóa trải nghiệm người dùng và đề xuất thói quen phù hợp\n- Gửi thông báo nhắc nhở thói quen qua push notification và email\n- Cung cấp tính năng AI Coach để tư vấn và hỗ trợ xây dựng thói quen\n- Phân tích, thống kê để cải thiện chất lượng dịch vụ\n- Hỗ trợ kỹ thuật và xử lý sự cố';
+
+  @override
+  String get ppStorageSecurity => '3. Lưu trữ và bảo mật';
+
+  @override
+  String get ppStorageSecurityContent =>
+      'Chúng tôi áp dụng các biện pháp bảo mật sau:\n- Dữ liệu được lưu trữ trên máy chủ an toàn với mã hóa SSL/TLS\n- Mật khẩu được mã hóa bằng thuật toán băm (bcrypt)\n- Dữ liệu chỉ được giữ lại trong thời gian cần thiết để cung cấp dịch vụ\n- Chúng tôi định kỳ đánh giá và cập nhật các biện pháp bảo mật';
+
+  @override
+  String get ppDataSharing => '4. Chia sẻ dữ liệu';
+
+  @override
+  String get ppDataSharingContent =>
+      'Chúng tôi cam kết không bán, trao đổi hoặc chuyển nhượng thông tin cá nhân của bạn cho bên thứ ba, ngoại trừ:\n- Khi có yêu cầu từ cơ quan pháp luật có thẩm quyền\n- Khi cần thiết để bảo vệ quyền lợi và an toàn của người dùng hoặc ứng dụng\n- Với các đối tác cung cấp dịch vụ (như Firebase cho push notification) dưới sự ràng buộc bảo mật';
+
+  @override
+  String get ppUserRights => '5. Quyền của người dùng';
+
+  @override
+  String get ppUserRightsContent =>
+      'Bạn có quyền:\n- Truy cập và xem thông tin cá nhân của mình\n- Chỉnh sửa, cập nhật thông tin cá nhân\n- Yêu cầu xóa tài khoản và dữ liệu liên quan\n- Từ chối nhận thông báo push hoặc email quảng cáo\n- Xuất dữ liệu của mình theo yêu cầu';
+
+  @override
+  String get ppPolicyChanges => '6. Thay đổi chính sách';
+
+  @override
+  String get ppPolicyChangesContent =>
+      'Chúng tôi có thể cập nhật Chính sách Bảo mật này theo thời gian. Khi có thay đổi quan trọng, chúng tôi sẽ thông báo cho bạn qua email hoặc thông báo trong ứng dụng. Việc bạn tiếp tục sử dụng ứng dụng sau khi thay đổi có hiệu lực đồng nghĩa với việc bạn chấp nhận các thay đổi đó.';
+
+  @override
+  String get ppContact => '7. Liên hệ';
+
+  @override
+  String get ppContactContent =>
+      'Nếu bạn có bất kỳ câu hỏi hoặc thắc mắc nào về Chính sách Bảo mật này, vui lòng liên hệ với chúng tôi qua email: support@viora.app';
+
+  @override
+  String get tosAcceptance => '1. Chấp nhận Điều khoản';
+
+  @override
+  String get tosAcceptanceContent =>
+      'Bằng việc đăng ký và sử dụng ứng dụng Viora, bạn xác nhận đã đọc, hiểu và đồng ý bị ràng buộc bởi các Điều khoản Sử dụng này. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng không sử dụng ứng dụng.';
+
+  @override
+  String get tosAccount => '2. Trách nhiệm tài khoản';
+
+  @override
+  String get tosAccountContent =>
+      'Bạn có trách nhiệm:\n- Cung cấp thông tin chính xác, đầy đủ và cập nhật khi đăng ký\n- Bảo mật mật khẩu và tài khoản của mình\n- Thông báo ngay cho chúng tôi nếu phát hiện truy cập trái phép\n- Chịu trách nhiệm về mọi hoạt động diễn ra trên tài khoản của mình';
+
+  @override
+  String get tosProhibited => '3. Hành vi bị nghiêm cấm';
+
+  @override
+  String get tosProhibitedContent =>
+      'Khi sử dụng ứng dụng, bạn không được:\n- Đăng tải nội dung vi phạm pháp luật, khiêu dâm, bạo lực hoặc xúc phạm\n- Quấy rối, đe dọa hoặc xâm phạm quyền riêng tư của người dùng khác\n- Giả mạo danh tính hoặc tạo nhiều tài khoản với mục đích xấu\n- Phát tán spam, virus hoặc mã độc\n- Khai thác lỗ hổng hoặc can thiệp vào hệ thống của ứng dụng\n- Sử dụng ứng dụng cho mục đích thương mại khi chưa được cho phép';
+
+  @override
+  String get tosUserContent => '4. Nội dung người dùng';
+
+  @override
+  String get tosUserContentContent =>
+      'Bạn giữ quyền sở hữu trí tuệ đối với nội dung bạn đăng tải (bài viết, bình luận, hình ảnh). Bằng việc đăng tải, bạn cấp cho chúng tôi giấy phép không độc quyền, miễn phí bản quyền để sử dụng, hiển thị và phân phối nội dung đó trong phạm vi ứng dụng.';
+
+  @override
+  String get tosAppRights => '5. Quyền của ứng dụng';
+
+  @override
+  String get tosAppRightsContent =>
+      'Chúng tôi có quyền:\n- Xóa nội dung vi phạm Điều khoản Sử dụng mà không cần thông báo trước\n- Tạm khóa hoặc vô hiệu hóa tài khoản vi phạm\n- Điều chỉnh, tạm ngưng hoặc ngừng cung cấp dịch vụ bất kỳ lúc nào\n- Thay đổi giới hạn sử dụng hoặc tính năng của ứng dụng';
+
+  @override
+  String get tosDisclaimer => '6. Tuyên bố miễn trừ trách nhiệm';
+
+  @override
+  String get tosDisclaimerContent =>
+      'Ứng dụng được cung cấp trên cơ sở \'nguyên trạng\' (as is). Chúng tôi không bảo đảm rằng ứng dụng sẽ đáp ứng mọi nhu cầu của bạn hoặc không có lỗi. Thông tin và tư vấn từ AI Coach chỉ mang tính tham khảo, không thay thế cho tư vấn chuyên môn từ bác sĩ hoặc chuyên gia sức khỏe.';
+
+  @override
+  String get tosChanges => '7. Thay đổi Điều khoản';
+
+  @override
+  String get tosChangesContent =>
+      'Chúng tôi có thể sửa đổi Điều khoản Sử dụng này bất kỳ lúc nào. Khi có thay đổi, chúng tôi sẽ thông báo cho bạn qua email hoặc thông báo trong ứng dụng. Việc bạn tiếp tục sử dụng ứng dụng sau khi thay đổi có hiệu lực đồng nghĩa với việc bạn chấp nhận các điều khoản mới.';
+
+  @override
+  String get tosContact => '8. Liên hệ';
+
+  @override
+  String get tosContactContent =>
+      'Nếu bạn có bất kỳ câu hỏi nào về Điều khoản Sử dụng, vui lòng liên hệ qua email: support@viora.app';
+
+  @override
   String get habitsToday => 'Thói quen hôm nay';
 
   @override
@@ -1207,7 +1329,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get followUser => 'Theo dõi';
 
   @override
-  String get followingUser => 'Đang theo';
+  String get followingUser => 'Đang theo dõi';
 
   @override
   String get friends => 'Bạn bè';
@@ -1739,7 +1861,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sendWarning => 'Gửi cảnh báo';
 
   @override
-  String get warningSent => 'Đã gửi cảnh báo đến người dùng (in-app + email)';
+  String get warningSent => 'Đã gửi cảnh báo';
 
   @override
   String get userDetails => 'Chi tiết người dùng';
@@ -1832,6 +1954,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get plantTypeFlower => 'Hoa';
+
+  @override
+  String get changePlantType => 'Đổi cây';
 
   @override
   String get appInfo => 'Thông tin ứng dụng';

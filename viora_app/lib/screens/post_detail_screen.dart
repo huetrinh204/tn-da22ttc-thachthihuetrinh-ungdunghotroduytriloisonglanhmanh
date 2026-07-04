@@ -4,11 +4,14 @@ import '../models/post.dart';
 import '../models/comment.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
 import '../constants/app_icons.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/report_reason_sheet.dart';
+import 'create_post_screen.dart';
 import 'user_profile_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
@@ -34,6 +37,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   String? _replyingToUserName;
   bool _isLoading = false;
   bool _isSendingComment = false;
+  bool _reported = false;
   bool _isSendingReply = false;
   String? _commentsError;
   String? _token;
@@ -58,6 +62,30 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   bool get _isOwnPost =>
       _currentUserId != null && _post.userId == _currentUserId;
+
+  Future<void> _editPost() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePostScreen(existingPost: _post),
+      ),
+    );
+    if (result == true && mounted) {
+      _refreshPost();
+    }
+  }
+
+  Future<void> _refreshPost() async {
+    try {
+      final res = await ApiService.getPostById(_token!, _post.id);
+      if (!mounted) return;
+      if (res['post'] != null) {
+        setState(() {
+          _post = Post.fromJson(res['post'] as Map<String, dynamic>);
+        });
+      }
+    } catch (_) {}
+  }
 
   Future<void> _deletePost() async {
     final l10n = AppLocalizations.of(context)!;
@@ -140,20 +168,23 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final res = await ApiService.deletePost(_token ?? "", _post.id);
     if (!mounted) return;
     if (res["message"] == null || res["message"] == "Deleted") {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.postDeleted),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      Navigator.pop(context, true);
+      if (mounted) {
+        await AppNotificationDialog.show(
+          context,
+          type: NotificationType.success,
+          title: l10n.postDeleted,
+        );
+      }
+      if (mounted) Navigator.pop(context, true);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(res["message"] ?? "Failed"),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Xóa thất bại',
+          content: res["message"] ?? "Failed",
+        );
+      }
     }
   }
 
@@ -218,12 +249,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _commentController.clear();
       FocusScope.of(context).unfocus();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response["message"] ?? "Failed to comment"),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Bình luận thất bại',
+          content: response["message"] ?? "Failed to comment",
+        );
+      }
     }
   }
 
@@ -280,12 +313,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       _replyController.clear();
       _cancelReply();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response["message"] ?? "Failed to reply"),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Trả lời thất bại',
+          content: response["message"] ?? "Failed to reply",
+        );
+      }
     }
   }
 
@@ -344,6 +379,44 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     }
   }
 
+  void _handleReport() async {
+    final token = _token ?? "";
+
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReportReasonSheet(
+        onReport: (reason, description) async {
+          Navigator.pop(context);
+          final res = await ApiService.reportPost(token, _post.id, reason, description: description);
+          if (!mounted) return;
+          if (res['message'] != null && (res['message'] as String).contains('success')) {
+            setState(() => _reported = true);
+            if (!mounted) return;
+            AppNotificationDialog.show(
+              context,
+              type: NotificationType.success,
+              title: 'Cảm ơn bạn đã báo cáo!',
+              content: 'Admin sẽ xem xét và xử lý sớm nhất.',
+            );
+          } else {
+            final msg = res['message'] as String? ?? 'Gửi báo cáo thất bại';
+            if (!mounted) return;
+            final isDuplicate = msg.contains('đã báo cáo');
+            AppNotificationDialog.show(
+              context,
+              type: isDuplicate ? NotificationType.warning : NotificationType.error,
+              title: isDuplicate ? 'Đã báo cáo trước đó' : 'Gửi báo cáo thất bại',
+              content: isDuplicate ? 'Bài viết này đã được bạn báo cáo trước đó và đang chờ admin xem xét.' : msg,
+            );
+          }
+        },
+      ),
+    );
+  }
+
   void _handleCommentLike(Comment comment) async {
     final token = _token ?? "";
     final wasLiked = comment.isLiked;
@@ -380,11 +453,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         title: l10n.postContent,
         showBack: true,
         actions: [
-          if (_isOwnPost)
+          if (_isOwnPost) ...[
+            IconButton(
+              icon: Icon(AppIcons.edit, color: AppColors.primary),
+              onPressed: _editPost,
+            ),
             IconButton(
               icon: Icon(AppIcons.delete, color: AppColors.error),
               onPressed: _deletePost,
             ),
+          ],
         ],
       ),
       body: Column(
@@ -630,6 +708,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             color: context.textSecondary,
             onTap: () {},
           ),
+          const Spacer(),
+          if (!_isOwnPost)
+            InkWell(
+              onTap: _handleReport,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                child: Icon(
+                  _reported ? Icons.flag : Icons.flag_outlined,
+                  size: 22,
+                  color: _reported ? AppColors.error : context.textSecondary.withValues(alpha: 0.6),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -804,7 +896,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: context.inputFill,
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -1003,7 +1095,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: context.inputFill,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
@@ -1074,7 +1166,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: context.cardColor,
+        color: Colors.white,
         border: Border(
           top: BorderSide(
             color: context.infoBoxBorder,
@@ -1134,7 +1226,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                         fontSize: 14,
                       ),
                       filled: true,
-                      fillColor: context.inputFill,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide.none,

@@ -232,23 +232,6 @@ class PostCard extends StatelessWidget {
         ],
       ),
     ),
-    // Warning badge overlay — chỉ chủ bài viết thấy
-    if (post.isOwnPost && post.isWarned)
-      Positioned(
-        top: 12,
-        right: 12,
-        child: Tooltip(
-          message: 'Bài viết đã bị cảnh báo vi phạm',
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
-              color: AppColors.error,
-              shape: BoxShape.circle,
-            ),
-            child: const Text('⚠️', style: TextStyle(fontSize: 16)),
-          ),
-        ),
-      ),
   ],
 );
 }

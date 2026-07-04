@@ -125,6 +125,7 @@ router.put("/:id", authMiddleware, async (req: any, res) => {
 
   try {
     const finalReminderTime = (reminder_enabled !== false && reminder_time) ? reminder_time : null;
+    console.log(`[HabitUpdate] habit_id=${req.params.id} reminder_time=${JSON.stringify(reminder_time)} reminder_enabled=${JSON.stringify(reminder_enabled)} final=${JSON.stringify(finalReminderTime)}`);
     await pool.query(
       `UPDATE habits SET name = ?, category = ?, icon = ?, color = ?, target_count = ?, reminder_time = ?
        WHERE id = ? AND user_id = ?`,
@@ -153,7 +154,7 @@ async function sendImmediateIfNeeded(userId: number, habitName: string, reminder
     const reminderMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
     const diff = currentMin - reminderMin;
 
-    if (diff >= 0 && diff <= 10) {
+    if (diff > 0 && diff <= 10) {
       const [userRows]: any = await pool.query(
         "SELECT fcm_token FROM users WHERE id = ?", [userId]
       );
@@ -165,6 +166,8 @@ async function sendImmediateIfNeeded(userId: number, habitName: string, reminder
           userId
         );
         console.log(`[HabitImmediate] Push sent to user=${userId} habit="${habitName}" diffMin=${diff}`);
+      } else {
+        console.log(`[HabitImmediate] WARNING user=${userId} set reminder for "${habitName}" but has NO FCM token`);
       }
     }
   } catch (error) {
@@ -390,6 +393,87 @@ async function updateStreak(userId: number) {
     [newStreak, longestStreak, today, freezeTokens, userId]
   );
 }
+
+// ================= DIAGNOSTIC: check reminder + FCM =================
+router.get("/check-reminder", authMiddleware, async (req: any, res) => {
+  try {
+    const [habitRows]: any = await pool.query(
+      "SELECT id, name, reminder_time, is_active FROM habits WHERE user_id = ? AND is_active = 1 ORDER BY id DESC",
+      [req.user.id]
+    );
+    const [userRows]: any = await pool.query(
+      "SELECT id, fcm_token FROM users WHERE id = ?",
+      [req.user.id]
+    );
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    res.json({
+      serverTime: vietnamTime.toISOString(),
+      vietnamTime: `${vietnamTime.getUTCHours()}:${String(vietnamTime.getUTCMinutes()).padStart(2, '0')}`,
+      user: userRows[0] || null,
+      habits: habitRows,
+      habitsWithReminder: habitRows.filter((h: any) => h.reminder_time != null),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ================= DIAGNOSTIC: send test push =================
+router.post("/test-push", authMiddleware, async (req: any, res) => {
+  try {
+    const [userRows]: any = await pool.query(
+      "SELECT fcm_token, name FROM users WHERE id = ?",
+      [req.user.id]
+    );
+    const user = userRows[0];
+    if (!user || !user.fcm_token) {
+      return res.json({ sent: false, reason: "No FCM token", fcm_token: user?.fcm_token || null });
+    }
+    await sendPushNotification(
+      user.fcm_token,
+      '🔔 Test thông báo từ Viora',
+      `Xin chào! Đây là thông báo test. Nếu bạn thấy được, FCM đang hoạt động tốt!`,
+      req.user.id
+    );
+    res.json({ sent: true, fcm_token_prefix: user.fcm_token.substring(0, 20) + '...' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ================= SEND HABIT REMINDER PUSH NOW =================
+router.post("/send-reminder/:id", authMiddleware, async (req: any, res) => {
+  try {
+    const [habits]: any = await pool.query(
+      "SELECT id, name, reminder_time FROM habits WHERE id = ? AND user_id = ?",
+      [req.params.id, req.user.id]
+    );
+    const habit = habits[0];
+    if (!habit) return res.json({ sent: false, reason: "Not found" });
+    if (!habit.reminder_time) return res.json({ sent: false, reason: "No reminder_time", habit });
+
+    const [userRows]: any = await pool.query(
+      "SELECT fcm_token FROM users WHERE id = ?",
+      [req.user.id]
+    );
+    const token = userRows[0]?.fcm_token;
+    if (!token) return res.json({ sent: false, reason: "No FCM token" });
+
+    await sendPushNotification(
+      token,
+      '⏰ Đến giờ rồi!',
+      `Đã đến lúc thực hiện thói quen "${habit.name}" 💪`,
+      req.user.id
+    );
+    res.json({ sent: true, habit_id: habit.id, reminder_time: habit.reminder_time });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 export default router;
 

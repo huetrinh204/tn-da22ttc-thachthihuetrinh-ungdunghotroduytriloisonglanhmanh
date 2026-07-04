@@ -306,20 +306,18 @@ class _AdminAiAssistantTabState extends State<AdminAiAssistantTab>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isUser ? AppColors.primary : context.cardColor,
+                color: isUser ? const Color(0xFFE8F5E9) : Colors.white,
                 borderRadius: BorderRadius.circular(16).copyWith(
                   bottomRight: isUser ? const Radius.circular(4) : null,
                   bottomLeft: !isUser ? const Radius.circular(4) : null,
                 ),
-                border: isUser
-                    ? null
-                    : Border.all(color: context.infoBoxBorder),
+                border: Border.all(color: context.infoBoxBorder),
               ),
               child: Text(
                 msg.content,
                 style: TextStyle(
                   fontSize: 14,
-                  color: isUser ? Colors.white : context.textPrimary,
+                  color: context.textPrimary,
                   height: 1.5,
                 ),
               ),
@@ -350,7 +348,7 @@ class _AdminAiAssistantTabState extends State<AdminAiAssistantTab>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: context.cardColor,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16).copyWith(
                 bottomLeft: const Radius.circular(4),
               ),
@@ -389,7 +387,7 @@ class _AdminAiAssistantTabState extends State<AdminAiAssistantTab>
   Widget _buildInputArea(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: context.cardColor,
+        color: Colors.white,
         border: Border(top: BorderSide(color: context.infoBoxBorder)),
       ),
       child: SafeArea(
@@ -423,7 +421,7 @@ class _AdminAiAssistantTabState extends State<AdminAiAssistantTab>
                           ? 'Ask anything...'
                           : 'Nhập câu hỏi...',
                       filled: true,
-                      fillColor: context.inputFill,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,

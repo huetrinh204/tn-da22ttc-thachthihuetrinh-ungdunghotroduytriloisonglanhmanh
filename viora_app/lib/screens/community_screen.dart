@@ -3,15 +3,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
+import '../navigation/app_navigation.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 import 'notifications_inbox_screen.dart';
 import 'user_profile_screen.dart';
+import '../widgets/report_reason_sheet.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -24,15 +27,18 @@ class _CommunityScreenState extends State<CommunityScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _postsScrollController = ScrollController();
   
   List<Post> _posts = [];
   List<Post> _filteredPosts = [];
+  List<Post> _filteredAchievementPosts = [];
   List<Map<String, dynamic>> _searchUsers = [];
   List<Post> _achievementPosts = [];
   bool _isLoading = false;
   bool _isLoadingAchievements = false;
   bool _isSearching = false;
   String? _loadError;
+  final Set<String> _reportedPostIds = {};
   String? _currentUserId;
   final Set<String> _followingIds = {};
   String? _token;
@@ -48,6 +54,8 @@ class _CommunityScreenState extends State<CommunityScreen>
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
     _searchController.addListener(_onSearchChanged);
+    AppNavigation.pendingCommunitySubTab.addListener(_applyPendingSubTab);
+    _applyPendingSubTab();
     _initSession();
   }
 
@@ -61,11 +69,21 @@ class _CommunityScreenState extends State<CommunityScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    AppNavigation.pendingCommunitySubTab.removeListener(_applyPendingSubTab);
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _postsScrollController.dispose();
     super.dispose();
+  }
+
+  void _applyPendingSubTab() {
+    final pending = AppNavigation.pendingCommunitySubTab.value;
+    if (pending != null) {
+      AppNavigation.pendingCommunitySubTab.value = null;
+      _tabController.index = pending;
+    }
   }
 
   Future<void> _initSession() async {
@@ -127,6 +145,7 @@ class _CommunityScreenState extends State<CommunityScreen>
       setState(() {
         _isSearching = false;
         _filteredPosts = [];
+        _filteredAchievementPosts = [];
         _searchUsers = [];
       });
       return;
@@ -136,6 +155,11 @@ class _CommunityScreenState extends State<CommunityScreen>
     setState(() {
       _isSearching = true;
       _filteredPosts = _posts.where((post) {
+        return post.content.toLowerCase().contains(query.toLowerCase()) ||
+               post.userName.toLowerCase().contains(query.toLowerCase()) ||
+               post.hashtags.any((tag) => tag.toLowerCase().contains(query.toLowerCase()));
+      }).toList();
+      _filteredAchievementPosts = _achievementPosts.where((post) {
         return post.content.toLowerCase().contains(query.toLowerCase()) ||
                post.userName.toLowerCase().contains(query.toLowerCase()) ||
                post.hashtags.any((tag) => tag.toLowerCase().contains(query.toLowerCase()));
@@ -154,6 +178,7 @@ class _CommunityScreenState extends State<CommunityScreen>
           .toList();
       setState(() {
         _filteredPosts = searchPosts;
+        _filteredAchievementPosts = searchPosts;
         _searchUsers = searchUsers;
       });
     }
@@ -218,7 +243,10 @@ class _CommunityScreenState extends State<CommunityScreen>
 
   Future<void> _loadAchievementPosts() async {
     final isFirstLoad = _achievementPosts.isEmpty;
-    if (isFirstLoad) setState(() => _isLoadingAchievements = true);
+    if (isFirstLoad) {
+      if (!mounted) return;
+      setState(() => _isLoadingAchievements = true);
+    }
 
     final token = _token ?? "";
     if (token.isEmpty) return;
@@ -231,6 +259,10 @@ class _CommunityScreenState extends State<CommunityScreen>
       _achievementPosts = postsData.map((json) => Post.fromJson(json)).toList();
       _isLoadingAchievements = false;
     });
+
+    if (_isSearching) {
+      _onSearchChanged();
+    }
   }
 
   void _navigateToCreatePost() async {
@@ -239,7 +271,18 @@ class _CommunityScreenState extends State<CommunityScreen>
       MaterialPageRoute(builder: (_) => const CreatePostScreen()),
     );
     if (result == true) {
-      _refreshPosts();
+      await _refreshPosts();
+      _scrollToTop();
+    }
+  }
+
+  void _scrollToTop() {
+    if (_postsScrollController.hasClients) {
+      _postsScrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -284,12 +327,14 @@ class _CommunityScreenState extends State<CommunityScreen>
     if (res["message"] == null || res["message"] == "Deleted") {
       _refreshPosts();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(res["message"] as String? ?? 'Xóa thất bại'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Xóa thất bại',
+          content: res["message"] as String? ?? 'Xóa thất bại',
+        );
+      }
     }
   }
 
@@ -663,6 +708,7 @@ class _CommunityScreenState extends State<CommunityScreen>
     }
 
     return ListView.builder(
+      controller: _postsScrollController,
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       itemCount: _visiblePosts.length,
       itemBuilder: (context, index) {
@@ -676,6 +722,104 @@ class _CommunityScreenState extends State<CommunityScreen>
 
     if (_isLoadingAchievements) {
       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
+
+    if (_isSearching) {
+      final hasUsers = _searchUsers.isNotEmpty;
+      final hasPosts = _filteredAchievementPosts.isNotEmpty;
+
+      if (!hasUsers && !hasPosts) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(AppIcons.search, size: 56, color: context.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                l10n.noSearchResults,
+                style: TextStyle(fontSize: 15, color: context.textSecondary),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+        children: [
+          if (hasUsers) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                l10n.searchResultsUsers,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            ...(_searchUsers.map((u) {
+              final uid = u['id']?.toString() ?? '';
+              final uname = u['name'] as String? ?? '';
+              final uavatar = u['avatar_url'] as String?;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: context.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  onTap: () => _navigateToUserProfile(uid, uname),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                    ),
+                    child: uavatar != null
+                        ? ClipOval(
+                            child: Image.network(
+                              uavatar,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?',
+                                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18)),
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(uname.isNotEmpty ? uname[0].toUpperCase() : '?',
+                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 18)),
+                          ),
+                  ),
+                  title: Text(uname,
+                    style: TextStyle(fontWeight: FontWeight.w600, color: context.textPrimary)),
+                  trailing: Icon(AppIcons.chevronRight, color: AppColors.primary),
+                ),
+              );
+            })),
+            const SizedBox(height: 8),
+          ],
+          if (hasPosts) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                l10n.searchResultsPosts,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: context.textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+            ...(_filteredAchievementPosts.map((post) => _buildPostCard(post))),
+          ],
+        ],
+      );
     }
 
     if (_achievementPosts.isEmpty) {
@@ -840,8 +984,8 @@ class _CommunityScreenState extends State<CommunityScreen>
                       ),
                     ],
                   )
-                else if (_canFollow(post.userId))
-                  _buildFollowButton(post.userId),
+                else
+                  _buildFollowButton(post),
                 if (post.daysStreak != null && post.daysStreak! > 0) ...[
                   if (_canFollow(post.userId)) const SizedBox(width: 8),
                   Container(
@@ -984,29 +1128,28 @@ class _CommunityScreenState extends State<CommunityScreen>
                   color: context.textSecondary,
                   onTap: () => _navigateToPostDetail(post),
                 ),
+                const Spacer(),
+                if (!post.isOwnPost)
+                  InkWell(
+                    onTap: () => _handleReport(post),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                      child: Icon(
+                        _reportedPostIds.contains(post.id) ? Icons.flag : Icons.flag_outlined,
+                        size: 20,
+                        color: _reportedPostIds.contains(post.id)
+                            ? AppColors.error
+                            : context.textSecondary.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
         ],
       ),
     ),
-    // Warning badge overlay — chỉ chủ bài viết thấy
-    if (post.isOwnPost && post.isWarned)
-      Positioned(
-        top: 12,
-        right: 12,
-        child: Tooltip(
-          message: 'Bài viết đã bị cảnh báo vi phạm',
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
-              color: AppColors.error,
-              shape: BoxShape.circle,
-            ),
-            child: const Text('⚠️', style: TextStyle(fontSize: 16)),
-          ),
-        ),
-      ),
   ],
 );
 }
@@ -1051,31 +1194,60 @@ class _CommunityScreenState extends State<CommunityScreen>
     return l10n.daysAgo(diff.inDays);
   }
 
+  void _updatePostsFollowing(String userId, bool isFollowing) {
+    for (int i = 0; i < _posts.length; i++) {
+      if (_posts[i].userId == userId) {
+        _posts[i] = _posts[i].copyWith(isFollowing: isFollowing);
+      }
+    }
+    for (int i = 0; i < _achievementPosts.length; i++) {
+      if (_achievementPosts[i].userId == userId) {
+        _achievementPosts[i] = _achievementPosts[i].copyWith(isFollowing: isFollowing);
+      }
+    }
+    for (int i = 0; i < _filteredPosts.length; i++) {
+      if (_filteredPosts[i].userId == userId) {
+        _filteredPosts[i] = _filteredPosts[i].copyWith(isFollowing: isFollowing);
+      }
+    }
+  }
+
   bool _canFollow(String userId) =>
       _currentUserId != null && userId != _currentUserId;
 
   bool _isFollowing(String userId) => _followingIds.contains(userId);
 
-  Widget _buildFollowButton(String userId) {
+  Widget _buildFollowButton(Post post) {
     final l10n = AppLocalizations.of(context)!;
-    final following = _isFollowing(userId);
+    final following = post.isFollowing;
+    final isFriend = following && post.isFollowedBack;
 
     return TextButton(
-      onPressed: () => _toggleFollow(userId),
+      onPressed: () => _toggleFollow(post.userId),
       style: TextButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        backgroundColor: following
-            ? context.inputFill
-            : AppColors.primary.withValues(alpha: 0.1),
+        backgroundColor: isFriend
+            ? AppColors.success.withValues(alpha: 0.1)
+            : following
+                ? Colors.grey.withValues(alpha: 0.1)
+                : AppColors.primary.withValues(alpha: 0.1),
       ),
       child: Text(
-        following ? l10n.followingUser : l10n.followUser,
+        isFriend
+            ? l10n.friends
+            : following
+                ? l10n.followingUser
+                : l10n.followUser,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: following ? context.textSecondary : AppColors.primary,
+          color: isFriend
+              ? AppColors.success
+              : following
+                  ? Colors.grey.shade600
+                  : AppColors.primary,
         ),
       ),
     );
@@ -1092,6 +1264,7 @@ class _CommunityScreenState extends State<CommunityScreen>
       } else {
         _followingIds.add(userId);
       }
+      _updatePostsFollowing(userId, !wasFollowing);
     });
 
     final prefs = await SharedPreferences.getInstance();
@@ -1108,14 +1281,17 @@ class _CommunityScreenState extends State<CommunityScreen>
         } else {
           _followingIds.remove(userId);
         }
+        _updatePostsFollowing(userId, wasFollowing);
       });
       await prefs.setStringList("following_user_ids", _followingIds.toList());
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response["message"] as String),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Thao tác thất bại',
+          content: response["message"] as String,
+        );
+      }
     } else if (_tabController.index == 1 && mounted) {
       _loadPosts();
     }
@@ -1147,5 +1323,43 @@ class _CommunityScreenState extends State<CommunityScreen>
         }
       });
     }
+  }
+
+  void _handleReport(Post post) async {
+    final token = await SharedPreferences.getInstance().then((p) => p.getString('token') ?? '');
+
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReportReasonSheet(
+        onReport: (reason, description) async {
+          Navigator.pop(context);
+          final res = await ApiService.reportPost(token, post.id, reason, description: description);
+          if (!mounted) return;
+          if (res['message'] != null && (res['message'] as String).contains('success')) {
+            setState(() => _reportedPostIds.add(post.id));
+            if (!mounted) return;
+            AppNotificationDialog.show(
+              context,
+              type: NotificationType.success,
+              title: 'Cảm ơn bạn đã báo cáo!',
+              content: 'Admin sẽ xem xét và xử lý sớm nhất.',
+            );
+          } else {
+            final msg = res['message'] as String? ?? 'Gửi báo cáo thất bại';
+            if (!mounted) return;
+            final isDuplicate = msg.contains('đã báo cáo');
+            AppNotificationDialog.show(
+              context,
+              type: isDuplicate ? NotificationType.warning : NotificationType.error,
+              title: isDuplicate ? 'Đã báo cáo trước đó' : 'Gửi báo cáo thất bại',
+              content: isDuplicate ? 'Bài viết này đã được bạn báo cáo trước đó và đang chờ admin xem xét.' : msg,
+            );
+          }
+        },
+      ),
+    );
   }
 }

@@ -241,18 +241,21 @@ async function checkAndSendHabitReminders() {
        INNER JOIN users u ON h.user_id = u.id
        WHERE h.reminder_time IS NOT NULL
          AND h.is_active = 1
-     AND u.fcm_token IS NOT NULL
-     AND u.fcm_token != ''
-     AND h.id NOT IN (
-           SELECT habit_id FROM habit_logs
-           WHERE log_date = ? AND is_completed = 1
-         )`,
+         AND h.id NOT IN (
+               SELECT habit_id FROM habit_logs
+               WHERE log_date = ? AND is_completed = 1
+             )`,
       [today]
     );
 
-    console.log(`[HabitReminder] Found ${habits.length} habits with reminder_time`);
+    console.log(`[HabitReminder] Found ${habits.length} habits with reminder_time (before FCM check)`);
 
     for (const habit of habits) {
+      // Check FCM token here (not in SQL) để dễ debug khi token null
+      if (!habit.fcm_token) {
+        console.log(`[HabitReminder] SKIP habit_id=${habit.habit_id} user_id=${habit.user_id} - NO FCM TOKEN`);
+        continue;
+      }
       const parsed = parseTimeValue(habit.reminder_time);
       if (!parsed) {
         console.log(`[HabitReminder] SKIP habit_id=${habit.habit_id} - cannot parse reminder_time: ${JSON.stringify(habit.reminder_time)}`);
@@ -266,8 +269,7 @@ async function checkAndSendHabitReminders() {
 
       if (diffMin < 0 || diffMin > 60) continue;
 
-      // Gửi tại phút 0 (đúng giờ) và phút 20 (nhắc lại)
-      if (diffMin !== 0 && diffMin !== 20) continue;
+      if (diffMin % 20 !== 0) continue;
 
       await sendPushNotification(
         habit.fcm_token,

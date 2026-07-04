@@ -213,6 +213,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         name: opt.name,
         category: opt.category,
         icon: opt.icon,
+        targetCount: opt.targetCount,
       );
       if (res['habit'] != null) habitsCreated++;
     }

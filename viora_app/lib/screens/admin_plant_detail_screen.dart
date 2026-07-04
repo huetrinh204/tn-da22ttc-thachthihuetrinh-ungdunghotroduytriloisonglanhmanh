@@ -432,7 +432,7 @@ class _AdminPlantDetailScreenState extends State<AdminPlantDetailScreen> {
       case 'sunflower':
         return loc.plantTypeSunflower;
       case 'flower':
-        return loc.plantTypeFlower;
+        return loc.plantFlower;
       default:
         return type;
     }

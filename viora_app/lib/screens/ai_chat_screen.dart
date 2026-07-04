@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../constants/app_icons.dart';
 import '../widgets/app_confirm_dialog.dart';
+import '../widgets/app_notification_dialog.dart';
 
 class AiChatScreen extends StatefulWidget {
   const AiChatScreen({super.key});
@@ -134,11 +135,11 @@ class _AiChatScreenState extends State<AiChatScreen>
       });
       _textController.text = text;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Không có kết nối mạng. Vui lòng thử lại.'),
-            behavior: SnackBarBehavior.floating,
-          ),
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Mất kết nối',
+          content: 'Không có kết nối mạng. Vui lòng thử lại.',
         );
       }
     }
@@ -275,7 +276,7 @@ class _AiChatScreenState extends State<AiChatScreen>
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/bongbongchat.jpg'),
+                  image: AssetImage('assets/images/CHAT_AI.png'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -285,7 +286,7 @@ class _AiChatScreenState extends State<AiChatScreen>
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: context.cardColor,
+                  color: Colors.white,
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(20),
                     bottomLeft: Radius.circular(20),
@@ -372,7 +373,7 @@ class _AiChatScreenState extends State<AiChatScreen>
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/bongbongchat.jpg'),
+                  image: AssetImage('assets/images/CHAT_AI.png'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -382,8 +383,8 @@ class _AiChatScreenState extends State<AiChatScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isUser ? AppColors.primary
-                    : isError ? Colors.red.withValues(alpha: 0.08) : context.cardColor,
+                color: isUser ? const Color(0xFFE8F5E9)
+                    : isError ? Colors.red.withValues(alpha: 0.08) : Colors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
@@ -391,11 +392,11 @@ class _AiChatScreenState extends State<AiChatScreen>
                   bottomRight: Radius.circular(isUser ? 4 : 18),
                 ),
                 border: isError ? Border.all(color: Colors.red.withValues(alpha: 0.3))
-                    : !isUser ? Border.all(color: context.infoBoxBorder) : null,
+                    : Border.all(color: context.infoBoxBorder),
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
               ),
               child: isUser
-                  ? Text(msg.content, style: const TextStyle(fontSize: 14, color: Colors.white, height: 1.45))
+                  ? Text(msg.content, style: TextStyle(fontSize: 14, color: context.textPrimary, height: 1.45))
                   : MarkdownBody(
                       data: msg.content,
                       selectable: true,
@@ -425,7 +426,7 @@ class _AiChatScreenState extends State<AiChatScreen>
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
               image: const DecorationImage(
-                image: AssetImage('assets/images/bongbongchat.jpg'),
+                image: AssetImage('assets/images/CHAT_AI.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -433,7 +434,7 @@ class _AiChatScreenState extends State<AiChatScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: context.cardColor,
+              color: Colors.white,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(18), topRight: Radius.circular(18),
                 bottomLeft: Radius.circular(4), bottomRight: Radius.circular(18),
@@ -470,7 +471,7 @@ class _AiChatScreenState extends State<AiChatScreen>
     final canSend = _textController.text.trim().isNotEmpty && !_isLoading;
     return Container(
       decoration: BoxDecoration(
-        color: context.cardColor,
+        color: Colors.white,
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, -2))],
       ),
       child: SafeArea(
@@ -484,7 +485,7 @@ class _AiChatScreenState extends State<AiChatScreen>
                 child: Container(
                   constraints: const BoxConstraints(maxHeight: 120),
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkBackground : AppColors.background,
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: _inputError != null && _inputError!.isNotEmpty ? Colors.red : AppColors.border),
                   ),

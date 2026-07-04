@@ -14,7 +14,9 @@ import 'plant_screen.dart';
 
 /// Tab Phát triển: chuỗi, thành tựu, cây.
 class GrowScreen extends StatefulWidget {
-  const GrowScreen({super.key});
+  final Future<void> Function(Map<String, dynamic>? plant)? onCheckInCompleted;
+
+  const GrowScreen({super.key, this.onCheckInCompleted});
 
   @override
   State<GrowScreen> createState() => _GrowScreenState();
@@ -25,6 +27,7 @@ class _GrowScreenState extends State<GrowScreen> {
   int longestStreak = 0;
   int freezeTokens = 0;
   bool streakLoading = true;
+  int _plantKey = 0;
 
   @override
   void initState() {
@@ -66,8 +69,8 @@ class _GrowScreenState extends State<GrowScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Expanded(
-            child: PlantScreen(embedded: true),
+          Expanded(
+            child: PlantScreen(key: ValueKey('plant_$_plantKey'), embedded: true),
           ),
         ],
       ),
@@ -91,22 +94,17 @@ class _GrowScreenState extends State<GrowScreen> {
       );
     }
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => AppNavigation.openHabits(),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.primaryDark, AppColors.primary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primaryDark, AppColors.primary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
+      ),
+      child: Row(
             children: [
               Icon(AppIcons.streak, color: Colors.white, size: 32),
               const SizedBox(width: 14),
@@ -208,8 +206,6 @@ class _GrowScreenState extends State<GrowScreen> {
               ],
             ],
           ),
-        ),
-      ),
     );
   }
 
@@ -234,7 +230,14 @@ class _GrowScreenState extends State<GrowScreen> {
         Expanded(
           child: SecondaryButton(
             text: l10n.habits,
-            onPressed: () => AppNavigation.openHabits(),
+            onPressed: () async {
+              await AppNavigation.openHabits(
+                onCheckInCompleted: (plant) async {
+                  await widget.onCheckInCompleted?.call(plant);
+                  if (mounted) setState(() => _plantKey++);
+                },
+              );
+            },
             icon: Icon(AppIcons.habits, size: 20),
           ),
         ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
@@ -59,7 +59,7 @@ class _NotificationSettingsScreenState
     // Tự động lên lịch thông báo luôn
     await NotificationService.scheduleAll();
     if (!mounted) return;
-    AppSnackbar.showSuccess(context, l10n.savedSettings);
+    AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.savedSettings);
   }
 
   Future<void> _pickTime(bool isMorning) async {
@@ -174,10 +174,7 @@ class _NotificationSettingsScreenState
                               final can = await NotificationService.canScheduleExact();
                               setState(() => _canExactAlarm = can);
                               if (!can && mounted) {
-                                AppSnackbar.showError(
-                                  context,
-                                  'Vào Cài đặt → Ứng dụng → Viora → Báo thức & Nhắc nhở → Bật lên',
-                                );
+                                AppNotificationDialog.show(context, type: NotificationType.error, title: 'Vào Cài đặt → Ứng dụng → Viora → Báo thức & Nhắc nhở → Bật lên');
                               }
                             },
                             icon: const Icon(Icons.refresh, size: 18),
@@ -284,10 +281,7 @@ class _NotificationSettingsScreenState
                             await NotificationService.sendTestNotification();
                             if (!mounted) return;
                             setState(() => _isSendingTest = false);
-                            AppSnackbar.showSuccess(
-                              context,
-                              'Đã gửi! Kéo thanh thông báo xuống để xem.',
-                            );
+                            AppNotificationDialog.show(context, type: NotificationType.success, title: 'Đã gửi! Kéo thanh thông báo xuống để xem.');
                           },
                   ),
                 ),

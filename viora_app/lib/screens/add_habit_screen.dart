@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 
@@ -201,21 +202,27 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   switch (cat['id']) {
                     case 'hydration':
                       _selectedIcon = '💧';
-                      _dailyGoal = _dailyGoal.clamp(100, 5000);
+                      _dailyGoal = 2000;
                       break;
                     case 'eat':
                       _selectedIcon = '🍴';
-                      _dailyGoal = _dailyGoal.clamp(100, 5000);
+                      _dailyGoal = 1000;
                       break;
                     case 'exercise':
+                      _selectedIcon = '🏃';
+                      _dailyGoal = 30;
+                      break;
                     case 'sleep':
+                      _selectedIcon = '😴';
+                      _dailyGoal = 480;
+                      break;
                     case 'mental':
-                      _selectedIcon = cat['id'] == 'exercise' ? '🏃' : (cat['id'] == 'sleep' ? '😴' : '🧘');
-                      _dailyGoal = _dailyGoal.clamp(5, 480);
+                      _selectedIcon = '🧘';
+                      _dailyGoal = 10;
                       break;
                     default:
                       _selectedIcon = '⭐';
-                      _dailyGoal = _dailyGoal.clamp(1, 10);
+                      _dailyGoal = 1;
                   }
                 }),
                 child: Container(
@@ -568,11 +575,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   void _saveHabit() {
     final l10n = AppLocalizations.of(context)!;
     if (_nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.addHabitEnterName),
-          backgroundColor: Colors.red,
-        ),
+      AppNotificationDialog.show(
+        context,
+        type: NotificationType.warning,
+        title: l10n.addHabitEnterName,
       );
       return;
     }

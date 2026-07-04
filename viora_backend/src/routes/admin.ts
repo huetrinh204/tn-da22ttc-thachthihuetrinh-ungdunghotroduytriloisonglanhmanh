@@ -1191,4 +1191,153 @@ router.put("/app-settings/logo", authMiddleware, adminMiddleware, async (req: an
   }
 });
 
+// ================= REPORT MANAGEMENT =================
+
+// Get all pending reports (user_notifications type='post_reported')
+router.get("/reports", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT n.id, n.user_id AS admin_id, n.type, n.title, n.body, n.emoji, n.payload, n.is_read, n.created_at,
+              u.name AS admin_name
+       FROM user_notifications n
+       JOIN users u ON n.user_id = u.id
+       WHERE n.type = 'post_reported'
+       ORDER BY n.created_at DESC`
+    );
+
+    const reports = await Promise.all(rows.map(async (row: any) => {
+      const payload = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
+      let postInfo = null;
+      let reporterInfo = null;
+
+      if (payload?.post_id) {
+        const [posts]: any = await pool.query(
+          "SELECT id, content, image_url, created_at, user_id FROM community_posts WHERE id = ?",
+          [payload.post_id]
+        );
+        if (posts.length > 0) {
+          const [authors]: any = await pool.query(
+            "SELECT id, name, email FROM users WHERE id = ?",
+            [posts[0].user_id]
+          );
+          postInfo = {
+            id: posts[0].id,
+            content: posts[0].content,
+            image_url: posts[0].image_url,
+            created_at: posts[0].created_at,
+            author: authors.length > 0 ? { id: authors[0].id, name: authors[0].name, email: authors[0].email } : null,
+          };
+        }
+      }
+
+      if (payload?.reporter_id) {
+        const [reps]: any = await pool.query(
+          "SELECT id, name, email FROM users WHERE id = ?",
+          [payload.reporter_id]
+        );
+        if (reps.length > 0) {
+          reporterInfo = { id: reps[0].id, name: reps[0].name, email: reps[0].email };
+        }
+      }
+
+      return {
+        id: row.id,
+        payload,
+        post: postInfo,
+        reporter: reporterInfo,
+        created_at: row.created_at,
+      };
+    }));
+
+    // Filter only pending
+    const pending = reports.filter((r: any) => r.payload?.status === 'pending');
+
+    res.json({ reports: pending });
+  } catch (error) {
+    console.error("Get reports error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Handle a report (warn or dismiss)
+router.put("/reports/:notifId/handle", authMiddleware, adminMiddleware, async (req: any, res: Response) => {
+  try {
+    const { notifId } = req.params;
+    const { action, warnReason } = req.body; // 'warn' or 'dismiss'
+
+    if (!action || !['warn', 'dismiss'].includes(action)) {
+      return res.status(400).json({ message: "Action must be 'warn' or 'dismiss'" });
+    }
+
+    // Get the report notification
+    const [notifs]: any = await pool.query(
+      "SELECT * FROM user_notifications WHERE id = ? AND type = 'post_reported'",
+      [notifId]
+    );
+    if (notifs.length === 0) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    const notif = notifs[0];
+    const payload = typeof notif.payload === 'string' ? JSON.parse(notif.payload) : notif.payload;
+
+    if (action === 'warn') {
+      if (!warnReason) {
+        return res.status(400).json({ message: "Warn reason is required" });
+      }
+
+      // Use existing warn flow: mark post as warned
+      const postId = payload.post_id;
+      const [posts]: any = await pool.query(
+        "SELECT p.*, u.name, u.email, u.language FROM community_posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
+        [postId]
+      );
+
+      if (posts.length > 0) {
+        const post = posts[0];
+
+        await pool.query(
+          "UPDATE community_posts SET is_warned = 1 WHERE id = ?",
+          [postId]
+        );
+
+        // Notify post author
+        await pool.query(
+          `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+          [
+            post.user_id,
+            'warning',
+            'Cảnh báo vi phạm nội dung',
+            `Bài viết của bạn đã bị báo cáo và vi phạm quy định cộng đồng: ${warnReason}`,
+            '⚠️',
+            JSON.stringify({ post_id: postId, reason: warnReason, reported_by: req.user.id }),
+          ]
+        );
+      }
+
+      // Update report status to warned
+      payload.status = 'warned';
+      await pool.query(
+        "UPDATE user_notifications SET payload = ? WHERE id = ?",
+        [JSON.stringify(payload), notifId]
+      );
+
+      res.json({ message: "Post warned successfully" });
+    } else {
+      // Dismiss: just update status
+      payload.status = 'dismissed';
+      await pool.query(
+        "UPDATE user_notifications SET payload = ? WHERE id = ?",
+        [JSON.stringify(payload), notifId]
+      );
+
+      res.json({ message: "Report dismissed" });
+    }
+  } catch (error) {
+    console.error("Handle report error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;

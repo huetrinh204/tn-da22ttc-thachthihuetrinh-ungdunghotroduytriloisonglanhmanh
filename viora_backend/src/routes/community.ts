@@ -1263,6 +1263,93 @@ router.delete("/notifications/read-all", authMiddleware, async (req: any, res: R
   }
 });
 
+// ================= USER REPORT POST =================
+router.post("/posts/:postId/report", authMiddleware, async (req: any, res: Response) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user.id;
+    const { reason, description } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ message: "Reason is required" });
+    }
+
+    // Check post exists
+    const [posts]: any = await pool.query(
+      "SELECT p.id, p.content, p.user_id, u.name AS author_name FROM community_posts p JOIN users u ON p.user_id = u.id WHERE p.id = ?",
+      [postId]
+    );
+    if (posts.length === 0) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    const post = posts[0];
+
+    // Prevent reporting own post
+    if (post.user_id === userId) {
+      return res.status(400).json({ message: "Cannot report your own post" });
+    }
+
+    // Check duplicate report from same user on same post
+    const [existing]: any = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM user_notifications
+       WHERE type = 'post_reported'
+       AND payload->>'$.reporter_id' = ?
+       AND payload->>'$.post_id' = ?`,
+      [String(userId), String(postId)]
+    );
+    if (existing[0].cnt > 0) {
+      return res.status(400).json({ message: "Bạn đã báo cáo bài viết này trước đó rồi" });
+    }
+
+    // Get reporter name
+    const [reporters]: any = await pool.query(
+      "SELECT name FROM users WHERE id = ?",
+      [userId]
+    );
+    const reporterName = reporters.length > 0 ? reporters[0].name : "Unknown";
+
+    // Get all admin users
+    const [admins]: any = await pool.query(
+      "SELECT id FROM users WHERE role = 'admin'"
+    );
+
+    if (admins.length === 0) {
+      return res.status(500).json({ message: "No admin users available" });
+    }
+
+    // Create notification for each admin
+    const payload = JSON.stringify({
+      post_id: Number(postId),
+      reporter_id: userId,
+      reporter_name: reporterName,
+      reason,
+      description: description || "",
+      status: "pending",
+    });
+
+    for (const admin of admins) {
+      await pool.query(
+        `INSERT INTO user_notifications (user_id, type, title, body, emoji, payload, is_read, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, 0, NOW())`,
+        [
+          admin.id,
+          "post_reported",
+          "Báo cáo bài viết mới",
+          `${reporterName} đã báo cáo bài viết của ${post.author_name}: ${reason}`,
+          "🚩",
+          payload,
+        ]
+      );
+    }
+
+    res.json({ message: "Report submitted successfully" });
+  } catch (error) {
+    console.error("User report post error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 async function ensureCommunitySchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS community_posts (

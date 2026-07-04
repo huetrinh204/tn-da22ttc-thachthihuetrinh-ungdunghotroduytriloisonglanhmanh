@@ -5,6 +5,7 @@ import 'dart:io';
 import '../services/api_service.dart';
 import '../models/post.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../constants/app_icons.dart';
@@ -12,8 +13,19 @@ import '../l10n/app_localizations.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final Post? existingPost;
+  final String? initialContent;
+  final String? initialImageUrl;
+  final List<String>? initialHashtags;
+  final String postType;
 
-  const CreatePostScreen({super.key, this.existingPost});
+  const CreatePostScreen({
+    super.key,
+    this.existingPost,
+    this.initialContent,
+    this.initialImageUrl,
+    this.initialHashtags,
+    this.postType = 'normal',
+  });
 
   @override
   State<CreatePostScreen> createState() => _CreatePostScreenState();
@@ -31,9 +43,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   void initState() {
     super.initState();
     _contentController = TextEditingController(
-      text: widget.existingPost?.content ?? '',
+      text: widget.existingPost?.content ?? widget.initialContent ?? '',
     );
-    _existingImageUrl = widget.existingPost?.imageUrl;
+    _existingImageUrl = widget.existingPost?.imageUrl ?? widget.initialImageUrl;
   }
 
   @override
@@ -70,12 +82,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final content = _contentController.text.trim();
 
     if (content.isEmpty && _selectedImage == null && _existingImageUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.shareYourThoughts),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.warning,
+          title: AppLocalizations.of(context)!.shareYourThoughts,
+        );
+      }
       return;
     }
 
@@ -115,6 +128,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         content: content,
         imageUrl: imageUrl,
         hashtags: hashtags.isNotEmpty ? hashtags : null,
+        postType: widget.postType,
       );
     }
 
@@ -123,25 +137,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     setState(() => _isPosting = false);
 
     if (response["message"] == null || response["post"] != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isEditing ? 'Đã cập nhật bài viết' : AppLocalizations.of(context)!.postCreated),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      Navigator.pop(context, true);
+      if (mounted) {
+        await AppNotificationDialog.show(
+          context,
+          type: NotificationType.success,
+          title: _isEditing ? 'Đã cập nhật bài viết' : AppLocalizations.of(context)!.postCreated,
+        );
+      }
+      if (mounted) Navigator.pop(context, true);
     } else {
       final msg = response["message"] as String? ?? "Failed";
       final hint = msg == "Network error"
           ? "Không kết nối được server.\nKiểm tra backend (npm run dev) và IP trong api_service.dart"
           : msg;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(hint),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 4),
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Đăng bài thất bại',
+          content: hint,
+        );
+      }
     }
   }
 

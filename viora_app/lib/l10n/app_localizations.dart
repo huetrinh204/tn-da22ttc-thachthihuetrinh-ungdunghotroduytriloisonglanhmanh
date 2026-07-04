@@ -1412,6 +1412,216 @@ abstract class AppLocalizations {
   /// **'Xác nhận'**
   String get stepConfirm;
 
+  /// No description provided for @agreePrivacyPolicy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tôi đồng ý với Chính sách Bảo mật và Điều khoản Sử dụng'**
+  String get agreePrivacyPolicy;
+
+  /// No description provided for @pleaseAgreePrivacy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng đồng ý với Chính sách Bảo mật và Điều khoản Sử dụng'**
+  String get pleaseAgreePrivacy;
+
+  /// No description provided for @policiesTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chính sách Bảo mật & Điều khoản'**
+  String get policiesTitle;
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chính sách Bảo mật'**
+  String get privacyPolicyTitle;
+
+  /// No description provided for @termsOfServiceTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điều khoản Sử dụng'**
+  String get termsOfServiceTitle;
+
+  /// No description provided for @ppInfoCollected.
+  ///
+  /// In vi, this message translates to:
+  /// **'1. Thông tin chúng tôi thu thập'**
+  String get ppInfoCollected;
+
+  /// No description provided for @ppInfoCollectedContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi bạn sử dụng ứng dụng Viora, chúng tôi có thể thu thập các thông tin sau:\n- Thông tin tài khoản: họ tên, địa chỉ email, ảnh đại diện\n- Dữ liệu thói quen: danh sách thói quen, nhật ký check-in hằng ngày, số đo, tiến trình\n- Dữ liệu tương tác: bài viết, bình luận, lượt thích, theo dõi trong cộng đồng\n- Dữ liệu cây ảo: cấp độ, kinh nghiệm (EXP), loại cây\n- Dữ liệu thiết bị: mã thiết bị cho push notification'**
+  String get ppInfoCollectedContent;
+
+  /// No description provided for @ppPurpose.
+  ///
+  /// In vi, this message translates to:
+  /// **'2. Mục đích sử dụng thông tin'**
+  String get ppPurpose;
+
+  /// No description provided for @ppPurposeContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chúng tôi sử dụng thông tin của bạn cho các mục đích sau:\n- Cung cấp và vận hành các tính năng của ứng dụng (theo dõi thói quen, cây ảo, cộng đồng)\n- Cá nhân hóa trải nghiệm người dùng và đề xuất thói quen phù hợp\n- Gửi thông báo nhắc nhở thói quen qua push notification và email\n- Cung cấp tính năng AI Coach để tư vấn và hỗ trợ xây dựng thói quen\n- Phân tích, thống kê để cải thiện chất lượng dịch vụ\n- Hỗ trợ kỹ thuật và xử lý sự cố'**
+  String get ppPurposeContent;
+
+  /// No description provided for @ppStorageSecurity.
+  ///
+  /// In vi, this message translates to:
+  /// **'3. Lưu trữ và bảo mật'**
+  String get ppStorageSecurity;
+
+  /// No description provided for @ppStorageSecurityContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chúng tôi áp dụng các biện pháp bảo mật sau:\n- Dữ liệu được lưu trữ trên máy chủ an toàn với mã hóa SSL/TLS\n- Mật khẩu được mã hóa bằng thuật toán băm (bcrypt)\n- Dữ liệu chỉ được giữ lại trong thời gian cần thiết để cung cấp dịch vụ\n- Chúng tôi định kỳ đánh giá và cập nhật các biện pháp bảo mật'**
+  String get ppStorageSecurityContent;
+
+  /// No description provided for @ppDataSharing.
+  ///
+  /// In vi, this message translates to:
+  /// **'4. Chia sẻ dữ liệu'**
+  String get ppDataSharing;
+
+  /// No description provided for @ppDataSharingContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chúng tôi cam kết không bán, trao đổi hoặc chuyển nhượng thông tin cá nhân của bạn cho bên thứ ba, ngoại trừ:\n- Khi có yêu cầu từ cơ quan pháp luật có thẩm quyền\n- Khi cần thiết để bảo vệ quyền lợi và an toàn của người dùng hoặc ứng dụng\n- Với các đối tác cung cấp dịch vụ (như Firebase cho push notification) dưới sự ràng buộc bảo mật'**
+  String get ppDataSharingContent;
+
+  /// No description provided for @ppUserRights.
+  ///
+  /// In vi, this message translates to:
+  /// **'5. Quyền của người dùng'**
+  String get ppUserRights;
+
+  /// No description provided for @ppUserRightsContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có quyền:\n- Truy cập và xem thông tin cá nhân của mình\n- Chỉnh sửa, cập nhật thông tin cá nhân\n- Yêu cầu xóa tài khoản và dữ liệu liên quan\n- Từ chối nhận thông báo push hoặc email quảng cáo\n- Xuất dữ liệu của mình theo yêu cầu'**
+  String get ppUserRightsContent;
+
+  /// No description provided for @ppPolicyChanges.
+  ///
+  /// In vi, this message translates to:
+  /// **'6. Thay đổi chính sách'**
+  String get ppPolicyChanges;
+
+  /// No description provided for @ppPolicyChangesContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chúng tôi có thể cập nhật Chính sách Bảo mật này theo thời gian. Khi có thay đổi quan trọng, chúng tôi sẽ thông báo cho bạn qua email hoặc thông báo trong ứng dụng. Việc bạn tiếp tục sử dụng ứng dụng sau khi thay đổi có hiệu lực đồng nghĩa với việc bạn chấp nhận các thay đổi đó.'**
+  String get ppPolicyChangesContent;
+
+  /// No description provided for @ppContact.
+  ///
+  /// In vi, this message translates to:
+  /// **'7. Liên hệ'**
+  String get ppContact;
+
+  /// No description provided for @ppContactContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nếu bạn có bất kỳ câu hỏi hoặc thắc mắc nào về Chính sách Bảo mật này, vui lòng liên hệ với chúng tôi qua email: support@viora.app'**
+  String get ppContactContent;
+
+  /// No description provided for @tosAcceptance.
+  ///
+  /// In vi, this message translates to:
+  /// **'1. Chấp nhận Điều khoản'**
+  String get tosAcceptance;
+
+  /// No description provided for @tosAcceptanceContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bằng việc đăng ký và sử dụng ứng dụng Viora, bạn xác nhận đã đọc, hiểu và đồng ý bị ràng buộc bởi các Điều khoản Sử dụng này. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng không sử dụng ứng dụng.'**
+  String get tosAcceptanceContent;
+
+  /// No description provided for @tosAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'2. Trách nhiệm tài khoản'**
+  String get tosAccount;
+
+  /// No description provided for @tosAccountContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có trách nhiệm:\n- Cung cấp thông tin chính xác, đầy đủ và cập nhật khi đăng ký\n- Bảo mật mật khẩu và tài khoản của mình\n- Thông báo ngay cho chúng tôi nếu phát hiện truy cập trái phép\n- Chịu trách nhiệm về mọi hoạt động diễn ra trên tài khoản của mình'**
+  String get tosAccountContent;
+
+  /// No description provided for @tosProhibited.
+  ///
+  /// In vi, this message translates to:
+  /// **'3. Hành vi bị nghiêm cấm'**
+  String get tosProhibited;
+
+  /// No description provided for @tosProhibitedContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khi sử dụng ứng dụng, bạn không được:\n- Đăng tải nội dung vi phạm pháp luật, khiêu dâm, bạo lực hoặc xúc phạm\n- Quấy rối, đe dọa hoặc xâm phạm quyền riêng tư của người dùng khác\n- Giả mạo danh tính hoặc tạo nhiều tài khoản với mục đích xấu\n- Phát tán spam, virus hoặc mã độc\n- Khai thác lỗ hổng hoặc can thiệp vào hệ thống của ứng dụng\n- Sử dụng ứng dụng cho mục đích thương mại khi chưa được cho phép'**
+  String get tosProhibitedContent;
+
+  /// No description provided for @tosUserContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'4. Nội dung người dùng'**
+  String get tosUserContent;
+
+  /// No description provided for @tosUserContentContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn giữ quyền sở hữu trí tuệ đối với nội dung bạn đăng tải (bài viết, bình luận, hình ảnh). Bằng việc đăng tải, bạn cấp cho chúng tôi giấy phép không độc quyền, miễn phí bản quyền để sử dụng, hiển thị và phân phối nội dung đó trong phạm vi ứng dụng.'**
+  String get tosUserContentContent;
+
+  /// No description provided for @tosAppRights.
+  ///
+  /// In vi, this message translates to:
+  /// **'5. Quyền của ứng dụng'**
+  String get tosAppRights;
+
+  /// No description provided for @tosAppRightsContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chúng tôi có quyền:\n- Xóa nội dung vi phạm Điều khoản Sử dụng mà không cần thông báo trước\n- Tạm khóa hoặc vô hiệu hóa tài khoản vi phạm\n- Điều chỉnh, tạm ngưng hoặc ngừng cung cấp dịch vụ bất kỳ lúc nào\n- Thay đổi giới hạn sử dụng hoặc tính năng của ứng dụng'**
+  String get tosAppRightsContent;
+
+  /// No description provided for @tosDisclaimer.
+  ///
+  /// In vi, this message translates to:
+  /// **'6. Tuyên bố miễn trừ trách nhiệm'**
+  String get tosDisclaimer;
+
+  /// No description provided for @tosDisclaimerContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ứng dụng được cung cấp trên cơ sở \'nguyên trạng\' (as is). Chúng tôi không bảo đảm rằng ứng dụng sẽ đáp ứng mọi nhu cầu của bạn hoặc không có lỗi. Thông tin và tư vấn từ AI Coach chỉ mang tính tham khảo, không thay thế cho tư vấn chuyên môn từ bác sĩ hoặc chuyên gia sức khỏe.'**
+  String get tosDisclaimerContent;
+
+  /// No description provided for @tosChanges.
+  ///
+  /// In vi, this message translates to:
+  /// **'7. Thay đổi Điều khoản'**
+  String get tosChanges;
+
+  /// No description provided for @tosChangesContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chúng tôi có thể sửa đổi Điều khoản Sử dụng này bất kỳ lúc nào. Khi có thay đổi, chúng tôi sẽ thông báo cho bạn qua email hoặc thông báo trong ứng dụng. Việc bạn tiếp tục sử dụng ứng dụng sau khi thay đổi có hiệu lực đồng nghĩa với việc bạn chấp nhận các điều khoản mới.'**
+  String get tosChangesContent;
+
+  /// No description provided for @tosContact.
+  ///
+  /// In vi, this message translates to:
+  /// **'8. Liên hệ'**
+  String get tosContact;
+
+  /// No description provided for @tosContactContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nếu bạn có bất kỳ câu hỏi nào về Điều khoản Sử dụng, vui lòng liên hệ qua email: support@viora.app'**
+  String get tosContactContent;
+
   /// No description provided for @habitsToday.
   ///
   /// In vi, this message translates to:
@@ -2411,7 +2621,7 @@ abstract class AppLocalizations {
   /// No description provided for @followingUser.
   ///
   /// In vi, this message translates to:
-  /// **'Đang theo'**
+  /// **'Đang theo dõi'**
   String get followingUser;
 
   /// No description provided for @friends.
@@ -3395,7 +3605,7 @@ abstract class AppLocalizations {
   /// No description provided for @warningSent.
   ///
   /// In vi, this message translates to:
-  /// **'Đã gửi cảnh báo đến người dùng (in-app + email)'**
+  /// **'Đã gửi cảnh báo'**
   String get warningSent;
 
   /// No description provided for @userDetails.
@@ -3565,6 +3775,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hoa'**
   String get plantTypeFlower;
+
+  /// No description provided for @changePlantType.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi cây'**
+  String get changePlantType;
 
   /// No description provided for @appInfo.
   ///

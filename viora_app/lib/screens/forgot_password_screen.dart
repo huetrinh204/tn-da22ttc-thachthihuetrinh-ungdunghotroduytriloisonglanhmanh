@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
 import 'login_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -40,7 +40,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Future<void> _sendOtp() async {
     final l10n = AppLocalizations.of(context)!;
     if (_emailCtrl.text.trim().isEmpty) {
-      AppSnackbar.showError(context, l10n.pleaseEnterEmail);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.pleaseEnterEmail);
       return;
     }
     setState(() => isLoading = true);
@@ -49,21 +49,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!mounted) return;
     _email = _emailCtrl.text.trim();
     setState(() => _step = 2);
-    AppSnackbar.showSuccess(context, l10n.otpSent);
+    AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.otpSent);
   }
 
   Future<void> _resetPassword() async {
     final l10n = AppLocalizations.of(context)!;
     if (_otpCtrl.text.trim().length != 6) {
-      AppSnackbar.showError(context, l10n.otpMustBeSixDigits);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.otpMustBeSixDigits);
       return;
     }
     if (_newPassCtrl.text.length < 8) {
-      AppSnackbar.showError(context, l10n.passwordMinEightChars);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.passwordMinEightChars);
       return;
     }
     if (_newPassCtrl.text != _confirmPassCtrl.text) {
-      AppSnackbar.showError(context, l10n.confirmPasswordMismatch);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: l10n.confirmPasswordMismatch);
       return;
     }
 
@@ -77,7 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!mounted) return;
 
     if (res["message"] == "Đặt lại mật khẩu thành công" || res["message"] == "Password reset success") {
-      AppSnackbar.showSuccess(context, l10n.resetPasswordSuccess);
+      AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.resetPasswordSuccess);
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
@@ -86,7 +86,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         (_) => false,
       );
     } else {
-      AppSnackbar.showError(context, res["message"] ?? l10n.failed);
+      AppNotificationDialog.show(context, type: NotificationType.error, title: res["message"] ?? l10n.failed);
     }
   }
 

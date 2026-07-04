@@ -5,7 +5,6 @@ import '../services/api_service.dart';
 import '../widgets/plant_widget.dart';
 import '../widgets/viora_app_bar.dart';
 import '../widgets/level_up_animation.dart';
-import '../widgets/treasure_reward_animation.dart';
 import '../theme/theme_extensions.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_colors.dart';
@@ -120,15 +119,6 @@ class _PlantScreenState extends State<PlantScreen>
           levelUpFromLevel = lastSeenLevel.clamp(1, 15);
         }
       });
-      
-      // Show treasure reward after level up animation (every 3 levels)
-      if (shouldShowAnimation && newLevel % 3 == 0) {
-        Future.delayed(const Duration(milliseconds: 3800), () {
-          if (mounted) {
-            _showTreasureReward();
-          }
-        });
-      }
       
       // Update last seen level
       await prefs.setInt(_lastSeenPlantLevelKey, newLevel);
@@ -297,56 +287,58 @@ class _PlantScreenState extends State<PlantScreen>
               padding: EdgeInsets.all(widget.embedded ? 16 : 20),
               children: [
                   // Plant display card
-                  Container(
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(info["color"] as int).withValues(alpha: 0.15),
-                          cardColor,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                  GestureDetector(
+                    onTap: _showChangePlantDialog,
+                    child: Container(
+                      padding: const EdgeInsets.all(28),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(info["color"] as int).withValues(alpha: 0.15),
+                            cardColor,
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                            color: Color(info["color"] as int).withValues(alpha: 0.3)),
                       ),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                          color: Color(info["color"] as int).withValues(alpha: 0.3)),
-                    ),
-                    child: Column(
-                      children: [
-                        PlantWidget(
-                          plantType: plantType,
-                          level: plantLevel,
-                          isWilted: plantWilted,
-                          size: 90,
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Color(info["color"] as int),
-                            borderRadius: BorderRadius.circular(20),
+                      child: Column(
+                        children: [
+                          PlantWidget(
+                            plantType: plantType,
+                            level: plantLevel,
+                            isWilted: plantWilted,
+                            size: 90,
                           ),
-                          child: Text(
-                            "${AppLocalizations.of(context)!.level(level)} — ${info["name"]}",
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Color(info["color"] as int),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              "${AppLocalizations.of(context)!.level(level)} — ${info["name"]}",
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          info["desc"] as String,
-                          style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade600,
-                              fontStyle: FontStyle.italic),
-                        ),
-                        // Progressive warning based on days without check-in
-                        if (daysWithoutCheckin > 0) ...[
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 8),
+                          Text(
+                            info["desc"] as String,
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                                fontStyle: FontStyle.italic),
+                          ),
+                          // Progressive warning based on days without check-in
+                          if (daysWithoutCheckin > 0) ...[
+                            const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -382,6 +374,7 @@ class _PlantScreenState extends State<PlantScreen>
                         ],
                       ],
                     ),
+                  ),
                   ),
 
                   const SizedBox(height: 20),
@@ -596,12 +589,147 @@ class _PlantScreenState extends State<PlantScreen>
     return roadmapWidgets;
   }
 
-  void _showTreasureReward() {
-    showDialog(
+  Future<void> _showChangePlantDialog() async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await showModalBottomSheet<String>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => const TreasureRewardAnimation(),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Text(
+              l10n.changePlantType,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.keepGrowing,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 24),
+            ...PlantType.all.map((type) {
+              final isSelected = type.id == plantType;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(ctx, type.id),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFFE8F5E9)
+                          : const Color(0xFFF8F8F8),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppColors.primary
+                            : Colors.grey.shade200,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        ClipOval(
+                          child: Image.asset(
+                            type.getAssetPath(type.maxStages),
+                            width: 52,
+                            height: 52,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _getPlantTypeName(type.id, l10n),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? const Color(0xFF00695C)
+                                      : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.points(plantExp),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isSelected)
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              AppIcons.check,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.grey.shade600,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text(l10n.cancel, style: const TextStyle(fontSize: 15)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+    if (result == null || result == plantType) return;
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+    await ApiService.setPlantType(token, result);
+    if (!mounted) return;
+    _loadPlant();
+  }
+
+  String _getPlantTypeName(String typeId, AppLocalizations l10n) {
+    switch (typeId) {
+      case 'bamboo': return l10n.plantTypeBamboo;
+      case 'cactus': return l10n.plantTypeCactus;
+      case 'sunflower': return l10n.plantTypeSunflower;
+      case 'flower': return l10n.plantFlower;
+      default: return typeId;
+    }
   }
 
   Widget _buildLevelNode({

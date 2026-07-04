@@ -27,16 +27,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
-  static const String _lastSeenPlantLevelKey = "last_seen_plant_level";
   int _currentIndex = 0;
   final GlobalKey<_DashboardTabState> _dashboardKey = GlobalKey<_DashboardTabState>();
   double _bubbleDx = -1; // -1 = chưa khởi tạo
   double _bubbleDy = -1;
-  bool _isCheckingPlantLevel = false;
-  bool _showGlobalLevelUpAnimation = false;
-  int? _levelUpFromLevel;
-  int? _levelUpToLevel;
-  String _globalPlantType = "bamboo";
   int _growScreenVersion = 0; // increments to force GrowScreen rebuild after habit changes
 
   @override
@@ -82,58 +76,71 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return 1;
   }
 
-  Future<void> _checkAndShowGlobalPlantLevelUp([Map<String, dynamic>? plantData]) async {
-    if (_isCheckingPlantLevel || _showGlobalLevelUpAnimation) return;
-    _isCheckingPlantLevel = true;
-    try {
-      final prefs = await SharedPreferences.getInstance();
+  Future<void> _showLevelUpDialog(Map<String, dynamic>? plantData) async {
+    if (plantData == null) return;
 
-      Map<String, dynamic>? plant = plantData;
-      if (plant == null) {
-        final token = prefs.getString("token") ?? "";
-        if (token.isEmpty) return;
-        final res = await ApiService.getPlant(token);
-        if (!mounted) return;
-        plant = res["plant"];
-      }
-      if (plant == null) return;
+    final exp = plantData["experience"] ?? 0;
+    final newLevel = _calculatePlantLevel(exp);
+    final prefs = await SharedPreferences.getInstance();
+    const key = "last_seen_plant_level";
+    final lastSeen = prefs.getInt(key);
 
-      final exp = plant["experience"] ?? 0;
-      final newLevel = _calculatePlantLevel(exp);
-      final lastSeenLevel = prefs.getInt(_lastSeenPlantLevelKey);
-      if (lastSeenLevel == null) {
-        await prefs.setInt(_lastSeenPlantLevelKey, newLevel);
-        return;
-      }
-      if (newLevel <= lastSeenLevel) return;
-
-      setState(() {
-        _globalPlantType = (plant!["plant_type"] ?? "bamboo").toString();
-        _levelUpFromLevel = lastSeenLevel.clamp(1, 15);
-        _levelUpToLevel = newLevel.clamp(1, 15);
-        _showGlobalLevelUpAnimation = true;
-      });
-
-      // Add level up notification
-      final lang = prefs.getString('language_code') ?? 'vi';
-      if (lang == 'en') {
-        await NotificationInboxStore.add(
-          title: 'Congratulations on Level Up! 🎉',
-          body: 'Your virtual plant has successfully leveled up to Level $newLevel! Keep up the good work!',
-          emoji: '🌳',
-          targetTab: 3,
-        );
-      } else {
-        await NotificationInboxStore.add(
-          title: 'Chúc mừng lên cấp! 🎉',
-          body: 'Cây ảo của bạn đã nâng cấp thành công lên Cấp $newLevel! Hãy tiếp tục duy trì thói quen tốt nhé!',
-          emoji: '🌳',
-          targetTab: 3,
-        );
-      }
-    } finally {
-      _isCheckingPlantLevel = false;
+    if (lastSeen == null) {
+      await prefs.setInt(key, newLevel);
+      return;
     }
+    if (newLevel <= lastSeen) return;
+    if (newLevel > lastSeen + 1) {
+      await prefs.setInt(key, newLevel);
+      return;
+    }
+
+    await prefs.setInt(key, newLevel);
+
+    final lang = prefs.getString('language_code') ?? 'vi';
+    if (lang == 'en') {
+      await NotificationInboxStore.add(
+        title: 'Congratulations on Level Up! 🎉',
+        body: 'Your virtual plant has successfully leveled up to Level $newLevel! Keep up the good work!',
+        emoji: '🌳',
+        targetTab: 3,
+      );
+    } else {
+      await NotificationInboxStore.add(
+        title: 'Chúc mừng lên cấp! 🎉',
+        body: 'Cây ảo của bạn đã nâng cấp thành công lên Cấp $newLevel! Hãy tiếp tục duy trì thói quen tốt nhé!',
+        emoji: '🌳',
+        targetTab: 3,
+      );
+    }
+
+    if (!mounted) return;
+
+    showDialog(
+      context: AppNavigation.navigatorKey.currentContext!,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      builder: (ctx) => LevelUpAnimation(
+        plantType: plantData["plant_type"] ?? "bamboo",
+        oldLevel: lastSeen.clamp(1, 15),
+        newLevel: newLevel.clamp(1, 15),
+        onComplete: () => Navigator.of(ctx).pop(),
+      ),
+    );
+  }
+
+  Future<void> _checkAndShowGlobalPlantLevelUp([Map<String, dynamic>? plantData]) async {
+    if (plantData != null) {
+      await _showLevelUpDialog(plantData);
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token") ?? "";
+    if (token.isEmpty) return;
+    final res = await ApiService.getPlant(token);
+    if (!mounted) return;
+    await _showLevelUpDialog(res["plant"] as Map<String, dynamic>?);
   }
 
   void switchToTab(int index) {
@@ -146,11 +153,20 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return _DashboardTab(
           key: _dashboardKey,
           onPlantLoaded: _checkAndShowGlobalPlantLevelUp,
+          onHabitCheckInCompleted: (plant) async {
+            if (plant != null) await _checkAndShowGlobalPlantLevelUp(plant);
+            setState(() => _growScreenVersion++);
+          },
         );
       case AppTabs.community:
         return const CommunityScreen();
       case AppTabs.grow:
-        return GrowScreen(key: ValueKey('grow_$_growScreenVersion'));
+        return GrowScreen(
+          key: ValueKey('grow_$_growScreenVersion'),
+          onCheckInCompleted: (plant) async {
+            if (plant != null) await _checkAndShowGlobalPlantLevelUp(plant);
+          },
+        );
       case AppTabs.me:
         return const ProfileScreen();
       default:
@@ -171,31 +187,12 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final globalLevelUpOverlay =
-        _showGlobalLevelUpAnimation && _levelUpFromLevel != null && _levelUpToLevel != null
-            ? LevelUpAnimation(
-                plantType: _globalPlantType,
-                oldLevel: _levelUpFromLevel!,
-                newLevel: _levelUpToLevel!,
-                onComplete: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setInt(_lastSeenPlantLevelKey, _levelUpToLevel!);
-                  if (!mounted) return;
-                  setState(() {
-                    _showGlobalLevelUpAnimation = false;
-                    _levelUpFromLevel = null;
-                    _levelUpToLevel = null;
-                  });
-                },
-              )
-            : null;
     return Stack(
       children: [
         Scaffold(
           body: _buildScreen(_currentIndex),
           bottomNavigationBar: _buildBottomNavBar(context),
         ),
-        if (globalLevelUpOverlay != null) globalLevelUpOverlay,
         // Floating AI Coach chat bubble — draggable
         Positioned(
           left: _bubbleDx < 0 ? screenWidth - 72 : _bubbleDx,
@@ -214,20 +211,23 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    spreadRadius: 1,
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.chat_bubble_rounded,
-                color: Colors.white,
-                size: 28,
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/CHAT_AI.png',
+                  width: 28,
+                  height: 28,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
@@ -321,8 +321,9 @@ class _NavItem {
 
 class _DashboardTab extends StatefulWidget {
   final void Function([Map<String, dynamic>? plantData])? onPlantLoaded;
+  final Future<void> Function(Map<String, dynamic>? plant)? onHabitCheckInCompleted;
 
-  const _DashboardTab({super.key, this.onPlantLoaded});
+  const _DashboardTab({super.key, this.onPlantLoaded, this.onHabitCheckInCompleted});
 
   @override
   State<_DashboardTab> createState() => _DashboardTabState();
@@ -605,12 +606,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                         color: context.textPrimary,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      AppIcons.smile,
-                      color: AppColors.primary,
-                      size: 24,
-                    ),
+
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -969,8 +965,16 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                 ),
               )
             else
-              ...List.generate(_todayHabits.length, (i) {
-                final h = _todayHabits[i];
+              ...(() {
+                final display = List<Map<String, dynamic>>.from(_todayHabits)
+                  ..sort((a, b) {
+                    final aDone = a["is_completed"] == 1 ? 1 : 0;
+                    final bDone = b["is_completed"] == 1 ? 1 : 0;
+                    return aDone.compareTo(bDone);
+                  });
+                final limited = display.take(3).toList();
+                return List.generate(limited.length, (i) {
+                final h = limited[i];
                 final isHabitCompleted = h["is_completed"] == 1;
                 final habitName = h["name"] ?? "";
                 final target = double.tryParse(h["target_count"]?.toString() ?? '') ?? 1.0;
@@ -986,7 +990,7 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                     borderRadius: BorderRadius.circular(12),
                     child: InkWell(
                       onTap: () async {
-                        await AppNavigation.openHabits();
+                        await AppNavigation.openHabits(onCheckInCompleted: widget.onHabitCheckInCompleted);
                         _loadData();
                       },
                       borderRadius: BorderRadius.circular(12),
@@ -1045,13 +1049,14 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
                     ),
                   ),
                 );
-              }),
+              });
+            }()),
             const SizedBox(height: 12),
             Align(
               alignment: Alignment.center,
               child: TextButton.icon(
                 onPressed: () async {
-                  await AppNavigation.openHabits();
+                  await AppNavigation.openHabits(onCheckInCompleted: widget.onHabitCheckInCompleted);
                   _loadData();
                 },
                 icon: const Icon(AppIcons.chevronRight, size: 16),
@@ -1201,6 +1206,10 @@ class _DashboardTabState extends State<_DashboardTab> with WidgetsBindingObserve
         icon = Icons.warning_amber;
         iconColor = Colors.orange;
         message = n['title'] as String? ?? l10n.notifWarning;
+      case 'post_reported':
+        icon = Icons.flag;
+        iconColor = Colors.orange;
+        message = n['title'] as String? ?? 'Báo cáo bài viết';
       case 'post_edited':
         icon = Icons.edit;
         iconColor = AppColors.primary;

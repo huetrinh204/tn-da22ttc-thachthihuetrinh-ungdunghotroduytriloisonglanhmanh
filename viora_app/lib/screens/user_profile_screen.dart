@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post.dart';
 import '../services/api_service.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../l10n/app_localizations.dart';
@@ -133,12 +134,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               : currentFollowers - 1;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response["message"] as String),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(
+          context,
+          type: NotificationType.error,
+          title: 'Thao tác thất bại',
+          content: response["message"] as String,
+        );
+      }
     }
   }
 
@@ -495,7 +498,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         decoration: BoxDecoration(
           color: context.inputFill,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.infoBoxBorder),
+          border: Border.all(
+            color: post.isWarned ? AppColors.error : context.infoBoxBorder,
+            width: post.isWarned ? 1.5 : 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

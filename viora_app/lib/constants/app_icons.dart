@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Centralized icon constants using Lucide Icons
@@ -55,6 +56,9 @@ class AppIcons {
   
   /// Friendly smile icon for greetings
   static const smile = LucideIcons.smile;
+
+  /// Wave hand icon for greetings
+  static const wave = LucideIcons.hand;
   
   /// Zap icon for achievements
   static const zap = LucideIcons.zap;
@@ -170,10 +174,10 @@ class AppIcons {
   static const users = LucideIcons.users;
   
   /// Heart icon for likes
-  static const heart = LucideIcons.heart;
-  
+  static const heart = Icons.favorite_border;
+
   /// Heart filled icon
-  static const heartFilled = LucideIcons.heart;
+  static const heartFilled = Icons.favorite;
   
   /// Message/comment icon
   static const message = LucideIcons.messageCircle;

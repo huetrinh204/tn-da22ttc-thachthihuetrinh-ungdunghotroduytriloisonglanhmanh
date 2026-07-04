@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/viora_app_bar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_extensions.dart';
 import '../services/api_service.dart';
@@ -418,21 +419,15 @@ class _AdminScreenState extends State<AdminScreen>
     if (!mounted) return;
     
     if (response['message'] != null && response['message'].toString().contains('success')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Role updated to $newRole'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(context, type: NotificationType.success, title: 'Đã cập nhật quyền thành $newRole');
+      }
       await _loadUsers();
       await _loadStats();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response['message']?.toString() ?? 'Failed'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      if (mounted) {
+        AppNotificationDialog.show(context, type: NotificationType.error, title: 'Cập nhật thất bại', content: response['message']?.toString() ?? 'Failed');
+      }
     }
   }
 
@@ -461,21 +456,15 @@ class _AdminScreenState extends State<AdminScreen>
       if (!mounted) return;
       
       if (response['message'] != null && response['message'].toString().contains('success')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User deleted'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        if (mounted) {
+          AppNotificationDialog.show(context, type: NotificationType.success, title: 'Đã xóa người dùng');
+        }
         await _loadUsers();
         await _loadStats();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message']?.toString() ?? 'Failed'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        if (mounted) {
+          AppNotificationDialog.show(context, type: NotificationType.error, title: 'Xóa thất bại', content: response['message']?.toString() ?? 'Failed');
+        }
       }
     }
   }
@@ -596,21 +585,15 @@ class _AdminScreenState extends State<AdminScreen>
       if (!mounted) return;
       
       if (response['message'] != null && response['message'].toString().contains('success')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Post deleted'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        if (mounted) {
+          AppNotificationDialog.show(context, type: NotificationType.success, title: 'Đã xóa bài viết');
+        }
         await _loadPosts();
         await _loadStats();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message']?.toString() ?? 'Failed'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        if (mounted) {
+          AppNotificationDialog.show(context, type: NotificationType.error, title: 'Xóa thất bại', content: response['message']?.toString() ?? 'Failed');
+        }
       }
     }
   }

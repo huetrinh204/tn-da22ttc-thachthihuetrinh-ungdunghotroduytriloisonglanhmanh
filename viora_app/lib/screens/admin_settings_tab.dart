@@ -4,10 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/locale_provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 import '../theme/theme_extensions.dart';
 import '../screens/login_screen.dart';
 import '../services/api_service.dart';
-import '../widgets/app_snackbar.dart';
+import '../widgets/app_notification_dialog.dart';
 import '../widgets/app_confirm_dialog.dart';
 import '../l10n/app_localizations.dart';
 import '../constants/app_icons.dart';
@@ -81,9 +82,9 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     if (res['avatar_url'] != null) {
       final resolved = ApiService.resolveImageUrl(res['avatar_url'] as String);
       setState(() => _adminAvatarUrl = resolved);
-      if (mounted) AppSnackbar.showSuccess(context, 'Avatar updated');
+      if (mounted) AppNotificationDialog.show(context, type: NotificationType.success, title: 'Avatar updated');
     } else {
-      if (mounted) AppSnackbar.showError(context, 'Failed to update avatar');
+      if (mounted) AppNotificationDialog.show(context, type: NotificationType.error, title: 'Failed to update avatar');
     }
   }
 
@@ -144,14 +145,9 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     );
     if (!mounted) return;
     if (res['message']?.contains('success') ?? false) {
-      AppSnackbar.showSuccess(
-        context, t('Đã cập nhật cài đặt', 'Settings updated'),
-      );
+      AppNotificationDialog.show(context, type: NotificationType.success, title: t('Đã cập nhật cài đặt', 'Settings updated'));
     } else {
-      AppSnackbar.showError(
-        context,
-        res['message'] ?? t('Cập nhật thất bại', 'Update failed'),
-      );
+      AppNotificationDialog.show(context, type: NotificationType.error, title: res['message'] ?? t('Cập nhật thất bại', 'Update failed'));
     }
   }
 
@@ -196,19 +192,15 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                l10n.adminSettings,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: context.textPrimary,
+                Text(
+                  l10n.adminSettings,
+                  style: AppTypography.headingMedium.copyWith(color: context.textPrimary),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                t('Quản lý cài đặt hệ thống', 'Manage system settings'),
-                style: TextStyle(fontSize: 13, color: context.textSecondary),
-              ),
+                const SizedBox(height: 2),
+                Text(
+                  t('Quản lý cài đặt hệ thống', 'Manage system settings'),
+                  style: AppTypography.caption,
+                ),
             ],
           ),
         ],
@@ -397,8 +389,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                     'Enabled - Send reminders to incomplete users',
                   )
                 : t('Đang tắt - Không gửi thông báo tự động', 'Disabled'),
-            style: TextStyle(
-              fontSize: 13,
+            style: AppTypography.bodySecondary.copyWith(
               height: 1.4,
               color: _isAutoReminderEnabled
                   ? AppColors.success
@@ -482,18 +473,12 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: context.textPrimary,
-                      ),
+                      style: AppTypography.title,
                     ),
                     const Spacer(),
                     Text(
                       time,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.captionBold.copyWith(
                         color: AppColors.primary,
                       ),
                     ),
@@ -536,9 +521,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                             const SizedBox(width: 5),
                             Text(
                               t('Đổi giờ', 'Change'),
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                              style: AppTypography.captionBold.copyWith(
                                 color: AppColors.primary,
                               ),
                             ),
@@ -579,11 +562,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
             Expanded(
               child: Text(
                 t('Thông điệp nhắc nhở', 'Reminder Messages'),
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: context.textPrimary,
-                ),
+                style: AppTypography.title.copyWith(fontSize: 17),
               ),
             ),
             Container(
@@ -865,12 +844,15 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
               ),
             ),
             const SizedBox(width: AppSpacing.md),
-            Text(
-              l10n.appearance,
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: context.textPrimary,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    t('Giao diện', 'Appearance'),
+                    style: AppTypography.title.copyWith(fontSize: 17),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1152,7 +1134,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 await localeProvider.setLocale(const Locale('vi'));
                 if (!mounted) return;
                 Navigator.pop(ctx);
-                AppSnackbar.showSuccess(context, l10n.languageChanged);
+                AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.languageChanged);
               },
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -1166,7 +1148,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 await localeProvider.setLocale(const Locale('en'));
                 if (!mounted) return;
                 Navigator.pop(ctx);
-                AppSnackbar.showSuccess(context, l10n.languageChangedEn);
+                AppNotificationDialog.show(context, type: NotificationType.success, title: l10n.languageChangedEn);
               },
             ),
           ],
@@ -1326,10 +1308,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                 child: ElevatedButton(
                   onPressed: () async {
                     if (controller.text.trim().isEmpty) {
-                      AppSnackbar.showError(
-                        context,
-                        t('Vui lòng nhập nội dung', 'Please enter content'),
-                      );
+                      AppNotificationDialog.show(context, type: NotificationType.error, title: t('Vui lòng nhập nội dung', 'Please enter content'));
                       return;
                     }
                     Navigator.pop(ctx);
@@ -1338,15 +1317,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                     );
                     if (!mounted) return;
                     if (res['message']?.contains('success') ?? false) {
-                      AppSnackbar.showSuccess(
-                        context, t('Đã thêm thông điệp mới', 'Message added'),
-                      );
+                      AppNotificationDialog.show(context, type: NotificationType.success, title: t('Đã thêm thông điệp mới', 'Message added'));
                       _loadReminderData();
                     } else {
-                      AppSnackbar.showError(
-                        context,
-                        res['message'] ?? t('Thêm thất bại', 'Failed to add'),
-                      );
+                      AppNotificationDialog.show(context, type: NotificationType.error, title: res['message'] ?? t('Thêm thất bại', 'Failed to add'));
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -1447,15 +1421,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
                       );
                       if (!mounted) return;
                       if (res['message']?.contains('success') ?? false) {
-                        AppSnackbar.showSuccess(
-                          context, t('Đã cập nhật thông điệp', 'Message updated'),
-                        );
+                        AppNotificationDialog.show(context, type: NotificationType.success, title: t('Đã cập nhật thông điệp', 'Message updated'));
                         _loadReminderData();
                       } else {
-                        AppSnackbar.showError(
-                          context,
-                          res['message'] ?? t('Cập nhật thất bại', 'Failed to update'),
-                        );
+                        AppNotificationDialog.show(context, type: NotificationType.error, title: res['message'] ?? t('Cập nhật thất bại', 'Failed to update'));
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -1505,18 +1474,12 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       );
       if (!mounted) return;
       if (res['message']?.contains('success') ?? false) {
-        AppSnackbar.showSuccess(
-          context,
-          isActive
-              ? t('Đã tắt thông điệp', 'Message disabled')
-              : t('Đã bật thông điệp', 'Message enabled'),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.success, title: isActive
+            ? t('Đã tắt thông điệp', 'Message disabled')
+            : t('Đã bật thông điệp', 'Message enabled'));
         _loadReminderData();
       } else {
-        AppSnackbar.showError(
-          context,
-          res['message'] ?? t('Thao tác thất bại', 'Operation failed'),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.error, title: res['message'] ?? t('Thao tác thất bại', 'Operation failed'));
       }
     });
   }
@@ -1547,15 +1510,10 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
       );
       if (!mounted) return;
       if (res['message']?.contains('success') ?? false) {
-        AppSnackbar.showSuccess(
-          context, t('Đã xóa thông điệp', 'Message deleted'),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.success, title: t('Đã xóa thông điệp', 'Message deleted'));
         _loadReminderData();
       } else {
-        AppSnackbar.showError(
-          context,
-          res['message'] ?? t('Xóa thất bại', 'Failed to delete'),
-        );
+        AppNotificationDialog.show(context, type: NotificationType.error, title: res['message'] ?? t('Xóa thất bại', 'Failed to delete'));
       }
     });
   }
