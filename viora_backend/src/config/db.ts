@@ -8,8 +8,10 @@ const pool = mysql.createPool({
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "viora_app",
+  port: parseInt(process.env.DB_PORT || "3306"),
   timezone: "+07:00", // Set timezone to Vietnam (UTC+7)
   dateStrings: true,   // Return all date/time types as strings, not Date objects
+  ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : undefined,
 });
 
 export default pool;
