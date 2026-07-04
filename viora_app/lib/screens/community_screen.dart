@@ -119,12 +119,24 @@ class _CommunityScreenState extends State<CommunityScreen>
 
   Future<void> _loadUnreadCount() async {
     if (_token == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    final lastSeenStr = prefs.getString('notifications_last_seen_at');
+    final lastSeen = lastSeenStr != null ? DateTime.tryParse(lastSeenStr) : null;
+
     final notificationsRes = await ApiService.getNotifications(_token!);
     if (!mounted) return;
     if (notificationsRes["notifications"] != null) {
       final notifs = notificationsRes["notifications"] as List;
       setState(() {
-        _unreadNotificationsCount = notifs.where((n) => (n['is_read'] as int? ?? 0) == 0).length;
+        if (lastSeen == null) {
+          _unreadNotificationsCount = notifs.length;
+        } else {
+          _unreadNotificationsCount = notifs.where((n) {
+            final createdAt = DateTime.tryParse(n['created_at']?.toString() ?? '');
+            if (createdAt == null) return false;
+            return createdAt.isAfter(lastSeen);
+          }).length;
+        }
       });
     }
   }

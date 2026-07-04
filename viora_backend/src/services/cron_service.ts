@@ -151,14 +151,14 @@ export { sendMorningEmails, sendEveningEmails };
 async function sendMorningEmails() {
   try {
     const [users]: any = await pool.query(
-      "SELECT id, name, email, fcm_token FROM users WHERE email IS NOT NULL AND email != ''"
+      "SELECT id, name, email, fcm_token, notif_morning_enabled FROM users WHERE email IS NOT NULL AND email != ''"
     );
 
     for (const user of users) {
       // Gửi email
       await sendMorningReminder(user.email, user.name);
-      // Gửi FCM push nếu có token
-      if (user.fcm_token) {
+      // Chỉ gửi FCM nếu user KHÔNG bật personal reminder (tránh trùng với checkAndSendPersonalReminders)
+      if (user.fcm_token && !user.notif_morning_enabled) {
         await sendPushNotification(
           user.fcm_token,
           "🌱 Chào buổi sáng!",
@@ -176,7 +176,7 @@ async function sendEveningEmails() {
   try {
     const today = new Date().toISOString().split("T")[0];
     const [users]: any = await pool.query(
-      "SELECT id, name, email, fcm_token FROM users WHERE email IS NOT NULL AND email != ''"
+      "SELECT id, name, email, fcm_token, notif_evening_enabled FROM users WHERE email IS NOT NULL AND email != ''"
     );
 
     let sentCount = 0;
@@ -199,8 +199,8 @@ async function sendEveningEmails() {
       if (done < total) {
         // Gửi email
         await sendEveningReminder(user.email, user.name, done, total);
-        // Gửi FCM push nếu có token
-        if (user.fcm_token) {
+        // Chỉ gửi FCM nếu user KHÔNG bật personal reminder (tránh trùng)
+        if (user.fcm_token && !user.notif_evening_enabled) {
           await sendPushNotification(
             user.fcm_token,
             "🌙 Nhắc nhở buổi tối",

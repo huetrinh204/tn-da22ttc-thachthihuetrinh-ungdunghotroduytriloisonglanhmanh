@@ -602,6 +602,28 @@ router.post("/comments/:commentId/like", authMiddleware, async (req: any, res: R
       [commentId]
     );
 
+    // Push notification cho chủ comment
+    try {
+      const [commentOwner]: any = await pool.query(
+        "SELECT user_id FROM community_comments WHERE id = ?", [commentId]
+      );
+      if (commentOwner.length && commentOwner[0].user_id !== userId) {
+        const [likerRows]: any = await pool.query("SELECT name FROM users WHERE id = ?", [userId]);
+        const [ownerRows]: any = await pool.query("SELECT fcm_token FROM users WHERE id = ?", [commentOwner[0].user_id]);
+        if (ownerRows.length && ownerRows[0].fcm_token) {
+          const likerName = likerRows[0]?.name || "Ai đó";
+          await sendPushNotification(
+            ownerRows[0].fcm_token,
+            "❤️ Thích bình luận",
+            `${likerName} đã thích bình luận của bạn`,
+            commentOwner[0].user_id
+          );
+        }
+      }
+    } catch (pushErr) {
+      console.log("[CommentLike] Push notification failed:", pushErr);
+    }
+
     res.json({ like_count: countRows[0].cnt, is_liked: true });
   } catch (error) {
     console.log(error);
