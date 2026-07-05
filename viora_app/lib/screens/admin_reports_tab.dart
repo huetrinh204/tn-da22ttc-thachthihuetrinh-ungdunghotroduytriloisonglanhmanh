@@ -185,7 +185,10 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                     color: AppColors.warning.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.flag_outlined, color: AppColors.warning, size: 20),
+                  child: reporter?['avatar_url'] != null
+                      ? ClipOval(child: Image.network(reporter!['avatar_url'], width: 36, height: 36, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.flag_outlined, color: AppColors.warning, size: 20)))
+                      : const Icon(Icons.flag_outlined, color: AppColors.warning, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -223,10 +226,40 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
           // Post content
           if (post != null) ...[
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Text(
-                'Bài viết của ${post['author']?['name'] ?? 'Người dùng'}',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: context.textSecondary),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  // Author avatar
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: post['author']?['avatar_url'] != null
+                        ? ClipOval(child: Image.network(post['author']['avatar_url'], fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Center(child: Text(
+                              (post['author']?['name'] ?? 'U')[0].toUpperCase(),
+                              style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                            ))))
+                        : Center(child: Text(
+                            (post['author']?['name'] ?? 'U')[0].toUpperCase(),
+                            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                          )),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post['author']?['name'] ?? 'Người dùng',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: context.textPrimary),
+                      ),
+                      Text('Người đăng bài', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+                    ],
+                  ),
+                ],
               ),
             ),
             Padding(
@@ -237,12 +270,60 @@ class _AdminReportsTabState extends State<AdminReportsTab> {
                   color: context.inputFill,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  _truncateContent(post['content'] as String? ?? ''),
-                  style: TextStyle(fontSize: 13, color: context.textPrimary, height: 1.4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _truncateContent(post['content'] as String? ?? ''),
+                      style: TextStyle(fontSize: 13, color: context.textPrimary, height: 1.4),
+                    ),
+                    if (post['image_url'] != null) ...[
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          post['image_url'],
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const SizedBox(),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ),
+            // Reporter info
+            if (reporter != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: reporter['avatar_url'] != null
+                          ? ClipOval(child: Image.network(reporter['avatar_url'], fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(child: Text(
+                                (reporter['name'] ?? 'U')[0].toUpperCase(),
+                                style: const TextStyle(color: AppColors.warning, fontSize: 12),
+                              ))))
+                          : Center(child: Text(
+                              (reporter['name'] ?? 'U')[0].toUpperCase(),
+                              style: const TextStyle(color: AppColors.warning, fontSize: 12),
+                            )),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('Báo cáo bởi: ', style: TextStyle(fontSize: 12, color: context.textSecondary)),
+                    Text(reporter['name'] ?? 'Ai đó', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.warning)),
+                  ],
+                ),
+              ),
           ],
 
           // Reason

@@ -85,7 +85,9 @@ class AppNavigation {
     final userId = data['user_id'];
     final userName = data['user_name'];
 
-    if (postId != null && (type == 'like' || type == 'comment' || type == 'warning')) {
+    if (type == 'habit_reminder') {
+      switchToTab(AppTabs.today);
+    } else if (postId != null && (type == 'like' || type == 'comment' || type == 'warning')) {
       openCommunity();
       openPostDetail(postId);
     } else if (type == 'follow' && userId != null) {

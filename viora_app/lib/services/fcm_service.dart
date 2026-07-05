@@ -24,6 +24,13 @@ class FcmService {
         onDidReceiveNotificationResponse: (response) {
           final payload = response.payload;
           if (payload != null) {
+            if (payload.startsWith('tab:')) {
+              final tab = int.tryParse(payload.split(':').last);
+              if (tab != null) {
+                AppNavigation.switchToTab(tab);
+                return;
+              }
+            }
             try {
               final data = Map<String, String>.from(jsonDecode(payload));
               AppNavigation.handleFcmDeepLink(data);

@@ -78,6 +78,10 @@ class _LoginScreenState extends State<LoginScreen> {
       // Check if user is admin
       final profileRes = await ApiService.getProfile(token);
       final userRole = profileRes['user']?['role'] as String?;
+      final userId = profileRes['user']?['id']?.toString();
+      if (userId != null) {
+        await prefs.setString("cached_user_id", userId);
+      }
 
       if (userRole == 'admin') {
         if (!mounted) return;
@@ -132,6 +136,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
         final profileRes = await ApiService.getProfile(token);
         final userRole = profileRes['user']?['role'] as String?;
+        final userId = profileRes['user']?['id']?.toString();
+        if (userId != null) {
+          await prefs.setString("cached_user_id", userId);
+        }
 
         if (userRole == 'admin') {
           if (!mounted) return;

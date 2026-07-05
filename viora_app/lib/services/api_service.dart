@@ -140,14 +140,16 @@ class ApiService {
 
   static Future<void> clearFcmToken(String token) async {
     try {
-      await http.post(
-        Uri.parse("$baseUrl/auth/fcm-token"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({"fcm_token": null}),
-      );
+      await http
+          .post(
+            Uri.parse("$baseUrl/auth/fcm-token"),
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer $token",
+            },
+            body: jsonEncode({"fcm_token": null}),
+          )
+          .timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 
@@ -779,6 +781,22 @@ class ApiService {
     try {
       final response = await http.delete(
         Uri.parse("$baseUrl/community/posts/$postId"),
+        headers: {"Authorization": "Bearer $token"},
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) return data;
+      return {"message": data["message"] ?? "Failed"};
+    } catch (e) {
+      return {"message": "Network error"};
+    }
+  }
+
+  // ================= COMMUNITY - DELETE COMMENT =================
+  static Future<Map<String, dynamic>> deleteComment(
+      String token, String commentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse("$baseUrl/community/comments/$commentId"),
         headers: {"Authorization": "Bearer $token"},
       );
       final data = jsonDecode(response.body);

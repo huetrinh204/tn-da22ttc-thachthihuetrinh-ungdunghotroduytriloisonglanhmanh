@@ -219,10 +219,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await prefs.remove("token");
     // Không xóa onboarding_done — giữ lại để lần sau login không phải onboard lại
     if (!mounted) return;
-    AppNavigation.navigatorKey.currentState?.pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
+    final navigator = AppNavigation.navigatorKey.currentState;
+    if (navigator != null) {
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } else if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
   }
 
   void _showEditNameSheet() {

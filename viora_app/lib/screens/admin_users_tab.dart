@@ -103,7 +103,7 @@ class _AdminUsersTabState extends State<AdminUsersTab> {
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
               icon: const Icon(Icons.person_add_rounded, size: 20),
-              label: Text(l10n.addUser, style: AppTypography.captionBold),
+              label: Text(l10n.addUser, style: AppTypography.captionBold.copyWith(color: Colors.white)),
             ),
     );
   }

@@ -417,6 +417,37 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
+  void _deleteComment(Comment comment) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xóa bình luận'),
+        content: const Text('Bạn có chắc muốn xóa bình luận này?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Xóa', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final res = await ApiService.deleteComment(_token ?? "", comment.id);
+    if (!mounted) return;
+    if (res["message"] == "Deleted") {
+      setState(() {
+        _comments.removeWhere((c) => c.id == comment.id);
+      });
+    } else {
+      AppNotificationDialog.show(context, type: NotificationType.error, title: res["message"] ?? 'Xóa thất bại');
+    }
+  }
+
   void _handleCommentLike(Comment comment) async {
     final token = _token ?? "";
     final wasLiked = comment.isLiked;
@@ -971,6 +1002,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           ),
                         ),
                       ),
+                      // Delete button (only for own comments)
+                      if (comment.userId == _currentUserId) ...[
+                        const SizedBox(width: 16),
+                        InkWell(
+                          onTap: () => _deleteComment(comment),
+                          child: Text(
+                            l10n.delete,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                   // View/Hide replies button

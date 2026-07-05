@@ -230,7 +230,9 @@ class NotificationService {
   }
 
   static Future<void> cancelAll() async {
-    await _plugin.cancelAll();
+    try {
+      await _plugin.cancelAll();
+    } catch (_) {}
   }
 
   // Gửi thông báo test ngay lập tức và hẹn giờ 10 giây
