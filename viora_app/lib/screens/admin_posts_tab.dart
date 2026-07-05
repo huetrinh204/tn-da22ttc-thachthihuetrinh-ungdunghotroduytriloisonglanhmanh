@@ -963,7 +963,12 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: AppColors.warning.withValues(alpha: 0.12),
-                  child: const Icon(Icons.person_outline, color: AppColors.warning, size: 18),
+                  backgroundImage: reporter?['avatar_url'] != null
+                      ? NetworkImage(reporter!['avatar_url'] as String)
+                      : null,
+                  child: reporter?['avatar_url'] == null
+                      ? const Icon(Icons.person_outline, color: AppColors.warning, size: 18)
+                      : null,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -989,6 +994,34 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
               ],
             ),
           ),
+          // Post author info
+          if (post != null && post['author'] != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 12,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    backgroundImage: post['author']?['avatar_url'] != null
+                        ? NetworkImage(post['author']['avatar_url'] as String)
+                        : null,
+                    child: post['author']?['avatar_url'] == null
+                        ? Text(
+                            (post['author']?['name'] ?? 'U')[0].toUpperCase(),
+                            style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 6),
+                  Text('Bài của: ', style: AppTypography.caption.copyWith(fontSize: 12)),
+                  Text(
+                    post['author']?['name'] ?? 'Người dùng',
+                    style: AppTypography.captionBold.copyWith(fontSize: 12, color: sheetCtx.textPrimary),
+                  ),
+                ],
+              ),
+            ),
           if (post != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
