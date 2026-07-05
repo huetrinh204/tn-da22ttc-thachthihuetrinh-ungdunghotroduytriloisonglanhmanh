@@ -1316,6 +1316,49 @@ router.put("/reports/:notifId/handle", authMiddleware, adminMiddleware, async (r
         [JSON.stringify(payload), notifId]
       );
 
+      // Send email warning to post author
+      if (posts.length > 0) {
+        const post = posts[0];
+        const isVietnamese = (post.language || 'vi') === 'vi';
+        try {
+          await sgMail.send({
+            from: SENDGRID_FROM,
+            to: post.email,
+            subject: isVietnamese ? 'Cảnh báo vi phạm - Viora' : 'Content Warning - Viora',
+            html: isVietnamese ? `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #ff9800;">⚠️ Cảnh báo vi phạm nội dung</h2>
+                <p>Xin chào <strong>${post.name}</strong>,</p>
+                <p>Bài viết của bạn đã vi phạm quy định cộng đồng Viora.</p>
+                <div style="background-color: #fff3e0; padding: 15px; border-left: 4px solid #ff9800; margin: 20px 0;">
+                  <p style="margin: 0;"><strong>Lý do:</strong> ${warnReason}</p>
+                </div>
+                <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0;">
+                  <p style="margin: 0;"><strong>Nội dung bài viết:</strong></p>
+                  <p style="margin: 10px 0 0 0;">${post.content || '(Không có nội dung)'}</p>
+                </div>
+                <p>Vui lòng tuân thủ các quy định cộng đồng để tránh bị khóa tài khoản.</p>
+                <p style="color: #666; font-size: 14px;">Trân trọng,<br>Đội ngũ Viora</p>
+              </div>
+            ` : `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #ff9800;">⚠️ Content Violation Warning</h2>
+                <p>Hello <strong>${post.name}</strong>,</p>
+                <p>Your post has violated Viora's community guidelines.</p>
+                <div style="background-color: #fff3e0; padding: 15px; border-left: 4px solid #ff9800; margin: 20px 0;">
+                  <p style="margin: 0;"><strong>Reason:</strong> ${warnReason}</p>
+                </div>
+                <p>Please adhere to community guidelines to avoid account suspension.</p>
+                <p style="color: #666; font-size: 14px;">Best regards,<br>The Viora Team</p>
+              </div>
+            `
+          });
+          console.log(`[Admin] Warning email sent to ${post.email}`);
+        } catch (emailErr) {
+          console.error("[Admin] Warning email failed:", emailErr);
+        }
+      }
+
       res.json({ message: "Post warned successfully" });
     } else {
       // Dismiss: just update status
