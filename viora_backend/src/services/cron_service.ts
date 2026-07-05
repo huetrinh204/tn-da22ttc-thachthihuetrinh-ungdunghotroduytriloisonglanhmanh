@@ -271,12 +271,32 @@ async function checkAndSendHabitReminders() {
 
       if (diffMin % 20 !== 0) continue;
 
+      // Tránh gửi trùng trong cùng 1 phút — kiểm tra last_notif_sent
+      const [lastNotif]: any = await pool.query(
+        `SELECT last_reminder_sent_at FROM habits WHERE id = ?`,
+        [habit.habit_id]
+      );
+      if (lastNotif.length && lastNotif[0].last_reminder_sent_at) {
+        const lastSent = new Date(lastNotif[0].last_reminder_sent_at);
+        const minutesSinceLast = (Date.now() - lastSent.getTime()) / 60000;
+        if (minutesSinceLast < 15) {
+          console.log(`[HabitReminder] SKIP habit_id=${habit.habit_id} - sent ${minutesSinceLast.toFixed(1)}min ago`);
+          continue;
+        }
+      }
+
       await sendPushNotification(
         habit.fcm_token,
         '⏰ Đến giờ rồi!',
         `Đã đến lúc thực hiện thói quen "${habit.habit_name}" 💪`,
         habit.user_id
       );
+
+      // Lưu thời điểm gửi để tránh gửi trùng
+      await pool.query(
+        `UPDATE habits SET last_reminder_sent_at = NOW() WHERE id = ?`,
+        [habit.habit_id]
+      ).catch(() => {}); // Bỏ qua nếu column chưa tồn tại
 
       console.log(`[HabitReminder] Sent to user=${habit.user_id} habit="${habit.habit_name}" at +${diffMin}min`);
     }
