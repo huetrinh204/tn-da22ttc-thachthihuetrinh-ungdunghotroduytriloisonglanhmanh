@@ -1,9 +1,12 @@
 import pool from "../config/db";
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import dotenv from "dotenv";
 import { sendPushNotification } from "./fcm_push_service";
 
 dotenv.config();
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
+const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER || "";
 
 export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
   try {
@@ -75,15 +78,6 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
       return;
     }
 
-    // Setup email transporter
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
-
     let emailsSent = 0;
     let notificationsSent = 0;
     let pushNotificationsSent = 0;
@@ -91,23 +85,6 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
     // Send reminders to each user
     for (const user of users) {
       try {
-        // Create in-app notification - (REMOVED per user request)
-        // We only show push notifications on the phone, not in the app's notification list.
-        /*
-        await pool.query(
-          `INSERT INTO user_notifications (user_id, type, title, body, emoji, is_read, created_at)
-           VALUES (?, ?, ?, ?, ?, 0, NOW())`,
-          [
-            user.id,
-            'reminder',
-            '⏰ Nhắc nhở hoàn thành thói quen',
-            messageText,
-            '🌱'
-          ]
-        );
-        notificationsSent++;
-        */
-
         // Send FCM push notification if fcm_token exists
         if (user.fcm_token && user.fcm_token.trim() !== '') {
           try {
@@ -123,10 +100,10 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
           }
         }
 
-        // Send email
+        // Send email via SendGrid
         try {
-          await transporter.sendMail({
-            from: process.env.GMAIL_USER,
+          await sgMail.send({
+            from: FROM_EMAIL,
             to: user.email,
             subject: `⏰ Nhắc nhở từ Viora - ${timeOfDay === 'morning' ? 'Buổi sáng' : 'Buổi tối'}`,
             html: `
@@ -137,22 +114,9 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
                 <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                   <h2 style="color: #4CAF50; margin-top: 0;">Xin chào ${user.name}!</h2>
                   <div style="background: #f0f9f0; padding: 20px; border-left: 4px solid #4CAF50; margin: 20px 0;">
-                    <p style="margin: 0; font-size: 16px; color: #333;">
-                      ${messageText}
-                    </p>
+                    <p style="margin: 0; font-size: 16px; color: #333;">${messageText}</p>
                   </div>
-                  <p style="color: #666; font-size: 14px;">
-                    Hãy mở ứng dụng Viora và hoàn thành thói quen của bạn ngay hôm nay nhé! 💪
-                  </p>
-                  <div style="text-align: center; margin: 30px 0;">
-                    <a href="#" style="background: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold;">
-                      Mở Viora
-                    </a>
-                  </div>
-                  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-                  <p style="color: #999; font-size: 12px; text-align: center;">
-                    Bạn nhận được email này vì bạn đã đăng ký nhận thông báo nhắc nhở từ Viora.
-                  </p>
+                  <p style="color: #666; font-size: 14px;">Hãy mở ứng dụng Viora và hoàn thành thói quen của bạn ngay hôm nay nhé! 💪</p>
                 </div>
               </div>
             `
@@ -161,7 +125,6 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
         } catch (emailError) {
           console.error(`[AutoReminder] Email error for user ${user.id}:`, emailError);
         }
-
       } catch (error) {
         console.error(`[AutoReminder] Error sending to user ${user.id}:`, error);
       }

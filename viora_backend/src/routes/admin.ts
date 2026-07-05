@@ -2,9 +2,12 @@ import { Router, Request, Response } from "express";
 import pool from "../config/db";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 
 dotenv.config();
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
+const SENDGRID_FROM = process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER || "";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
@@ -306,19 +309,10 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
       ]
     );
 
-    // Send email notification
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD
-      }
-    });
-
+    // Send email notification via SendGrid
     const isVietnamese = (post.language || 'vi') === 'vi';
 
     const mailOptions = {
-      from: process.env.GMAIL_USER,
       to: post.email,
       subject: isVietnamese ? 'Cảnh báo vi phạm - Viora' : 'Content Warning - Viora',
       html: isVietnamese ? `
@@ -358,11 +352,10 @@ router.post("/posts/:postId/report", authMiddleware, adminMiddleware, async (req
 
     let emailSent = false;
     try {
-      await transporter.sendMail(mailOptions);
+      await sgMail.send({ ...mailOptions, from: SENDGRID_FROM });
       emailSent = true;
     } catch (emailError) {
       console.error("Email send error:", emailError);
-      // Continue even if email fails
     }
 
     res.json({ 
