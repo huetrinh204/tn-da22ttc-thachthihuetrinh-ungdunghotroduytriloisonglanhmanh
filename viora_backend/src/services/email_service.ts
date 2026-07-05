@@ -1,19 +1,10 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
-
-const FROM = `Viora App <${process.env.GMAIL_USER}>`;
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
+const FROM = process.env.SENDGRID_FROM_EMAIL || process.env.GMAIL_USER || "noreply@viora.app";
 
 const baseStyle = `
   <style>
@@ -229,7 +220,7 @@ ${baseStyle}
 
 export async function sendMorningReminder(email: string, name: string) {
   try {
-    await transporter.sendMail({
+    await sgMail.send({
       from: FROM,
       to: email,
       subject: `🌱 ${name}, hôm nay bạn đã sẵn sàng chưa?`,
@@ -247,7 +238,7 @@ export async function sendEveningReminder(
 ) {
   const allDone = completed === total && total > 0;
   try {
-    await transporter.sendMail({
+    await sgMail.send({
       from: FROM,
       to: email,
       subject: allDone
@@ -263,7 +254,7 @@ export async function sendEveningReminder(
 
 export async function sendOtpEmail(email: string, name: string, code: string) {
   try {
-    await transporter.sendMail({
+    await sgMail.send({
       from: FROM,
       to: email,
       subject: "🔐 Mã xác thực đặt lại mật khẩu Viora",
