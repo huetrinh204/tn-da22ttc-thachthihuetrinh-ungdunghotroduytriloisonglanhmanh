@@ -52,7 +52,7 @@ class Post {
       commentCount: json['comment_count'] ?? 0,
       isLiked: json['is_liked'] ?? false,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at']).toLocal()
+          ? DateTime.parse(json['created_at'].toString().contains('Z') || json['created_at'].toString().contains('+') ? json['created_at'] : '${json['created_at']}Z').toLocal()
           : DateTime.now(),
       challengeName: json['challenge_name'],
       daysStreak: json['days_streak'],

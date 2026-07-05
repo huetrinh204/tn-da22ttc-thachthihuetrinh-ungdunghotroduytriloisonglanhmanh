@@ -35,7 +35,7 @@ class Comment {
       isLiked: json['is_liked'] ?? false,
       replyCount: json['reply_count'] ?? 0,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at']).toLocal()
+          ? DateTime.parse(json['created_at'].toString().contains('Z') || json['created_at'].toString().contains('+') ? json['created_at'] : '${json['created_at']}Z').toLocal()
           : DateTime.now(),
     );
   }

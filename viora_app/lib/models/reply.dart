@@ -26,7 +26,7 @@ class Reply {
       userAvatar: json['user_avatar'],
       content: json['content'] ?? '',
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at']).toLocal()
+          ? DateTime.parse(json['created_at'].toString().contains('Z') || json['created_at'].toString().contains('+') ? json['created_at'] : '${json['created_at']}Z').toLocal()
           : DateTime.now(),
     );
   }

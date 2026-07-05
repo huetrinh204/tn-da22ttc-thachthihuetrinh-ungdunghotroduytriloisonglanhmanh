@@ -285,6 +285,18 @@ class _CommunityScreenState extends State<CommunityScreen>
     if (result == true) {
       await _refreshPosts();
       _scrollToTop();
+      // Navigate to the newly created post (first post after refresh)
+      if (mounted && _posts.isNotEmpty) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PostDetailScreen(post: _posts.first),
+            ),
+          );
+        }
+      }
     }
   }
 

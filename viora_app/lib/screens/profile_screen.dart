@@ -19,6 +19,7 @@ import '../providers/locale_provider.dart';
 import '../utils/habit_icon_mapper.dart';
 import '../services/notification_service.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../navigation/app_navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -218,8 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await prefs.remove("token");
     // Không xóa onboarding_done — giữ lại để lần sau login không phải onboard lại
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
+    AppNavigation.navigatorKey.currentState?.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );

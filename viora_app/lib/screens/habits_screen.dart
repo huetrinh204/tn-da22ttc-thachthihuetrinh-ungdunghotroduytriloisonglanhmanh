@@ -197,7 +197,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
 
     // Show celebration if all habits completed today
     if (mounted && habits.isNotEmpty && habits.every((h) => h["is_completed"] == 1)) {
-      await AllHabitsCompletedDialog.show(context);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) AllHabitsCompletedDialog.show(context);
+      });
     }
 
   }
@@ -225,41 +227,47 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   void _showPointsFlyAnimation(Offset startPosition, int points) {
-    // Get tree icon position
-    final RenderBox? treeBox =
-        _treeIconKey.currentContext?.findRenderObject() as RenderBox?;
-    if (treeBox == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
 
-    // Convert start position from global to Stack-local coordinates
-    final RenderBox? stackBox =
-        _stackKey.currentContext?.findRenderObject() as RenderBox?;
-    if (stackBox == null) return;
+      // Get tree icon position
+      final RenderBox? treeBox =
+          _treeIconKey.currentContext?.findRenderObject() as RenderBox?;
+      if (treeBox == null) return;
 
-    final stackLocalStart = stackBox.globalToLocal(startPosition);
-    final treeGlobal = treeBox.localToGlobal(Offset.zero);
-    final treeCenterGlobal = Offset(
-      treeGlobal.dx + treeBox.size.width / 2,
-      treeGlobal.dy + treeBox.size.height / 2,
-    );
-    final stackLocalEnd = stackBox.globalToLocal(treeCenterGlobal);
+      // Convert start position from global to Stack-local coordinates
+      final RenderBox? stackBox =
+          _stackKey.currentContext?.findRenderObject() as RenderBox?;
+      if (stackBox == null) return;
 
-    // Create animation widget with Stack-local coordinates
-    final animationWidget = PointsFlyAnimation(
-      points: points,
-      startPosition: Offset(
-        stackLocalStart.dx + 40,
-        stackLocalStart.dy + 40,
-      ),
-      endPosition: stackLocalEnd,
-      onComplete: () {
-        setState(() {
-          _flyingAnimations.removeAt(0);
-        });
-      },
-    );
+      final stackLocalStart = stackBox.globalToLocal(startPosition);
+      final treeGlobal = treeBox.localToGlobal(Offset.zero);
+      final treeCenterGlobal = Offset(
+        treeGlobal.dx + treeBox.size.width / 2,
+        treeGlobal.dy + treeBox.size.height / 2,
+      );
+      final stackLocalEnd = stackBox.globalToLocal(treeCenterGlobal);
 
-    setState(() {
-      _flyingAnimations.add(animationWidget);
+      // Create animation widget with Stack-local coordinates
+      final animationWidget = PointsFlyAnimation(
+        points: points,
+        startPosition: Offset(
+          stackLocalStart.dx + 40,
+          stackLocalStart.dy + 40,
+        ),
+        endPosition: stackLocalEnd,
+        onComplete: () {
+          if (mounted) {
+            setState(() {
+              _flyingAnimations.removeAt(0);
+            });
+          }
+        },
+      );
+
+      setState(() {
+        _flyingAnimations.add(animationWidget);
+      });
     });
   }
 
