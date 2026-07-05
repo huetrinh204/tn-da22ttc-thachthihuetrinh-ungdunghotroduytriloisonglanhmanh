@@ -122,7 +122,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
                     AppSpacing.lg,
                     AppSpacing.md,
                     AppSpacing.lg,
-                    AppSpacing.lg,
+                    AppSpacing.lg + 80,
                   ),
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -287,11 +287,13 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.sm,
+        AppSpacing.xl, AppSpacing.md, 0, AppSpacing.sm,
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Row(
+        child: Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.xl),
+          child: Row(
           children: [
             _buildSortDropdown(l10n),
             const SizedBox(width: AppSpacing.sm),
@@ -320,6 +322,7 @@ class _AdminPostsTabState extends State<AdminPostsTab> {
               ),
             ],
           ],
+          ),
         ),
       ),
     );

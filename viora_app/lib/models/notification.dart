@@ -44,7 +44,11 @@ class CommunityNotification {
       emoji: json['emoji'] as String?,
       isRead: (json['is_read'] as int? ?? 0) == 1,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
+          ? DateTime.parse(
+              (json['created_at'] as String).contains('Z') || (json['created_at'] as String).contains('+')
+                  ? json['created_at'] as String
+                  : '${json['created_at']}Z'
+            ).toLocal()
           : DateTime.now(),
     );
   }
