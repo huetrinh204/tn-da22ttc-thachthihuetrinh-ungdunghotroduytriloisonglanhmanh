@@ -1,10 +1,19 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = process.env.FROM_EMAIL || "Viora <onboarding@resend.dev>";
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
+
+const FROM = `Viora App <${process.env.GMAIL_USER}>`;
 
 const baseStyle = `
   <style>
@@ -220,7 +229,7 @@ ${baseStyle}
 
 export async function sendMorningReminder(email: string, name: string) {
   try {
-    await resend.emails.send({
+    await transporter.sendMail({
       from: FROM,
       to: email,
       subject: `🌱 ${name}, hôm nay bạn đã sẵn sàng chưa?`,
@@ -238,7 +247,7 @@ export async function sendEveningReminder(
 ) {
   const allDone = completed === total && total > 0;
   try {
-    await resend.emails.send({
+    await transporter.sendMail({
       from: FROM,
       to: email,
       subject: allDone
@@ -254,7 +263,7 @@ export async function sendEveningReminder(
 
 export async function sendOtpEmail(email: string, name: string, code: string) {
   try {
-    await resend.emails.send({
+    await transporter.sendMail({
       from: FROM,
       to: email,
       subject: "🔐 Mã xác thực đặt lại mật khẩu Viora",
