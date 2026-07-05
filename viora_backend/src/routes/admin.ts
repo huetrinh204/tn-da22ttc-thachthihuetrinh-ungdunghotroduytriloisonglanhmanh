@@ -1217,7 +1217,7 @@ router.get("/reports", authMiddleware, adminMiddleware, async (req: any, res: Re
         );
         if (posts.length > 0) {
           const [authors]: any = await pool.query(
-            "SELECT id, name, email FROM users WHERE id = ?",
+            "SELECT id, name, email, avatar_url FROM users WHERE id = ?",
             [posts[0].user_id]
           );
           postInfo = {
@@ -1225,18 +1225,18 @@ router.get("/reports", authMiddleware, adminMiddleware, async (req: any, res: Re
             content: posts[0].content,
             image_url: posts[0].image_url,
             created_at: posts[0].created_at,
-            author: authors.length > 0 ? { id: authors[0].id, name: authors[0].name, email: authors[0].email } : null,
+            author: authors.length > 0 ? { id: authors[0].id, name: authors[0].name, email: authors[0].email, avatar_url: authors[0].avatar_url } : null,
           };
         }
       }
 
       if (payload?.reporter_id) {
         const [reps]: any = await pool.query(
-          "SELECT id, name, email FROM users WHERE id = ?",
+          "SELECT id, name, email, avatar_url FROM users WHERE id = ?",
           [payload.reporter_id]
         );
         if (reps.length > 0) {
-          reporterInfo = { id: reps[0].id, name: reps[0].name, email: reps[0].email };
+          reporterInfo = { id: reps[0].id, name: reps[0].name, email: reps[0].email, avatar_url: reps[0].avatar_url };
         }
       }
 

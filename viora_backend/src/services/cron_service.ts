@@ -289,7 +289,8 @@ async function checkAndSendHabitReminders() {
         habit.fcm_token,
         '⏰ Đến giờ rồi!',
         `Đã đến lúc thực hiện thói quen "${habit.habit_name}" 💪`,
-        habit.user_id
+        habit.user_id,
+        'habit_reminder'
       );
 
       // Lưu thời điểm gửi để tránh gửi trùng

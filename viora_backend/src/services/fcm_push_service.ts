@@ -19,7 +19,8 @@ export async function sendPushNotification(
   fcmToken: string,
   title: string,
   body: string,
-  userId?: number | string
+  userId?: number | string,
+  type?: string
 ) {
   try {
     const message: any = {
@@ -33,9 +34,10 @@ export async function sendPushNotification(
         },
       },
     };
-    if (userId != null) {
-      message.data = { userId: String(userId) };
-    }
+    const data: any = {};
+    if (userId != null) data.userId = String(userId);
+    if (type != null) data.type = type;
+    if (Object.keys(data).length > 0) message.data = data;
     await admin.messaging().send(message);
     console.log(`[FCM] Push sent to token: ${fcmToken.substring(0, 20)}...`);
   } catch (err) {

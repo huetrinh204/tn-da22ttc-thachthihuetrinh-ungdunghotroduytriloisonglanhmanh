@@ -655,6 +655,28 @@ router.delete("/comments/:commentId/like", authMiddleware, async (req: any, res:
   }
 });
 
+// ================= DELETE COMMENT =================
+router.delete("/comments/:commentId", authMiddleware, async (req: any, res: Response) => {
+  const commentId = parseInt(req.params.commentId, 10);
+  const userId = req.user.id;
+
+  if (isNaN(commentId)) return res.status(400).json({ message: "Invalid comment id" });
+
+  try {
+    const [rows]: any = await pool.query(
+      "SELECT user_id FROM community_comments WHERE id = ?", [commentId]
+    );
+    if (!rows.length) return res.status(404).json({ message: "Comment not found" });
+    if (rows[0].user_id !== userId) return res.status(403).json({ message: "Not allowed" });
+
+    await pool.query("DELETE FROM community_comments WHERE id = ?", [commentId]);
+    res.json({ message: "Deleted" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // ================= COMMENT REPLIES =================
 // Get replies for a comment
 router.get("/comments/:commentId/replies", authMiddleware, async (req: any, res: Response) => {

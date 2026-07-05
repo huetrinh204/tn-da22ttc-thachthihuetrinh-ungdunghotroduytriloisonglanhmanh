@@ -249,6 +249,12 @@ router.post("/:id/checkin", authMiddleware, async (req: any, res) => {
       // cập nhật streak riêng của habit này
       await updateHabitStreak(req.params.id, today);
 
+      // Reset days_without_checkin ngay khi hoàn thành habit
+      await pool.query(
+        "UPDATE plants SET days_without_checkin = 0, is_wilted = 0, last_penalty_date = NULL WHERE user_id = ?",
+        [req.user.id]
+      ).catch(() => {});
+
       // cập nhật plant và lấy số điểm được cộng
       const plantUpdate = await updatePlant(req.user.id, today);
 
