@@ -1037,12 +1037,36 @@ router.put("/auto-reminder/settings", authMiddleware, adminMiddleware, async (re
   try {
     const { is_enabled, morning_time, evening_time, send_morning, send_evening } = req.body;
 
-    await pool.query(
-      `UPDATE auto_reminder_settings 
-       SET is_enabled = ?, morning_time = ?, evening_time = ?, send_morning = ?, send_evening = ?
-       WHERE id = 1`,
-      [is_enabled ? 1 : 0, morning_time, evening_time, send_morning ? 1 : 0, send_evening ? 1 : 0]
-    );
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (is_enabled !== undefined) {
+      updates.push('is_enabled = ?');
+      values.push(is_enabled ? 1 : 0);
+    }
+    if (morning_time !== undefined) {
+      updates.push('morning_time = ?');
+      values.push(morning_time);
+    }
+    if (evening_time !== undefined) {
+      updates.push('evening_time = ?');
+      values.push(evening_time);
+    }
+    if (send_morning !== undefined) {
+      updates.push('send_morning = ?');
+      values.push(send_morning ? 1 : 0);
+    }
+    if (send_evening !== undefined) {
+      updates.push('send_evening = ?');
+      values.push(send_evening ? 1 : 0);
+    }
+
+    if (updates.length > 0) {
+      await pool.query(
+        `UPDATE auto_reminder_settings SET ${updates.join(', ')} WHERE id = 1`,
+        values
+      );
+    }
 
     res.json({ message: "Settings updated successfully" });
   } catch (error) {

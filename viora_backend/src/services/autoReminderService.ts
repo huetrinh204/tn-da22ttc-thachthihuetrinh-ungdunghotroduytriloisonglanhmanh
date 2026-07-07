@@ -52,7 +52,9 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
 
     // Get users who have NOT completed all their habits today
     // AND do NOT have personal reminders enabled (to avoid duplicate notifications)
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const vietnamTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+    const today = vietnamTime.toISOString().split('T')[0];
     
     const [users]: any = await pool.query(`
       SELECT DISTINCT u.id, u.name, u.email, u.fcm_token
@@ -63,7 +65,7 @@ export async function sendAutoReminders(timeOfDay: 'morning' | 'evening') {
         SELECT DISTINCT hl.user_id
         FROM habit_logs hl
         INNER JOIN habits h2 ON h2.id = hl.habit_id AND h2.is_active = 1
-        WHERE DATE(hl.log_date) = ?
+        WHERE hl.log_date = ?
         GROUP BY hl.user_id
         HAVING COUNT(DISTINCT hl.habit_id) >= (
           SELECT COUNT(*) FROM habits WHERE user_id = hl.user_id AND is_active = 1
