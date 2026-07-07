@@ -1113,5 +1113,21 @@
   "removeWarningConfirm": "Bài viết này sẽ được hiển thị lại trên cộng đồng. Xác nhận gỡ cảnh báo?",
   "postApproved": "Đã phê duyệt bài viết",
   "postRejectedDeleted": "Đã từ chối và xóa bài viết",
-  "postWarningRemoved": "Đã gỡ cảnh báo bài viết"
+  "postWarningRemoved": "Đã gỡ cảnh báo bài viết",
+
+  "levelDesc1": "Hành trình bắt đầu từ đây",
+  "levelDesc2": "Hạt đang nảy mầm",
+  "levelDesc3": "Cây đang nảy mầm, tiếp tục nhé!",
+  "levelDesc4": "Cây đang lớn dần mỗi ngày",
+  "levelDesc5": "Cây đang phát triển tốt",
+  "levelDesc6": "Cây đang vững chắc hơn",
+  "levelDesc7": "Cây đang lớn mạnh",
+  "levelDesc8": "Cây đã vững chắc",
+  "levelDesc9": "Cây đang phát triển rất tốt",
+  "levelDesc10": "Cây bắt đầu ra hoa",
+  "levelDesc11": "Cây đang kết trái",
+  "levelDesc12": "Trái đang lớn dần",
+  "levelDesc13": "Trái đã chín",
+  "levelDesc14": "Cây đầy trái chín",
+  "levelDesc15": "Tuyệt vời! Cây đã đạt đỉnh cao 🏆"
 }

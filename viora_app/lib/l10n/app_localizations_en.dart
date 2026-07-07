@@ -2351,4 +2351,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get postWarningRemoved => 'Warning removed';
+
+  @override
+  String get levelDesc1 => 'The journey begins here';
+
+  @override
+  String get levelDesc2 => 'The seed is sprouting';
+
+  @override
+  String get levelDesc3 => 'The sprout is growing, keep going!';
+
+  @override
+  String get levelDesc4 => 'The plant is growing bigger every day';
+
+  @override
+  String get levelDesc5 => 'The plant is developing well';
+
+  @override
+  String get levelDesc6 => 'The plant is getting stronger';
+
+  @override
+  String get levelDesc7 => 'The plant is growing strong';
+
+  @override
+  String get levelDesc8 => 'The plant is sturdy';
+
+  @override
+  String get levelDesc9 => 'The plant is thriving';
+
+  @override
+  String get levelDesc10 => 'The plant is starting to bloom';
+
+  @override
+  String get levelDesc11 => 'The plant is bearing fruit';
+
+  @override
+  String get levelDesc12 => 'The fruit is growing';
+
+  @override
+  String get levelDesc13 => 'The fruit is ripe';
+
+  @override
+  String get levelDesc14 => 'The tree is full of ripe fruit';
+
+  @override
+  String get levelDesc15 => 'Amazing! The plant has reached its peak 🏆';
 }

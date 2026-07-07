@@ -2334,4 +2334,49 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get postWarningRemoved => 'Đã gỡ cảnh báo bài viết';
+
+  @override
+  String get levelDesc1 => 'Hành trình bắt đầu từ đây';
+
+  @override
+  String get levelDesc2 => 'Hạt đang nảy mầm';
+
+  @override
+  String get levelDesc3 => 'Cây đang nảy mầm, tiếp tục nhé!';
+
+  @override
+  String get levelDesc4 => 'Cây đang lớn dần mỗi ngày';
+
+  @override
+  String get levelDesc5 => 'Cây đang phát triển tốt';
+
+  @override
+  String get levelDesc6 => 'Cây đang vững chắc hơn';
+
+  @override
+  String get levelDesc7 => 'Cây đang lớn mạnh';
+
+  @override
+  String get levelDesc8 => 'Cây đã vững chắc';
+
+  @override
+  String get levelDesc9 => 'Cây đang phát triển rất tốt';
+
+  @override
+  String get levelDesc10 => 'Cây bắt đầu ra hoa';
+
+  @override
+  String get levelDesc11 => 'Cây đang kết trái';
+
+  @override
+  String get levelDesc12 => 'Trái đang lớn dần';
+
+  @override
+  String get levelDesc13 => 'Trái đã chín';
+
+  @override
+  String get levelDesc14 => 'Cây đầy trái chín';
+
+  @override
+  String get levelDesc15 => 'Tuyệt vời! Cây đã đạt đỉnh cao 🏆';
 }

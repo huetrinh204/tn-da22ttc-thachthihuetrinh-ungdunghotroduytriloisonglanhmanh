@@ -8,6 +8,7 @@ import '../services/notification_service.dart';
 import '../navigation/app_navigation.dart';
 import '../widgets/achievement_popup.dart';
 import '../widgets/all_habits_completed_dialog.dart';
+import '../widgets/first_checkin_dialog.dart';
 import '../widgets/points_fly_animation.dart';
 import '../widgets/habit_icon.dart';
 import '../widgets/app_confirm_dialog.dart';
@@ -314,80 +315,18 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Future<void> _showFirstCheckInDialog() async {
-    final l10n = AppLocalizations.of(context)!;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.firstCheckInTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.firstCheckInBody),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.bar_chart_rounded,
-                    color: AppColors.primary,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      l10n.firstCheckInStatsHint,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        height: 1.45,
-                        color: AppColors.primaryDark,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(l10n.gotIt),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const StatsScreen()),
-              );
-            },
-            icon: const Icon(Icons.bar_chart_rounded, size: 18),
-            label: Text(l10n.viewHabitStats),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              if (context.mounted) Navigator.pop(context);
-              AppNavigation.openPlant();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(l10n.viewYourPlant),
-          ),
-        ],
-      ),
+    await FirstCheckinDialog.show(
+      context,
+      onViewStats: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const StatsScreen()),
+        );
+      },
+      onViewPlant: () {
+        if (context.mounted) Navigator.pop(context);
+        AppNavigation.openPlant();
+      },
     );
   }
 

@@ -81,7 +81,7 @@ abstract final class StarterHabitTemplates {
           name: l10n.starterHabitHealthyBreakfast,
           category: 'eat',
           icon: '🥗',
-          targetCount: 1,
+          targetCount: 500,
         );
       case 'starter_eat_veggies':
         return StarterHabitOption(
@@ -89,7 +89,7 @@ abstract final class StarterHabitTemplates {
           name: l10n.starterHabitEatVeggies,
           category: 'eat',
           icon: '🥦',
-          targetCount: 1,
+          targetCount: 300,
         );
       case 'starter_read_30':
         return StarterHabitOption(
@@ -103,7 +103,7 @@ abstract final class StarterHabitTemplates {
         return StarterHabitOption(
           id: id,
           name: l10n.starterHabitStudy60,
-          category: 'other',
+          category: 'mental',
           icon: '✏️',
           targetCount: 60,
         );

@@ -39,24 +39,24 @@ class _PlantScreenState extends State<PlantScreen>
   bool get wantKeepAlive => false; // Không cache → reload mỗi lần vào tab
 
   String _getLevelDescription(int level, AppLocalizations l10n) {
-    const descriptions = [
-      "Hành trình bắt đầu từ đây",
-      "Hạt đang nảy mầm",
-      "Cây đang nảy mầm, tiếp tục nhé!",
-      "Cây đang lớn dần mỗi ngày",
-      "Cây đang phát triển tốt",
-      "Cây đang vững chắc hơn",
-      "Cây đang lớn mạnh",
-      "Cây đã vững chắc",
-      "Cây đang phát triển rất tốt",
-      "Cây bắt đầu ra hoa",
-      "Cây đang kết trái",
-      "Trái đang lớn dần",
-      "Trái đã chín",
-      "Cây đầy trái chín",
-      "Tuyệt vời! Cây đã đạt đỉnh cao 🏆",
-    ];
-    return descriptions[level - 1];
+    return switch (level) {
+      1 => l10n.levelDesc1,
+      2 => l10n.levelDesc2,
+      3 => l10n.levelDesc3,
+      4 => l10n.levelDesc4,
+      5 => l10n.levelDesc5,
+      6 => l10n.levelDesc6,
+      7 => l10n.levelDesc7,
+      8 => l10n.levelDesc8,
+      9 => l10n.levelDesc9,
+      10 => l10n.levelDesc10,
+      11 => l10n.levelDesc11,
+      12 => l10n.levelDesc12,
+      13 => l10n.levelDesc13,
+      14 => l10n.levelDesc14,
+      15 => l10n.levelDesc15,
+      _ => '',
+    };
   }
 
   int _getLevelColor(int level) {

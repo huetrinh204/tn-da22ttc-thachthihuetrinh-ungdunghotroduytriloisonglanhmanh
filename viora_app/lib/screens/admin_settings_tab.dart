@@ -942,6 +942,7 @@ class _AdminSettingsTabState extends State<AdminSettingsTab> {
     await NotificationService.cancelAll();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove("token");
+    await prefs.remove("cached_user_id");
     if (!mounted) return;
     Navigator.pushReplacement(
       context,

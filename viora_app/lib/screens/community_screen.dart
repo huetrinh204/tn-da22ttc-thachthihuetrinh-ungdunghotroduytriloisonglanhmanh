@@ -219,7 +219,7 @@ class _CommunityScreenState extends State<CommunityScreen>
       return;
     }
 
-    String type = "trending";
+    String type = "latest";
     if (_tabController.index == 1) {
       type = "following";
     }
@@ -535,7 +535,7 @@ class _CommunityScreenState extends State<CommunityScreen>
         dividerColor: Colors.transparent,
         indicatorPadding: const EdgeInsets.all(4),
         tabs: [
-          Tab(text: l10n.trending),
+          Tab(text: l10n.latest),
           Tab(text: l10n.following),
           Tab(text: l10n.achievementsTitle),
         ],

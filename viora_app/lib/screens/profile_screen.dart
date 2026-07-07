@@ -217,6 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await ApiService.clearFcmToken(token);
     }
     await prefs.remove("token");
+    await prefs.remove("cached_user_id");
     // Không xóa onboarding_done — giữ lại để lần sau login không phải onboard lại
     if (!mounted) return;
     final navigator = AppNavigation.navigatorKey.currentState;

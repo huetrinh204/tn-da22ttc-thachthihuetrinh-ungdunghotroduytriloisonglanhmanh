@@ -4513,6 +4513,96 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đã gỡ cảnh báo bài viết'**
   String get postWarningRemoved;
+
+  /// No description provided for @levelDesc1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành trình bắt đầu từ đây'**
+  String get levelDesc1;
+
+  /// No description provided for @levelDesc2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hạt đang nảy mầm'**
+  String get levelDesc2;
+
+  /// No description provided for @levelDesc3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đang nảy mầm, tiếp tục nhé!'**
+  String get levelDesc3;
+
+  /// No description provided for @levelDesc4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đang lớn dần mỗi ngày'**
+  String get levelDesc4;
+
+  /// No description provided for @levelDesc5.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đang phát triển tốt'**
+  String get levelDesc5;
+
+  /// No description provided for @levelDesc6.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đang vững chắc hơn'**
+  String get levelDesc6;
+
+  /// No description provided for @levelDesc7.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đang lớn mạnh'**
+  String get levelDesc7;
+
+  /// No description provided for @levelDesc8.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đã vững chắc'**
+  String get levelDesc8;
+
+  /// No description provided for @levelDesc9.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đang phát triển rất tốt'**
+  String get levelDesc9;
+
+  /// No description provided for @levelDesc10.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây bắt đầu ra hoa'**
+  String get levelDesc10;
+
+  /// No description provided for @levelDesc11.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đang kết trái'**
+  String get levelDesc11;
+
+  /// No description provided for @levelDesc12.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trái đang lớn dần'**
+  String get levelDesc12;
+
+  /// No description provided for @levelDesc13.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trái đã chín'**
+  String get levelDesc13;
+
+  /// No description provided for @levelDesc14.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cây đầy trái chín'**
+  String get levelDesc14;
+
+  /// No description provided for @levelDesc15.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuyệt vời! Cây đã đạt đỉnh cao 🏆'**
+  String get levelDesc15;
 }
 
 class _AppLocalizationsDelegate

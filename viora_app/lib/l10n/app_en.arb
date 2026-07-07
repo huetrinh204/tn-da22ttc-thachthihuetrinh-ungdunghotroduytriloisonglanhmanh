@@ -1113,5 +1113,21 @@
   "removeWarningConfirm": "This post will be visible again in the community. Confirm remove warning?",
   "postApproved": "Post approved",
   "postRejectedDeleted": "Post rejected and deleted",
-  "postWarningRemoved": "Warning removed"
+  "postWarningRemoved": "Warning removed",
+
+  "levelDesc1": "The journey begins here",
+  "levelDesc2": "The seed is sprouting",
+  "levelDesc3": "The sprout is growing, keep going!",
+  "levelDesc4": "The plant is growing bigger every day",
+  "levelDesc5": "The plant is developing well",
+  "levelDesc6": "The plant is getting stronger",
+  "levelDesc7": "The plant is growing strong",
+  "levelDesc8": "The plant is sturdy",
+  "levelDesc9": "The plant is thriving",
+  "levelDesc10": "The plant is starting to bloom",
+  "levelDesc11": "The plant is bearing fruit",
+  "levelDesc12": "The fruit is growing",
+  "levelDesc13": "The fruit is ripe",
+  "levelDesc14": "The tree is full of ripe fruit",
+  "levelDesc15": "Amazing! The plant has reached its peak 🏆"
 }
