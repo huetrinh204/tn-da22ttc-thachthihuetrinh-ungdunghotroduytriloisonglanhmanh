@@ -276,7 +276,7 @@ class _AiChatScreenState extends State<AiChatScreen>
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/CHAT_AI.png'),
+                  image: AssetImage('assets/images/bongbongchat.jpg'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -373,28 +373,28 @@ class _AiChatScreenState extends State<AiChatScreen>
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
                 image: const DecorationImage(
-                  image: AssetImage('assets/images/CHAT_AI.png'),
+                  image: AssetImage('assets/images/bongbongchat.jpg'),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
           ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isUser ? const Color(0xFFE8F5E9)
-                    : isError ? Colors.red.withValues(alpha: 0.08) : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isUser ? 18 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 18),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isUser ? const Color(0xFFE8F5E9)
+                      : isError ? Colors.red.withValues(alpha: 0.08) : Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isUser ? 18 : 4),
+                    bottomRight: Radius.circular(isUser ? 4 : 18),
+                  ),
+                  border: isError ? Border.all(color: Colors.red.withValues(alpha: 0.3))
+                      : Border.all(color: context.infoBoxBorder),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
                 ),
-                border: isError ? Border.all(color: Colors.red.withValues(alpha: 0.3))
-                    : Border.all(color: context.infoBoxBorder),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4, offset: const Offset(0, 2))],
-              ),
               child: isUser
                   ? Text(msg.content, style: TextStyle(fontSize: 14, color: context.textPrimary, height: 1.45))
                   : MarkdownBody(
@@ -426,7 +426,7 @@ class _AiChatScreenState extends State<AiChatScreen>
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1.5),
               image: const DecorationImage(
-                image: AssetImage('assets/images/CHAT_AI.png'),
+                image: AssetImage('assets/images/bongbongchat.jpg'),
                 fit: BoxFit.cover,
               ),
             ),

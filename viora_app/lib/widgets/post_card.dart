@@ -118,30 +118,6 @@ class PostCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Streak badge
-                    if (post.daysStreak != null && post.daysStreak! > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.warning.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(AppIcons.streak, color: AppColors.warning, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              "${post.daysStreak} ${l10n.days}",
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.warning,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                   ],
                 ),
               ),

@@ -42,8 +42,10 @@ class HabitIconMapper {
         return LucideIcons.apple; // Vegetables/Healthy eating
       case '📝':
         return LucideIcons.fileEdit; // Notes/Writing
+      case '✅':
+        return LucideIcons.checkCheck; // Completed/Check-in
       default:
-        return LucideIcons.circle; // Default fallback
+        return LucideIcons.helpCircle; // Default fallback
     }
   }
 
@@ -64,6 +66,7 @@ class HabitIconMapper {
       {'emoji': '❤️', 'icon': LucideIcons.heart},
       {'emoji': '🍴', 'icon': LucideIcons.utensils},
       {'emoji': '⚖️', 'icon': LucideIcons.scale},
+      {'emoji': '✅', 'icon': LucideIcons.checkCheck},
     ];
   }
 
